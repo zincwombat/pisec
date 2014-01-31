@@ -1,0 +1,12 @@
+{application, pisec,
+ [
+  {description, "Raspberry Pi Security Application"},
+  {vsn, "1.0.0"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { pisec_app, []}},
+  {env, []}
+ ]}.
