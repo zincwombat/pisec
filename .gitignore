@@ -1,0 +1,8 @@
+log
+tmp
+db/*.sqlite3
+nbproject/private
+bin
+ebin
+.DS_Store
+*/logs/*
