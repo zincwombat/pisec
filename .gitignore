@@ -6,3 +6,6 @@ bin
 ebin
 .DS_Store
 */logs/*
+deps
+rel
+*.dets
