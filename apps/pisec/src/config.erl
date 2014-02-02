@@ -5,7 +5,7 @@
          stop/0]).
 
 -include("debug.hrl").
--define(DFILE,	"/home/pi/erlang/security/config.dets").
+-define(DFILE,	"config/config.dets").
 
 -export([init/1,
          handle_call/3,

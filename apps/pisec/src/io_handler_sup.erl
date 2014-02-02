@@ -1,8 +1,9 @@
 -module(io_handler_sup).
 -behaviour(supervisor).
 -include("debug.hrl").
+-include("alarm.hrl").
 
--define(config,"/home/pi/erlang/security/config/alarmconfig.erl").
+-define(ALARMCONFIG,"alarmconfig.erl").
 
 -export([start/0,
 	 stop/0]).
@@ -32,7 +33,11 @@ children(Ports) when is_list(Ports)->
 	lists:map(fun(Z)->?CHILD(io_handler,Z,worker) end,Ports).
 
 getConf()->
-	case file:consult(?config) of
+	%% note that ALARMCONFIG is in the priv directory
+
+	AlarmConfigFile=code:priv_dir(?APPNAME) ++ "/" ++ ?ALARMCONFIG,
+
+	case file:consult(AlarmConfigFile) of
 	{ok,Config}->
 		case lists:keyfind(ports,1,Config) of
 		{ports,Ports}->

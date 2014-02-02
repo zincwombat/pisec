@@ -1,3 +1,4 @@
+-define(APPNAME,			"pisec").
 -define(SIMULATOR_SCAN_INTERVAL,	50).
 -define(DEFAULT_SCAN_INTERVAL,		50).
 -define(MIN_PORT,			1).
