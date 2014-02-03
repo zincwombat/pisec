@@ -24,6 +24,8 @@ REBAR_CONFIG_X86=rebar.config.x86
 RELEASE_CONFIG_X86=reltool.config.x86
 REBAR_CONFIG_PI=rebar.config.pi
 RELEASE_CONFIG_PI=reltool.config.pi
+SYSCONFIG_PI=sys.config.pi
+SYSCONFIG_X86=sys.config.x86
  
 # =============================================================================
 # Verify that the programs we need to run are installed on this system
@@ -47,12 +49,14 @@ ifeq ($(ARCHTYPE),x86_64)
 $(info "(Intel x86 architecture detected) [$(ARCHTYPE)]")
 REBAR_CONFIG=$(REBAR_CONFIG_X86)
 RELEASE_CONFIG=$(RELEASE_CONFIG_X86)
+SYS_CONFIG=$(SYSCONFIG_X86)
 endif 
 
 ifeq ($(ARCHTYPE),armv6l)
 $(info "(Raspberry Pi (ARM) architecture detected) [$(ARCHTYPE)]")
 REBAR_CONFIG=$(REBAR_CONFIG_PI)
 RELEASE_CONFIG=$(RELEASE_CONFIG_PI)
+SYS_CONFIG=$(SYSCONFIG_PI)
 endif 
 
  
@@ -67,6 +71,8 @@ setup:
 	ln -s $(REBAR_CONFIG) rebar.config
 	rm -f $(REL)/reltool.config
 	ln -s $(RELEASE_CONFIG) $(REL)/reltool.config
+	rm -f $(REL)/files/sys.config
+	cp $(REL)/files/$(SYS_CONFIG) $(REL)/files/sys.config
  
 # =============================================================================
 # Rules to build the system
