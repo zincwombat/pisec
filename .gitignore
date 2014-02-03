@@ -9,3 +9,6 @@ ebin
 deps
 rel/pisec
 *.dets
+rebar.config
+rel/files/sys.config
+rel/reltool.config
