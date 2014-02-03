@@ -23,7 +23,7 @@ DEPS=erts kernel stdlib
 REBAR_CONFIG_X86=rebar.config.x86
 RELEASE_CONFIG_X86=reltool.config.x86
 REBAR_CONFIG_PI=rebar.config.pi
-RELEASE_CONFIG_X86=reltool.config.x86
+RELEASE_CONFIG_PI=reltool.config.pi
  
 # =============================================================================
 # Verify that the programs we need to run are installed on this system
