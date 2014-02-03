@@ -1,0 +1,11 @@
+{sub_dirs, [
+		"apps/pisec",
+		"rel"
+           ]}.
+{erl_opts, [debug_info,
+	    {i, "deps/yaws/include/"}
+	 ]}.
+{deps, [
+	{yaws, ".*", 		{git, "git://github.com/zincwombat/yaws", {tag, "PISEC-YAWS-1.98"}}},
+	{rfc4627_jsonrpc, ".*",	{git, "git://github.com/tonyg/erlang-rfc4627", {branch,"master"}}}
+]}.
