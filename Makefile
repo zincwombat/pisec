@@ -83,7 +83,8 @@ deps:	setup
 	$(REBAR) get-deps
 	$(REBAR) compile
 
-release:	clean-deps 
+release:	setup
+	$(REBAR) clean
 	$(REBAR) compile
 	$(REBAR) generate
  
