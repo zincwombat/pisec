@@ -7,5 +7,5 @@ ebin
 .DS_Store
 */logs/*
 deps
-rel
+rel/pisec
 *.dets
