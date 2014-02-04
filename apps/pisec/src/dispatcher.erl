@@ -204,7 +204,7 @@ handle_call(Msg,From,State)->
 handle_cast(Msg={sync,Port},State=#state{ptab=PTab})->
 	case ets:lookup(PTab,Port) of
 	[]->
-		?error({unregistered_port,{port,Port}});
+		ok;
 	[{Port,Pid}]->
 		?dbug(Msg),
 		{ok,Inputs}=scanner:readPorts(),
@@ -217,7 +217,7 @@ handle_cast(Msg,State)->
         {noreply,State}.
 
 
-handle_info(Msg={inputs,Inputs},State)->
+handle_info({inputs,Inputs},State)->
 	?info({notification,{new,ioutils:blist(Inputs)}}),
 	NewState=handle_notify(Inputs,State),
         {noreply,NewState};
@@ -281,7 +281,7 @@ handle_notify(NewPorts,State=#state{ptab=PTab,portrec=#portRec{port=LastPorts}})
 handle_notify({PortNum,NewVal},PTab)->
 	i_handle_notify(PortNum,NewVal,ets:lookup(PTab,PortNum)).
 
-i_handle_notify(PortNum,NewVal,[{_,Pid}])->
+i_handle_notify(_PortNum,NewVal,[{_,Pid}])->
 	io_handler:notify(NewVal,Pid);
 
 i_handle_notify(_,_,_)->

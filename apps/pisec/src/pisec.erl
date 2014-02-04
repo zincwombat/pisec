@@ -9,7 +9,7 @@
 				 {content,"application/json",jsonapi:encode(addHttpCode(STATUS,META),DATA)}]).
 
 
-meta(Arg=#arg{})->
+meta(#arg{})->
 	TimeStamp=iso8601:format(now()),
 	%%Headers=Arg#arg.headers,
 	%%UA=Headers#headers.user_agent,

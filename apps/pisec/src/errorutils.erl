@@ -17,7 +17,7 @@ mkHttpError(Status) when is_integer(Status)->
 	mkError(Status,Status,mkHttpPhrase(Status)).
 
 mkHttpError(Status,Extended) when is_integer(Status)->
-	{Code,Status,Description}=
+	{_Code,Status,Description}=
 	case (catch yaws_api:code_to_phrase(Status)) of
 	Phrase when is_list(Phrase)->
 		{Status,Status,Phrase};

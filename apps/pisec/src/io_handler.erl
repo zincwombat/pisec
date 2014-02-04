@@ -134,7 +134,7 @@ handle_sync_event(Event={fsync,{level,Level}},_From,StateName,StateData=#state{p
 	case StateName of
 	'CLEAR'->
 		'ACTIVE';
-	Other->
+	_Other->
 		StateName
 	end,
 	%%?info({calling_notify}),
@@ -142,13 +142,13 @@ handle_sync_event(Event={fsync,{level,Level}},_From,StateName,StateData=#state{p
 	?info({handle_sync_event,{port,Port},{event,Event},{state,StateName},{stateData,StateData}}),
 	{reply,NextState,NextState,StateData};
 
-handle_sync_event(Event={fsync,{level,_Level}},_From,StateName,StateData=#state{port=Port,assertLevel=Level})->
+handle_sync_event(Event={fsync,{level,_Level}},_From,StateName,StateData=#state{port=Port,assertLevel=_Level})->
 	%% alarm CLEAR
 	NextState=
 	case StateName of
 	'ACTIVE'->
 		'CLEAR';
-	Other->
+	_Other->
 		StateName
 	end,
 	%%?info({calling_notify}),

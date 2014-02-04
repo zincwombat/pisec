@@ -28,13 +28,13 @@ toJson(Meta,ok,_Links)->
     	{obj, [{meta,	MetaData},
 	       {data,	ok}]};
 
-toJson(Meta,{error,{L={location,{module,Module},{line,Line}},{detail,E}}},_Links)->
+toJson(Meta,{error,{L={location,{module,_Module},{line,_Line}},{detail,E}}},_Links)->
 	toJson(Meta,errorutils:mkError(500,500,E,L));
 
-toJson(Meta,E={error,Reason},_Links)->
+toJson(Meta,{error,Reason},_Links)->
 	toJson(Meta,errorutils:mkError(500,500,Reason,"error tuple returned by backend"));
 
-toJson(Meta,PR=#portstatus{ioport=IOPort,description=Desc,iostate=IOState,maskstate=MaskState},Links)->
+toJson(Meta,#portstatus{ioport=IOPort,description=Desc,iostate=IOState,maskstate=MaskState},_Links)->
 	Port={obj,
 		[
 			{port,IOPort},
@@ -50,7 +50,7 @@ toJson(Meta,PR=#portstatus{ioport=IOPort,description=Desc,iostate=IOState,maskst
 	       {data,	PortData}]};
 
 
-toJson(Meta,A=#alarmstatus{alarmstate=AS,portfilter=PortFilter,portstate=PortStates},Links)->
+toJson(Meta,A=#alarmstatus{alarmstate=AS,portfilter=PortFilter,portstate=PortStates},_Links)->
 
 	PortData=[{obj, 
 		[
@@ -95,7 +95,7 @@ toJson(Meta,E=#error{},_Links)->
 %% BEGIN BUSINESS LOGIC
 %%========================
 
-genLinks(A=#alarmstatus{alarmstate=AS})->
+genLinks(#alarmstatus{alarmstate=AS})->
 	case AS of
 		"DISARMED"->
 			[arm()];
@@ -110,7 +110,7 @@ genLinks(A=#alarmstatus{alarmstate=AS})->
 	end;
 
 
-genLinks(PS=#portstatus{ioport=Port,iostate=Status,maskstate="AUTO"})->
+genLinks(#portstatus{ioport=Port,iostate=Status,maskstate="AUTO"})->
 	LinkSet=
 	case Status of
 		"ACTIVE"->
@@ -124,11 +124,11 @@ genLinks(PS=#portstatus{ioport=Port,iostate=Status,maskstate="AUTO"})->
 	end,
 	LinkSet;
 
-genLinks(PS=#portstatus{ioport=Port,iostate=Status,maskstate="SET"})->
+genLinks(#portstatus{ioport=Port,iostate=_Status,maskstate="SET"})->
 	LinkSet=[reset(Port),clear(Port)],
 	LinkSet;
 
-genLinks(PS=#portstatus{ioport=Port,iostate=Status,maskstate="CLEAR"})->
+genLinks(#portstatus{ioport=Port,iostate=_Status,maskstate="CLEAR"})->
 	LinkSet=[reset(Port),set(Port)],
 	LinkSet;
 
@@ -181,7 +181,7 @@ unack()->
 %% utility routines
 %%==================
 
-mkObj(L=#link{href=HRef,rel=Rel})->
+mkObj(#link{href=HRef,rel=Rel})->
 	mkObj([{href,HRef},{rel,Rel}]);	
 
 mkObj(KVList) when is_list(KVList)->

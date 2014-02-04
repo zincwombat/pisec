@@ -31,13 +31,13 @@ mkRec(Port) when is_integer(Port),
 mkRec(_)->
 	{error,badarg}.
 
-isSet(PortNum,PortRec=#portRec{port=P})->
+isSet(PortNum,#portRec{port=P})->
 	isSet(PortNum,P);
 
 isSet(PortNum,P)->
 	(P band (1 bsl (PortNum-1)) > 0).
 
-portVal(PortNum,PortRec=#portRec{port=P})->
+portVal(PortNum,#portRec{port=P})->
         portVal(PortNum,P);
 
 portVal(PortNum,P)->
@@ -86,12 +86,12 @@ i_notifySet([],_,_,Changes)->
 	Changes.
 
 
-notify(PR=#portRec{port=Port})->
+notify(#portRec{port=Port})->
 	notify(Port,?MASKS).
 
 notify(Port,Masks) when is_list(Masks)->
 	lists:map(fun(Z)->notify(Port,Z) end,Masks); 
 
-notify(Port,{Mask,Num})->
+notify(Port,{_Mask,Num})->
 	?info({notify,{Num,isSet(Num,Port)}}).
 

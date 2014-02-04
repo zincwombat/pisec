@@ -48,7 +48,7 @@ getConf()->
 			[]
 		end;
 	E={error,_Error}->
-		?error({failed_to_read_ports,E}),
+		?critical({failed_to_read_ports,E}),
 		[]
 	end.
 

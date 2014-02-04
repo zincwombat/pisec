@@ -16,7 +16,12 @@
 -behaviour(gen_event).
 
 %%% SASL API
--export([init/1, handle_event/2, handle_call/2, handle_info/2, terminate/2]).
+-export([init/1, 
+	 handle_event/2, 
+	 handle_call/2, 
+	 handle_info/2, 
+	 code_change/3,
+	 terminate/2]).
 
 init([]) ->
 	{ok, []}.
@@ -30,11 +35,14 @@ handle_event(Event, State) ->
 handle_info({emulator,GL,Chars},State)->
 	handle_event({emulator,GL,Chars},State);
 
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
 	{ok, State}.
 
 handle_call(_Query, _State) -> 
 	{error, bad_query}.
+
+code_change(_OldVsn,State,_Extra)->
+	{ok,State}.
 
 terminate(_Reason, _State) ->
 	ok.
@@ -53,7 +61,7 @@ eventType(Event)->
         {_T,_Pid,{_OPid,crash_report,_Detail}}->
                 sasl_crash;
 
-        {error,_Pid,{_OPid,ErrorFormat,ErrorInfo}}->
+        {error,_Pid,{_OPid,_ErrorFormat,_ErrorInfo}}->
                 erlang_error;
 
         {info_report,_GL,{_OPid,_Type,_Info}}->
@@ -62,10 +70,10 @@ eventType(Event)->
         {_T,_Pid,{_OPid,Type,_Detail}}->
                 Type;
 
-        {emulator,GL,Detail}->
+        {emulator,_GL,_Detail}->
                 erlang_emulator_error;
 
-        Other->
+        _Other->
                 unknown
         end.
 

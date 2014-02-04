@@ -160,12 +160,12 @@ handle_call(_Msg,_,State) ->
 %% trace/2, dbug/2, info/2, warn/2, critical/2 which is a gen_server:cast
 %% operation
 
-handle_cast(M={log,Level,Module,Message},State=#state{only=Module})->
+handle_cast({log,Level,Module,Message},State=#state{only=Module})->
 	%% we are only interested in messages from module Module
 	handle_log(Level,Module,Message,State),
         {noreply,State};
 
-handle_cast(M={log,Level,Module,Message},State=#state{only=[]})->
+handle_cast({log,Level,Module,Message},State=#state{only=[]})->
 	%% all messages are being handled
 	handle_log(Level,Module,Message,State),
         {noreply,State};

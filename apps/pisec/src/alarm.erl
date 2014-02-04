@@ -112,7 +112,6 @@ init(InitState)->
 %% STATE ENGINE for SYNC calls
 %%=====================================================================================
 i_sync(State,StateData)->
-	{NextState,NextStateData}=
 	case catch(dispatcher:getActive()) of
         E={'EXIT',_Reason}->
                 ?warn({dispatcher_failed,E}),
@@ -174,10 +173,10 @@ i_scan(State,StateData)->
 addToSet(L) when is_list(L)->
 	lists:foldl(fun(Z,Set)->addToSet(Z,Set) end, sets:new(), L).
 
-addToSet(#portstatus{ioport=Port,iostate=State},AS)->
+addToSet(#portstatus{ioport=Port},AS)->
 	addToSet({port,Port},AS);
 
-addToSet(P={port,Port},AS)->
+addToSet(P={port,_Port},AS)->
 	sets:add_element(P,AS).
 	
 handle_sync_event(disarm,_From,StateName,StateData=#state{}) when StateName /= 'DISARMED'->
@@ -258,17 +257,17 @@ handle_sync_event(active,_From,State,StateData=#state{active_alarms=AA})->
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
 	{reply,?error({unhandled,Event}),StateName,StateData}.
 
-handle_event(Event=disarm,StateName,StateData=#state{})->
+handle_event(_Event=disarm,StateName,StateData=#state{})->
 	?info({alarmstate,{from,StateName},{to,'DISARMED'}}),
 	{next_state,'DISARMED',StateData};
 
-handle_event(Event={stop,Reason},StateName,StateData=#state{})->
+handle_event(_Event={stop,Reason},_StateName,StateData=#state{})->
 	{stop,Reason,StateData};
 
-handle_event(Event,StateName,StateData)->
+handle_event(_Event,StateName,StateData)->
 	{next_state,StateName,StateData}.
 
-handle_info(Event={timeout,_TRef,M={tm_sync,InitState}},'SYNC',StateData)->
+handle_info(_Event={timeout,_TRef,M={tm_sync,InitState}},'SYNC',StateData)->
         %% timer has fired, trigger a scan so that the system can
         %% (1) populate the active_alarm set
 	%% (2) exercise the FSM to decide the next state
@@ -280,7 +279,7 @@ handle_info(Event,State,StateData)->
 	?info({ignored_info,Event}),
 	{next_state,State,StateData}.
 
-terminate(Reason,StateName,StateData)->
+terminate(Reason,_StateName,_StateData)->
 	{stop,Reason}.
 
 code_change(_OldVsn,StateName,StateData,_Extra)->
@@ -292,20 +291,20 @@ buildPortStatusResponse(PortMaskList,PortStatusList)->
 combine(PS=#portstatus{ioport=I},#portmask{ioport=I,maskstate=M})->
 	PS#portstatus{maskstate=M}.
 
-portFilter(Status,PS=#portstatus{iostate=Status})->
+portFilter(Status,#portstatus{iostate=Status})->
 	true;
 
 portFilter(_,_)->
 	false.
 
-handle_alarm(N={notify,AS={P={port,Port},{state,AlarmState}}},StateData=#state{active_alarms=AA})->
+handle_alarm(N={notify,{P={port,_Port},{state,AlarmState}}},StateData=#state{active_alarms=AA})->
 	NAA=
 	case AlarmState of
 	'ACTIVE'->
 		sets:add_element(P,AA);
 	'CLEAR'->
 		sets:del_element(P,AA);
-	Other->
+	_Other->
 		?warn({unhandled,N}),
 		AA
 	end,
@@ -314,7 +313,7 @@ handle_alarm(N={notify,AS={P={port,Port},{state,AlarmState}}},StateData=#state{a
 
 %% STATE CALLBACKS
 
-'DISARMED'(Event={notify,{{port,Port},{state,AlarmState}}},StateData=#state{active_alarms=AA})->
+'DISARMED'(Event={notify,{{port,_Port},{state,_AlarmState}}},StateData)->
 	?info({{event,Event},{state,'DISARMED'}}),
 	NewStateData=handle_alarm(Event,StateData),
 	{next_state,'DISARMED',NewStateData};
@@ -327,11 +326,7 @@ handle_alarm(N={notify,AS={P={port,Port},{state,AlarmState}}},StateData=#state{a
 	?info({{ignored_event,Event},{state,'SYNC'}}),
 	{next_state,'SYNC',StateData}.
 
-'ARMING'(Event,StateData)->
-	?info({{event,Event},{state,'ARMING'}}),
-	{next_state,'ARMING',StateData}.
-
-'ACK'(Event={notify,{{port,Port},{state,AlarmState}}},StateData)->
+'ACK'(Event={notify,{{port,_Port},{state,_AlarmState}}},StateData)->
 	?info({{event,Event},{state,'ACK'}}),
 	NewStateData=handle_alarm(Event,StateData),
 	{next_state,'ACK',NewStateData};
@@ -340,7 +335,7 @@ handle_alarm(N={notify,AS={P={port,Port},{state,AlarmState}}},StateData=#state{a
 	?info({{event,Event},{state,'ACK'}}),
 	{next_state,'ACK',StateData}.
 
-'CLEAR'(Event={notify,{{port,Port},{state,'ACTIVE'}}},StateData)->
+'CLEAR'(Event={notify,{{port,_Port},{state,'ACTIVE'}}},StateData)->
 	?info({{event,Event},{state,'CLEAR'}}),
 	NewStateData=handle_alarm(Event,StateData),
 	{next_state,'ACTIVE',NewStateData};
@@ -349,7 +344,7 @@ handle_alarm(N={notify,AS={P={port,Port},{state,AlarmState}}},StateData=#state{a
 	?info({{event,Event},{state,'CLEAR'}}),
 	{next_state,'CLEAR',StateData}.
 
-'ACTIVE'(Event={notify,{{port,Port},{state,AlarmState}}},StateData)->
+'ACTIVE'(Event={notify,{{port,_Port},{state,_AlarmState}}},StateData)->
 	?info({{event,Event},{state,'ACTIVE'}}),
 	NewStateData=handle_alarm(Event,StateData),
 	{next_state,'ACTIVE',NewStateData};
