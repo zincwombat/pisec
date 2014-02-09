@@ -4,5 +4,4 @@
 -export([read_input/0]).
 
 read_input()->
-	%%random:uniform(255).
-	114.
+	random:uniform(255).

@@ -30,28 +30,13 @@ start(Args)->
 stop()->
 	exit(whereis(?MODULE),shutdown).
 
-	
-
 %% ===================================================================
 %% Supervisor callbacks
 %% ===================================================================
+
 init(Args) ->
-	SetMask=
-	case config:get(setmask) of
-	undefined->
-		config:set(setmask,0),
-		0;
-	S->
-		S
-	end,
-	ClearMask=
-	case config:get(clearmask) of
-	undefined->
-		config:set(clearmask,0),
-		0;
-	C->
-		C	
-	end,
+	SetMask=config:get(setmask,0),
+	ClearMask=config:get(clearmask,0),
 	AC=#alarmconf{setmask=SetMask,clearmask=ClearMask},
 	AlarmConf=
 	case lists:keysearch(simulator,1,Args) of
@@ -61,18 +46,16 @@ init(Args) ->
 		_->
 			AC
 	end,
+
+	
+	OutputManager=?CHILD(output_manager,worker,[]),
 	Scanner=?CHILD(scanner,worker,[AlarmConf]),
 	Dispatcher=?CHILD(dispatcher_sup,supervisor),
-	InitState=
-	case config:get(initstate) of
-	undefined->
-		config:set(initstate,'DISARMED'),
-		'DISARMED';
-	AState->
-		AState
-	end,
+
+	InitState=config:get(initstate,'DISARMED'),
+
 	Alarm=?CHILD(alarm,worker,[InitState]),
-	Cs=[Alarm,Scanner,Dispatcher],
+	Cs=[Alarm,Scanner,Dispatcher,OutputManager],
 	?info({starting,Cs}),
 	{ok,{{one_for_all,5,10},Cs}}.
 

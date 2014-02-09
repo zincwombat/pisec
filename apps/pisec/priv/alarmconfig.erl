@@ -8,3 +8,4 @@
 	{7,"Sensor 7",disabled,0},
 	{8,"Sensor 8",disabled,0}
 ]}.
+{port_handler_history_size,	20}.

@@ -22,16 +22,15 @@
 	notify/1,
 	notify/2,
 	pstate/1,
-	sync/2,
-	fsync/2
+	sync/2
 ]).
 
--export(['WAIT_SYNC'/2,
-	 'ACTIVE'/2,
-	 'CLEAR'/2,
-	 'FORCE_ACTIVE'/2,
-	 'FORCE_CLEAR'/2,
-	 'DISABLED'/2]).
+-export([
+	'WAIT_SYNC'/2,
+	'ACTIVE'/2,
+	'CLEAR'/2,
+	'DISABLED'/2
+]).
 
 -define(START_OPTIONS,  []).
 -define(SERVERNAME,     ?MODULE).
@@ -43,7 +42,8 @@
 
 -record(state,{	port,
 		assertLevel,
-		desc
+		desc,
+		history
 		}).
 
 start({Port,Desc,disabled,AssertLevel})->
@@ -106,55 +106,32 @@ reset(Port)->
 pstate(Port)->
 	gen_fsm:sync_send_all_state_event(Port,pstate).
 
-fsync(Level,Port)->
-	gen_fsm:sync_send_all_state_event(Port,{fsync,{level,Level}}).
+log(Event,#state{history=H})->
+	log(Event,H);
 
+log(Event,Queue)->
+	aqueue:add({Event,iso8601:format(erlang:now())},Queue).
 
 init([{Port,Desc,InitState,AssertLevel,_Pid},_])->
 	?tracelevel(?TRACE_LEVEL),
-	State=#state{},
 	?info({started,{port,Port},{desc,Desc},{initState,InitState}}),
 	process_flag(trap_exit,true),
 	dispatcher:subscribe(Port,self()),
 	dispatcher:sync(Port),
-	?info({calling_notify}),
 	alarm:notify(Port,InitState),
-	{ok,InitState,State#state{port=Port,desc=Desc,assertLevel=AssertLevel}}.
+	HistorySize=config:get(port_handler_history_size,?DEFAULT_PORTHANDLER_HISTORY),
+	LogMessage="(INIT) NULL->" ++ atom_to_list(InitState),
+	Q=log(LogMessage,aqueue:new(HistorySize)),
+	{ok,InitState,#state{port=Port,desc=Desc,assertLevel=AssertLevel,history=Q}}.
 
-handle_sync_event(Event=pstate,_From,StateName,StateData=#state{port=Port,desc=Desc})->
+handle_sync_event(Event=pstate,_From,StateName,StateData=#state{port=Port,desc=Desc,history=H})->
 	?dbug({handle_sync_event,{port,Port},{event,Event},{state,StateName},{stateData,StateData}}),
-	PS=#portstatus{ioport=Port,pid=self(),description=Desc,iostate=atom_to_list(StateName)},
+	PS=#portstatus{	ioport=Port,
+			pid=self(),
+			description=Desc,
+			iostate=atom_to_list(StateName),
+			log=aqueue:dump(H)},
 	{reply,PS,StateName,StateData};
-
-%%'CLEAR'(Event={level,Level},StateData=#state{port=Port,assertLevel=Level})->
-
-handle_sync_event(Event={fsync,{level,Level}},_From,StateName,StateData=#state{port=Port,assertLevel=Level})->
-	%% alarm active
-	NextState=
-	case StateName of
-	'CLEAR'->
-		'ACTIVE';
-	_Other->
-		StateName
-	end,
-	%%?info({calling_notify}),
-	alarm:notify(Port,NextState),
-	?info({handle_sync_event,{port,Port},{event,Event},{state,StateName},{stateData,StateData}}),
-	{reply,NextState,NextState,StateData};
-
-handle_sync_event(Event={fsync,{level,_Level}},_From,StateName,StateData=#state{port=Port,assertLevel=_Level})->
-	%% alarm CLEAR
-	NextState=
-	case StateName of
-	'ACTIVE'->
-		'CLEAR';
-	_Other->
-		StateName
-	end,
-	%%?info({calling_notify}),
-	alarm:notify(Port,NextState),
-	?info({handle_sync_event,{port,Port},{event,Event},{state,StateName},{stateData,StateData}}),
-	{reply,NextState,NextState,StateData};
 
 handle_sync_event(Event,_From,StateName,StateData=#state{port=Port})->
 	?info({handle_sync_event,{port,Port},{event,Event},{state,StateName},{stateData,StateData}}),
@@ -164,41 +141,22 @@ handle_event(Event={stop,Reason},StateName,StateData=#state{port=Port})->
 	?info({handle_event,{port,Port},{event,Event},{state,StateName},{stateData,StateData}}),
 	{stop,Reason,StateData};
 
-handle_event(Event=disable,StateName,StateData=#state{port=Port})->
+handle_event(Event=disable,StateName,StateData=#state{port=Port,history=Q})->
 	?info({state_change,{port,Port},{event,Event},{from,StateName},{to,'DISABLED'}}),
 	?info({calling_notify}),
+	%% TODO -- log in fifo
 	alarm:notify(Port,'DISABLED'),
-	{next_state,'DISABLED',StateData};
+	LogMessage="(DISABLE) " ++ atom_to_list(StateName) ++ "->DISABLED",
+	{next_state,'DISABLED',StateData#state{history=log(LogMessage,Q)}};
 
-handle_event(Event=enable,StateName='DISABLED',StateData=#state{port=Port})->
+handle_event(Event=enable,StateName='DISABLED',StateData=#state{port=Port,history=Q})->
 	?info({state_change,{port,Port},{event,Event},{from,StateName},{to,'WAIT_SYNC'}}),
 	?info({calling_notify}),
+	%% TODO -- log in fifo
 	alarm:notify(Port,'WAIT_SYNC'),
 	dispatcher:sync(Port),
-	{next_state,'WAIT_SYNC',StateData};
-
-%% SET override
-handle_event(Event=set,StateName,StateData=#state{port=Port}) when StateName /= 'FORCE_ACTIVE'->
-	?info({state_change,{port,Port},{event,Event},{from,StateName},{to,'FORCE_ACTIVE'}}),
-	?info({calling_notify}),
-	alarm:notify(Port,'FORCE_ACTIVE'),
-	{next_state,'FORCE_ACTIVE',StateData};
-
-%% CLEAR override
-handle_event(Event=clear,StateName,StateData=#state{port=Port}) when StateName /= 'FORCE_CLEAR'->
-	?info({state_change,{port,Port},{event,Event},{from,StateName},{to,'FORCE_CLEAR'}}),
-	?info({calling_notify}),
-	alarm:notify(Port,'FORCE_CLEAR'),
-	{next_state,'FORCE_CLEAR',StateData};
-
-%% RESET override
-handle_event(Event=reset,StateName,StateData=#state{port=Port}) when StateName == 'FORCE_CLEAR';
-								     StateName == 'FORCE_ACTIVE'->
-	?info({state_change,{port,Port},{event,Event},{from,StateName},{to,'WAIT_SYNC'}}),
-	dispatcher:sync(Port),
-	?info({calling_notify}),
-	alarm:notify(Port,'WAIT_SYNC'),
-	{next_state,'WAIT_SYNC',StateData};
+	LogMessage="(ENABLE) DISABLED->WAIT_SYNC",
+	{next_state,'WAIT_SYNC',StateData#state{history=log(LogMessage,Q)}};
 
 handle_event(Event,StateName,StateData=#state{port=Port})->
 	?dbug({handle_event,{port,Port},{event,Event},{state,StateName},{stateData,StateData}}),
@@ -221,56 +179,59 @@ code_change(_OldVsn,StateName,StateData,_Extra)->
 
 %% STATE CALLBACKS
 
-'WAIT_SYNC'(Event={sync,Level},StateData=#state{port=Port,assertLevel=Level})->
+'WAIT_SYNC'(Event={sync,Level},StateData=#state{port=Port,assertLevel=Level,history=Q})->
 	?info({state_change,{port,Port},{event,Event},{from,'WAIT_SYNC'},{to,'ACTIVE'}}),
 	?info({calling_notify}),
+	%% TODO -- log in fifo
 	alarm:notify(Port,'ACTIVE'),
-	{next_state,'ACTIVE',StateData};
+	LogMessage="(SYNC " ++ integer_to_list(Level) ++ ") WAIT_SYNC->ACTIVE",
+	{next_state,'ACTIVE',StateData#state{history=log(LogMessage,Q)}};
 
-'WAIT_SYNC'(Event={sync,_Level},StateData=#state{port=Port})->
+'WAIT_SYNC'(Event={sync,Level},StateData=#state{port=Port,history=Q})->
 	?info({state_change,{port,Port},{event,Event},{from,'WAIT_SYNC'},{to,'CLEAR'}}),
 	?info({calling_notify}),
+	%% TODO -- log in fifo
 	alarm:notify(Port,'CLEAR'),
-	{next_state,'CLEAR',StateData};
+	LogMessage="(SYNC " ++ integer_to_list(Level) ++ ") WAIT_SYNC->CLEAR",
+	{next_state,'CLEAR',StateData#state{history=log(LogMessage,Q)}};
 
 'WAIT_SYNC'(Event,StateData=#state{port=Port})->
 	?info({unhandled,{port,Port},{event,Event},{state,'WAIT_SYNC'}}),
 	{next_state,'WAIT_SYNC',StateData}.
 
-'DISABLED'(Event,StateData=#state{port=Port})->
-	?info({unhandled,{port,Port},{event,Event},{state,'FORCE_CLEAR'}}),
-	{next_state,'DISABLED',StateData}.
-
-'ACTIVE'(Event={level,Level},StateData=#state{port=Port,assertLevel=Level})->
+'ACTIVE'(Event={level,Level},StateData=#state{port=Port,assertLevel=Level,history=Q})->
 	?info({{port,Port},{event,Event},{state,'ACTIVE'}}),
 	?info({calling_notify}),
+	%% TODO -- log in fifo
 	alarm:notify(Port,'ACTIVE'),
-	{next_state,'ACTIVE',StateData};
+	LogMessage="(SYNC " ++ integer_to_list(Level) ++ ") ACTIVE->ACTIVE",
+	{next_state,'ACTIVE',StateData#state{history=log(LogMessage,Q)}};
 
-'ACTIVE'(Event={level,_Level},StateData=#state{port=Port})->
+'ACTIVE'(Event={level,Level},StateData=#state{port=Port,history=Q})->
 	?info({state_change,{port,Port},{event,Event},{from,'ACTIVE'},{to,'CLEAR'}}),
 	?info({"calling alarm:notify()",{port,Port},'CLEAR'}),
+	%% TODO -- log in fifo
 	alarm:notify(Port,'CLEAR'),
-	{next_state,'CLEAR',StateData};
+	LogMessage="(SYNC " ++ integer_to_list(Level) ++ ") ACTIVE->CLEAR",
+	{next_state,'CLEAR',StateData#state{history=log(LogMessage,Q)}};
 
 'ACTIVE'(Event,StateData=#state{port=Port})->
 	?info({unhandled,{port,Port},{event,Event},{state,'ACTIVE'}}),
 	{next_state,'ACTIVE',StateData}.
 
-'FORCE_ACTIVE'(Event,StateData=#state{port=Port})->
-	?info({unhandled,{port,Port},{event,Event},{state,'FORCE_ACTIVE'}}),
-	{next_state,'FORCE_ACTIVE',StateData}.
 
-'FORCE_CLEAR'(Event,StateData=#state{port=Port})->
-	?info({unhandled,{port,Port},{event,Event},{state,'FORCE_CLEAR'}}),
-	{next_state,'FORCE_CLEAR',StateData}.
-
-'CLEAR'(Event={level,Level},StateData=#state{port=Port,assertLevel=Level})->
+'CLEAR'(Event={level,Level},StateData=#state{port=Port,assertLevel=Level,history=Q})->
 	?info({state_change,{port,Port},{event,Event},{from,'CLEAR'},{to,'ACTIVE'}}),
 	?info({calling_notify}),
+	%% TODO -- log in fifo
 	alarm:notify(Port,'ACTIVE'),
-	{next_state,'ACTIVE',StateData};
+	LogMessage="(SYNC " ++ integer_to_list(Level) ++ ") CLEAR->ACTIVE",
+	{next_state,'ACTIVE',StateData#state{history=log(LogMessage,Q)}};
 
 'CLEAR'(Event,StateData=#state{port=Port})->
 	?info({unhandled,{port,Port},{event,Event},{state,'CLEAR'}}),
 	{next_state,'CLEAR',StateData}.
+
+'DISABLED'(Event,StateData=#state{port=Port})->
+        ?info({unhandled,{port,Port},{event,Event},{state,'DISABLED'}}),
+        {next_state,'DISABLED',StateData}.

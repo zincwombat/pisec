@@ -36,13 +36,12 @@
 ]).
 
 -export([
-		'DISARMED'/2,
-		'CLEAR'/2,
-		'ACTIVE'/2,
-		'ACK'/2,
-		'SYNC'/2
-	]
-).
+	'DISARMED'/2,
+	'CLEAR'/2,
+	'ACTIVE'/2,
+	'ACK'/2,
+	'SYNC'/2
+]).
 
 -define(START_OPTIONS,  []).
 -define(SERVERNAME,     ?MODULE).
@@ -51,11 +50,12 @@
 %% STATE DATA =================================================================
 
 -record(state,{	
-		tm_arming,
-		tm_alerting,
-		tm_sync,
-		active_alarms
-		}).
+	tm_arming,
+	tm_alerting,
+	tm_sync,
+	active_set,
+	active_count
+	}).
 
 start(InitState)->
 	gen_fsm:start_link({local,?MODULE},?MODULE,InitState,[]).
@@ -102,31 +102,34 @@ active()->
 init(InitState)->
 	?tracelevel(?TRACE_LEVEL),
 	?info({startup_state,InitState}),
-	StateData=#state{active_alarms=sets:new()},
+	StateData=#state{active_set=sets:new(),active_count=0},
 	process_flag(trap_exit,true),
-	%%i_init(InitState,StateData).
 	{NextState,NextStateData}=i_sync(InitState,StateData),
 	{ok,NextState,NextStateData}.
 
 %%=====================================================================================
 %% STATE ENGINE for SYNC calls
 %%=====================================================================================
-i_sync(State,StateData)->
+i_sync(State,StateData=#state{active_count=ActiveCount})->
 	case catch(dispatcher:getActive()) of
         E={'EXIT',_Reason}->
+		%% dispatcher has not yet started, so set a timer and try again
+		%% after the timer fires
+
                 ?warn({dispatcher_failed,E}),
                 ?info({starting_timer,{timer,tm_sync},{interval,?ALARMING_INTERVAL}}),
                 TRef=erlang:start_timer(?SYNC_INTERVAL,self(),{tm_sync,State}),
                 {'SYNC',StateData#state{tm_sync=TRef}};
 
 	[] when State=='ACTIVE'->
-		{'CLEAR',StateData#state{active_alarms=sets:new()}};
+		{'CLEAR',StateData#state{active_set=sets:new(),active_count=0}};
 
 	[] when State=='ACK'->
-		{'CLEAR',StateData#state{active_alarms=sets:new()}};
+		{'CLEAR',StateData#state{active_set=sets:new(),active_count=0}};
 
 	[] when State=='CLEAR'->
-		{'CLEAR',StateData#state{active_alarms=sets:new()}};
+		{'CLEAR',StateData#state{active_set=sets:new(),active_count=0}};
+
 
         ActiveAlarms-> 
 		ActiveSet=addToSet(ActiveAlarms),
@@ -142,33 +145,14 @@ i_sync(State,StateData)->
 		Other->
 			Other
 		end,
-
-		{NextState2,StateData#state{tm_sync=undefined,active_alarms=ActiveSet}}
+		{NextState2,StateData#state{tm_sync=undefined,
+					    active_set=ActiveSet,
+					    active_count=sets:size(ActiveSet)}}
         end.
 
 
 i_scan(State,StateData)->
 	i_sync(State,StateData).
-
-%%	{NewState,NewStateData}=
-%%	case dispatcher:getActive() of
-%%        []->
-%%                {'CLEAR',StateData#state{tm_arming=undefined,active_alarms=sets:new()}};
-%%
-%%        ActiveAlarms->
-%%		ActiveSet=addToSet(ActiveAlarms),
-%%
-%%		NextState=
-%%		case State of
-%%			'CLEAR'->
-%%				'ACTIVE';
-%%
-%%		Other->
-%%			Other
-%%		end,
-%%                {NextState,StateData#state{tm_sync=undefined,active_alarms=ActiveSet}}
-%%        end,
-%%	{NewState,NewStateData}.
 
 addToSet(L) when is_list(L)->
 	lists:foldl(fun(Z,Set)->addToSet(Z,Set) end, sets:new(), L).
@@ -178,49 +162,54 @@ addToSet(#portstatus{ioport=Port},AS)->
 
 addToSet(P={port,_Port},AS)->
 	sets:add_element(P,AS).
-	
+
 handle_sync_event(disarm,_From,StateName,StateData=#state{}) when StateName /= 'DISARMED'->
+	%% TODO -- log this
 	config:set(initstate,'DISARMED'),
 	?info({state,'DISARMED'}),
 	{reply,{ok,'DISARMED'},'DISARMED',StateData};
 
-handle_sync_event(arm,_From,'DISARMED',StateData=#state{active_alarms=AA})->
+handle_sync_event(arm,_From,'DISARMED',StateData=#state{active_set=AA})->
+	%% TODO -- log this
 	config:set(initstate,'ARMED'),
 	NextState=
-	case sets:size(AA) of
-	0->
+	case (sets:size(AA)==0) of
+	true->
 		'CLEAR';
-	_->
+	false->
 		'ACTIVE'
 	end,
 	{reply,{ok,NextState},NextState,StateData};
 
-handle_sync_event(unack,_From,'ACK',StateData=#state{active_alarms=AA})->
+handle_sync_event(unack,_From,'ACK',StateData=#state{active_set=AA})->
+	%% TODO -- log this
 	NextState=
-	case sets:size(AA) of
-	0->
+	case (sets:size(AA)==0) of
+	true->
 		'CLEAR';
-	_->
+	false->
 		'ACTIVE'
 	end,
 	{reply,{ok,NextState},NextState,StateData};
 
-handle_sync_event(ack,_From,'ACTIVE',StateData=#state{active_alarms=AA})->
+handle_sync_event(ack,_From,'ACTIVE',StateData=#state{active_set=AA})->
+	%% TODO -- log this
 	NextState=
-	case sets:size(AA) of
-	0->
+	case (sets:size(AA)==0) of
+	true->
 		'CLEAR';
-	_->
+	false->
 		'ACK'
 	end,
 	{reply,{ok,NextState},NextState,StateData};
 
-handle_sync_event(ack,_From,'ACK',StateData=#state{active_alarms=AA})->
+handle_sync_event(ack,_From,'ACK',StateData=#state{active_set=AA})->
+	%% TODO -- log this
 	NextState=
-	case sets:size(AA) of
-	0->
+	case (sets:size(AA)==0) of
+	true->
 		'CLEAR';
-	_->
+	false->
 		'ACK'
 	end,
 	{reply,{ok,NextState},NextState,StateData};
@@ -251,15 +240,11 @@ handle_sync_event({portstate,Port},_From,State,StateData) when ?IN_RANGE(Port)->
 	PortState=combine(PS,PM),
 	{reply,PortState,State,StateData};
 
-handle_sync_event(active,_From,State,StateData=#state{active_alarms=AA})->
+handle_sync_event(active,_From,State,StateData=#state{active_set=AA})->
 	{reply,sets:to_list(AA),State,StateData};
 		
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
 	{reply,?error({unhandled,Event}),StateName,StateData}.
-
-handle_event(_Event=disarm,StateName,StateData=#state{})->
-	?info({alarmstate,{from,StateName},{to,'DISARMED'}}),
-	{next_state,'DISARMED',StateData};
 
 handle_event(_Event={stop,Reason},_StateName,StateData=#state{})->
 	{stop,Reason,StateData};
@@ -297,18 +282,20 @@ portFilter(Status,#portstatus{iostate=Status})->
 portFilter(_,_)->
 	false.
 
-handle_alarm(N={notify,{P={port,_Port},{state,AlarmState}}},StateData=#state{active_alarms=AA})->
-	NAA=
-	case AlarmState of
+handle_alarm(N={notify,{P={port,_Port},{state,PortState}}},StateData=#state{active_set=ActiveSet,
+									    active_count=ActiveCount})->
+	{NewActiveCount,NewActiveSet}=
+	case PortState of
 	'ACTIVE'->
-		sets:add_element(P,AA);
+		{ActiveCount+1,sets:add_element(P,ActiveSet)};
 	'CLEAR'->
-		sets:del_element(P,AA);
+		{ActiveCount-1,sets:del_element(P,ActiveSet)};
 	_Other->
 		?warn({unhandled,N}),
-		AA
+		{ActiveCount,ActiveSet}
 	end,
-	StateData#state{active_alarms=NAA}.
+	StateData#state{active_set=NewActiveSet,
+			active_count=NewActiveCount}.
 
 
 %% STATE CALLBACKS
@@ -336,6 +323,7 @@ handle_alarm(N={notify,{P={port,_Port},{state,AlarmState}}},StateData=#state{act
 	{next_state,'ACK',StateData}.
 
 'CLEAR'(Event={notify,{{port,_Port},{state,'ACTIVE'}}},StateData)->
+	%% TODO -- Log this
 	?info({{event,Event},{state,'CLEAR'}}),
 	NewStateData=handle_alarm(Event,StateData),
 	{next_state,'ACTIVE',NewStateData};
@@ -345,6 +333,7 @@ handle_alarm(N={notify,{P={port,_Port},{state,AlarmState}}},StateData=#state{act
 	{next_state,'CLEAR',StateData}.
 
 'ACTIVE'(Event={notify,{{port,_Port},{state,_AlarmState}}},StateData)->
+	%% TODO -- Log this
 	?info({{event,Event},{state,'ACTIVE'}}),
 	NewStateData=handle_alarm(Event,StateData),
 	{next_state,'ACTIVE',NewStateData};

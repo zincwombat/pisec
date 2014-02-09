@@ -1,4 +1,8 @@
- 
+# =============================================================================
+# Define some variables to access 2 different source files depending on the
+# architecture
+# =============================================================================
+
 REBAR_CONFIG_X86=rebar.config.x86
 RELEASE_CONFIG_X86=reltool.config.x86
 REBAR_CONFIG_PI=rebar.config.pi
@@ -9,6 +13,7 @@ SYSCONFIG_X86=sys.config.x86
 # =============================================================================
 # Verify that the programs we need to run are installed on this system
 # =============================================================================
+
 ERL = $(shell which erl)
 ifeq ($(ERL),)
 $(error "Erlang not available on this system")
@@ -37,7 +42,7 @@ SYS_CONFIG=$(SYSCONFIG_PI)
 endif 
 
  
-.PHONY: all compile clean shell update-deps 
+.PHONY: all compile clean shell update-deps setup deps release
  
 all: 		deps compile 
 

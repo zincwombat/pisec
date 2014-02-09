@@ -18,8 +18,6 @@
 -export([
 	 state/0,
 	 restartHandler/1,
-	 fsync/0,
-	 fsync/1,
 	 sync/1,
 	 enable/0,
 	 disable/0,
@@ -51,12 +49,6 @@ restartHandler(Port)->
 
 pstate()->
 	gen_server:call(?MODULE,pstate).
-
-fsync()->
-	gen_server:call(?MODULE,fsync).
-
-fsync(Port)->
-	gen_server:call(?MODULE,{fsync,{port,Port}}).
 
 sync(Port)->
 	gen_server:cast(?MODULE,{sync,Port}).
@@ -166,18 +158,6 @@ handle_call({subscribe,Port,Pid},_From,State=#state{ptab=PTab})->
 	end,
 	{reply,ok,State};
 
-handle_call(fsync,_From,State=#state{ptab=PTab})->
-	Ports=ets:tab2list(PTab),
-	{ok,Inputs}=scanner:readPorts(),
-	Reply=lists:map(fun(Z)->handle_fsync(Z,Inputs) end,Ports),
-	{reply,{ok,Reply},State};
-
-handle_call({fsync,{port,Port}},_From,State=#state{ptab=PTab})->
-	PL=ets:lookup(PTab,Port),
-	{ok,Inputs}=scanner:readPorts(),
-	Reply=lists:map(fun(Z)->handle_fsync(Z,Inputs) end,PL),
-	{reply,{ok,Reply},State};
-
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
@@ -259,13 +239,6 @@ broadcast(Cmd,IOList) when is_list(IOList)->
 
 broadcast(_Cmd,Badarg)->
 	{error,{badarg,Badarg}}.
-
-handle_fsync({Port,Pid},Inputs)->
-	?info({handle_fsync,{Port,Pid,Inputs}}),
-	Level=ioutils:portVal(Port,Inputs),
-	io_handler:fsync(Level,Pid),
-	?info("return from io_handler:fsync()"),
-	ok.
 
 handle_sync(Inputs,Port,Pid)->	
 	Level=ioutils:portVal(Port,Inputs),

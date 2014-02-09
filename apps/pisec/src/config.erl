@@ -5,6 +5,8 @@
          stop/0]).
 
 -include("debug.hrl").
+-include("alarm.hrl").
+
 -define(DFILE,	"config/config.dets").
 
 -export([init/1,
@@ -18,6 +20,7 @@
 		state/0,
 		get/0,
 		get/1,
+		get/2,
 		delete/1,
 		set/1,
 		set/2
@@ -40,14 +43,46 @@ init([])->
 	?tracelevel(?TRACE_LEVEL),
 	DArgs=[{file,?DFILE}],
 	{ok,config}=dets:open_file(config,DArgs),
-	{ok,State#state{ctab=config}}.
+	merge_config(config,State).
+
+merge_config(Config,State)->
+	%% merge the values in the configuration file
+
+	ConfigFile=code:priv_dir(?APPNAME) ++ "/" ++ ?ALARMCONFIG,
+
+        case file:consult(ConfigFile) of
+        {ok,KVL}->
+		lists:map(fun(Z)->i_merge(Z,Config) end,KVL),
+		{ok,State#state{ctab=config}};
+
+        E={error,_Error}->
+                ?critical({failed_to_open_file,E}),
+                {stop,{config_file,{file,ConfigFile},E}}
+        end.
+
+i_merge(KV={Key,Value},Config)->
+	case dets:lookup(Config,Key) of
+	[{Key,Value}]->
+		ok;
+	[{Key,_DifferentValue}]->
+		ok;
+	[]->
+		dets:insert(Config,KV);
+	E={error,_Reason}->
+		E;
+	_->
+		ignored
+	end.
+	
 
 get()->
 	gen_server:call(?MODULE,get).
 
-
 get(Key)->
-	gen_server:call(?MODULE,{get,Key}).
+	get(Key,undefined).
+
+get(Key,Default)->
+	gen_server:call(?MODULE,{get,Key,Default}).
 
 delete(Key)->
 	gen_server:call(?MODULE,{delete,Key}).
@@ -69,11 +104,11 @@ handle_call(get,_From,State=#state{ctab=CTab})->
 	dets:traverse(CTab,fun(X) -> io:format("~p~n", [X]), continue end),
 	{reply,ok,State};
 
-handle_call({get,Key},_From,State=#state{ctab=CTab})->
+handle_call({get,Key,Default},_From,State=#state{ctab=CTab})->
 	Reply=
 	case dets:lookup(CTab,Key) of
 	[]->
-		undefined;
+		Default;
 	[{Key,Value}]->
 		Value
 	end,	

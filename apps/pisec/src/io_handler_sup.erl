@@ -3,7 +3,6 @@
 -include("debug.hrl").
 -include("alarm.hrl").
 
--define(ALARMCONFIG,"alarmconfig.erl").
 
 -export([start/0,
 	 stop/0]).
@@ -33,25 +32,15 @@ children(Ports) when is_list(Ports)->
 	lists:map(fun(Z)->?CHILD(io_handler,Z,worker) end,Ports).
 
 getConf()->
-	%% note that ALARMCONFIG is in the priv directory
 
-	AlarmConfigFile=code:priv_dir(?APPNAME) ++ "/" ++ ?ALARMCONFIG,
-
-	case file:consult(AlarmConfigFile) of
-	{ok,Config}->
-		case lists:keyfind(ports,1,Config) of
-		{ports,Ports}->
-			?info({configured_ports,Ports}),
-			EnabledPorts=lists:filter(fun(Z)->element(3,Z)/=inactive end,Ports),
-			children(EnabledPorts);
-		false->
-			[]
-		end;
-	E={error,_Error}->
-		?critical({failed_to_read_ports,E}),
-		[]
+	case config:get(ports) of
+	undefined->
+		[];
+	Ports when is_list(Ports)->
+		EnabledPorts=lists:filter(fun(Z)->element(3,Z)/=inactive end,Ports),
+		children(EnabledPorts)
 	end.
-
+	
 ports()->
 	ports(getConf()).
 

@@ -1,6 +1,8 @@
 -define(APPNAME,			"pisec").
+-define(ALARMCONFIG,			"alarmconfig.erl").
 -define(SIMULATOR_SCAN_INTERVAL,	50).
 -define(DEFAULT_SCAN_INTERVAL,		50).
+-define(DEFAULT_PORTHANDLER_HISTORY,	10).
 -define(MIN_PORT,			1).
 -define(MAX_PORT,			8).
 -define(IN_RANGE(X),			((X >= ?MIN_PORT) andalso (X =< ?MAX_PORT))).
@@ -8,7 +10,7 @@
 					 {content, "application/json", PAYLOAD}]).
 -define(JSON(PAYLOAD),			[{content, "application/json", PAYLOAD}]).
 
--record(portstatus,	{ioport,pid,description,iostate,maskstate}).
+-record(portstatus,	{ioport,pid,description,iostate,maskstate,log}).
 -record(portmask,	{ioport,maskstate}).
 -record(alarmconf,	{alarmstate,setmask,clearmask,simulator=false}).
 -record(alarmstatus,	{alarmstate,portfilter,portstate=[]}).
