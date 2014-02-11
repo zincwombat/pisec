@@ -70,7 +70,7 @@ handle_cast(Msg,State)->
 handle_info(T={timeout,_TRef,scan},State=#state{scan_interval=Interval})->
 	?info(T),
 	TRef=erlang:start_timer(Interval,self(),scan),
-        {noreply,State#state{tref=TRef}};
+        {noreply,State#state{tref=TRef,ports=random:uniform(255)}};
 
 handle_info(Msg,State)->
 	?warn({unhandled_info,{msg,Msg}}),
