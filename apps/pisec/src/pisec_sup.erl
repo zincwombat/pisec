@@ -36,10 +36,9 @@ stop()->
 %% ===================================================================
 init(Args) ->
 	Scanner=?CHILD(scanner_sup,supervisor,Args),
-	Kernel=?CHILD(esn_kernel_sup,supervisor),
 	Yaws=?CHILD(pisec_yaws_sup,supervisor),
 	Config=?CHILD(config,worker),
-	Cs=[Kernel,Config,Yaws,Scanner],
+	Cs=[Config,Yaws,Scanner],
 	?info({starting,Cs}),
 	{ok,{{one_for_one,5,10},Cs}}.
 
@@ -58,5 +57,3 @@ restart()->
 		?info({starting_child,scannr_sup}),
 		supervisor:restart_child(?MODULE,scanner_sup)
 	end.
-
-	

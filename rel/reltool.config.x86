@@ -9,6 +9,8 @@
          kernel,
          stdlib,
          sasl,
+	 esn_kernel,
+	 piface_sim,
          pisec
         ]},
        {rel, "start_clean", "",
@@ -24,6 +26,8 @@
                            "^erts.*/bin/(dialyzer|typer)",
                            "^erts.*/(doc|info|include|lib|man|src)"]},
        {excl_app_filters, ["\.gitignore"]},
+       {app, esn_kernel, [{mod_cond, app}, {incl_cond, include}, {lib_dir, "../apps/esn_kernel"}]},
+       {app, piface_sim, [{mod_cond, app}, {incl_cond, include}, {lib_dir, "../apps/piface_sim"}]},
        {app, pisec, [{mod_cond, app}, {incl_cond, include}, {lib_dir, "../apps/pisec"}]},
        {app, rfc4627_jsonrpc, [{mod_cond, app}, {incl_cond, include}, {lib_dir, "../deps/rfc4627_jsonrpc"}]},
        {app, yaws, [{mod_cond, app}, {incl_cond, include}, {lib_dir, "../deps/yaws"}]}

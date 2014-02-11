@@ -11,6 +11,7 @@
          sasl,
 	 gpio,
 	 spi,
+	 esn_kernel,
 	 piface,
          pisec
         ]},
@@ -27,6 +28,7 @@
                            "^erts.*/bin/(dialyzer|typer)",
                            "^erts.*/(doc|info|include|lib|man|src)"]},
        {excl_app_filters, ["\.gitignore"]},
+       {app, esn_kernel, [{mod_cond, app}, {incl_cond, include}, {lib_dir, "../apps/esn_kernel"}]},
        {app, pisec, [{mod_cond, app}, {incl_cond, include}, {lib_dir, "../apps/pisec"}]},
        {app, rfc4627_jsonrpc, [{mod_cond, app}, {incl_cond, include}, {lib_dir, "../deps/rfc4627_jsonrpc"}]},
        {app, gpio, [{mod_cond, app}, {incl_cond, include}, {lib_dir, "../deps/gpio"}]},

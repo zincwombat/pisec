@@ -264,7 +264,7 @@ handle_inputs(Inputs,State)->
 
 setSimulatorState(true,State=#state{simulator=false,interval=_Interval})->
 	?warn("**** activating SIMULATOR ****"),
-	Scanner=fun()->piface_sim:read_input() end,
+	Scanner=fun()->piface_simulator:read_input() end,
 	State#state{simulator=true,interval=?SIMULATOR_SCAN_INTERVAL,scanner=Scanner};
 
 setSimulatorState(false,State=#state{simulator=true,interval=_Interval})->

@@ -1,5 +1,7 @@
 {sub_dirs, [
+		"apps/esn_kernel",
 		"apps/pisec",
+		"apps/piface_sim",
 		"rel"
            ]}.
 {erl_opts, [debug_info,
