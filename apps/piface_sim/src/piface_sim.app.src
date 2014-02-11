@@ -1,0 +1,12 @@
+{application, piface_sim,
+ [
+  {description, "Raspberry Pi Piface Simulator"},
+  {vsn, "1.0.0"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { piface_sim_app, []}},
+  {env, []}
+ ]}.

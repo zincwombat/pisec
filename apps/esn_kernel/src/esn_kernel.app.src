@@ -1,0 +1,12 @@
+{application, esn_kernel,
+ [
+  {description, "ESN Kernel Application"},
+  {vsn, "1.0.0"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { esn_kernel_app, []}},
+  {env, []}
+ ]}.
