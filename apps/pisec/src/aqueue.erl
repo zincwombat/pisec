@@ -46,7 +46,7 @@ fsmFmtLogMessage(CurrentState,Event,NextState)->
         list_to_binary(S).
 
 log(Event,Queue={_L,_Max,_R,_F})->
-	add({Event,iso8601:format(erlang:now())},Queue).
+	add({Event,iso8601:format(calendar:local_time())},Queue).
 
 logFsm(CurrentState,Event,NextState,Queue)->
 	MEvent=fsmFmtLogMessage(CurrentState,Event,NextState),

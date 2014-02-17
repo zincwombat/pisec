@@ -10,7 +10,7 @@
 
 
 meta(#arg{})->
-	TimeStamp=iso8601:format(now()),
+	TimeStamp=iso8601:format(calendar:local_time()),
 	%%Headers=Arg#arg.headers,
 	%%UA=Headers#headers.user_agent,
 	%%QueryData=Arg#arg.querydata,
