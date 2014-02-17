@@ -9,13 +9,16 @@ empty({_L,Max,_R,_F})->
 	{0,Max,[],[]}.                                      
 
 dump({_L,_M,[],F})->
-	F;
+	%% F;
+	lists:reverse(F);
 
 dump({_L,_M,R,[]})->
-	lists:reverse(R);
+	%% lists:reverse(R);
+	R;
 
 dump({_L,_M,R,F})->
-	lists:append(F,lists:reverse(R)).
+	%%lists:append(F,lists:reverse(R)).
+	lists:append(lists:reverse(F),R).
 
 take({L,M,R,[H|T]})->
 	{H,{L-1,M,R,T}};
@@ -31,3 +34,21 @@ add(E, {M,M,R,[H|T]})->
 
 add(E, {M,M,R,[]})->
 	add(E, {M,M,[],lists:reverse(R)}).              %Move the rear to the front
+
+%% message handling and formatting functions
+
+fsmFmtLogMessage(CurrentState,Event,NextState) when is_list(Event)->
+        S=io_lib:format("[~s] :: ~s -> [~s]",[CurrentState,Event,NextState]),
+        list_to_binary(S);
+
+fsmFmtLogMessage(CurrentState,Event,NextState)->
+        S=io_lib:format("[~s] :: ~p -> [~s]",[CurrentState,Event,NextState]),
+        list_to_binary(S).
+
+log(Event,Queue={_L,_Max,_R,_F})->
+	add({Event,iso8601:format(erlang:now())},Queue).
+
+logFsm(CurrentState,Event,NextState,Queue)->
+	MEvent=fsmFmtLogMessage(CurrentState,Event,NextState),
+	log(MEvent,Queue).
+	

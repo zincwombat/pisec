@@ -22,6 +22,7 @@
 	state/1,	%% return all alarms in given state
 	portstate/1,	%% return the particular portstate
 	masks/0,
+	history/0,
 	notify/2	%% client notifies of state change
 ]).
 
@@ -54,8 +55,9 @@
 	tm_alerting,
 	tm_sync,
 	active_set,
-	active_count
-	}).
+	active_count,
+	history
+}).
 
 start(InitState)->
 	gen_fsm:start_link({local,?MODULE},?MODULE,InitState,[]).
@@ -87,6 +89,9 @@ scan()->
 state()->
 	gen_fsm:sync_send_all_state_event(?MODULE,state).
 
+history()->
+	gen_fsm:sync_send_all_state_event(?MODULE,history).
+
 state(AlarmState)->
 	gen_fsm:sync_send_all_state_event(?MODULE,{state,AlarmState}).
 
@@ -99,18 +104,25 @@ masks()->
 active()->
 	gen_fsm:sync_send_all_state_event(?MODULE,active).
 
+
 init(InitState)->
 	?tracelevel(?TRACE_LEVEL),
 	?info({startup_state,InitState}),
-	StateData=#state{active_set=sets:new(),active_count=0},
 	process_flag(trap_exit,true),
+	HistorySize=config:get(alarm_handler_history_size,?DEFAULT_ALARMHANDLER_HISTORY),
+	Queue=aqueue:new(HistorySize),
+
+        NewQueue=aqueue:logFsm(InitState,"init",'SYNC',Queue),
+	StateData=#state{active_set=sets:new(),active_count=0,history=NewQueue},
+
 	{NextState,NextStateData}=i_sync(InitState,StateData),
 	{ok,NextState,NextStateData}.
 
 %%=====================================================================================
 %% STATE ENGINE for SYNC calls
 %%=====================================================================================
-i_sync(State,StateData=#state{active_count=ActiveCount})->
+i_sync(State,StateData=#state{active_count=ActiveCount,history=Queue})->
+	{Event,NextState,NextStateData}=
 	case catch(dispatcher:getActive()) of
         E={'EXIT',_Reason}->
 		%% dispatcher has not yet started, so set a timer and try again
@@ -119,16 +131,16 @@ i_sync(State,StateData=#state{active_count=ActiveCount})->
                 ?warn({dispatcher_failed,E}),
                 ?info({starting_timer,{timer,tm_sync},{interval,?ALARMING_INTERVAL}}),
                 TRef=erlang:start_timer(?SYNC_INTERVAL,self(),{tm_sync,State}),
-                {'SYNC',StateData#state{tm_sync=TRef}};
+		{{sync,not_ready},'SYNC',StateData#state{tm_sync=TRef}};
 
 	[] when State=='ACTIVE'->
-		{'CLEAR',StateData#state{active_set=sets:new(),active_count=0}};
+		{{sync,no_active_alarms},'CLEAR',StateData#state{active_set=sets:new(),active_count=0}};
 
 	[] when State=='ACK'->
-		{'CLEAR',StateData#state{active_set=sets:new(),active_count=0}};
+		{{sync,no_active_alarms},'CLEAR',StateData#state{active_set=sets:new(),active_count=0}};
 
 	[] when State=='CLEAR'->
-		{'CLEAR',StateData#state{active_set=sets:new(),active_count=0}};
+		{{sync,no_active_alarms},'CLEAR',StateData#state{active_set=sets:new(),active_count=0}};
 
 
         ActiveAlarms-> 
@@ -145,10 +157,12 @@ i_sync(State,StateData=#state{active_count=ActiveCount})->
 		Other->
 			Other
 		end,
-		{NextState2,StateData#state{tm_sync=undefined,
-					    active_set=ActiveSet,
-					    active_count=sets:size(ActiveSet)}}
-        end.
+		{{sync,active_alarms},NextState2,StateData#state{active_set=ActiveSet,active_count=sets:size(ActiveSet)}}
+        end,
+
+        NewQueue=aqueue:logFsm(State,Event,NextState,Queue),
+	
+	{NextState,NextStateData#state{history=NewQueue}}.
 
 
 i_scan(State,StateData)->
@@ -163,14 +177,13 @@ addToSet(#portstatus{ioport=Port},AS)->
 addToSet(P={port,_Port},AS)->
 	sets:add_element(P,AS).
 
-handle_sync_event(disarm,_From,StateName,StateData=#state{}) when StateName /= 'DISARMED'->
-	%% TODO -- log this
+handle_sync_event(Event=disarm,_From,StateName,StateData=#state{history=Queue}) when StateName /= 'DISARMED'->
 	config:set(initstate,'DISARMED'),
 	?info({state,'DISARMED'}),
-	{reply,{ok,'DISARMED'},'DISARMED',StateData};
+        NewQueue=aqueue:logFsm(StateName,Event,'DISARM',Queue),
+	{reply,{ok,'DISARMED'},'DISARMED',StateData#state{history=NewQueue}};
 
-handle_sync_event(arm,_From,'DISARMED',StateData=#state{active_set=AA})->
-	%% TODO -- log this
+handle_sync_event(Event=arm,_From,StateName='DISARMED',StateData=#state{active_set=AA,history=Queue})->
 	config:set(initstate,'ARMED'),
 	NextState=
 	case (sets:size(AA)==0) of
@@ -179,10 +192,10 @@ handle_sync_event(arm,_From,'DISARMED',StateData=#state{active_set=AA})->
 	false->
 		'ACTIVE'
 	end,
-	{reply,{ok,NextState},NextState,StateData};
+        NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
+	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
-handle_sync_event(unack,_From,'ACK',StateData=#state{active_set=AA})->
-	%% TODO -- log this
+handle_sync_event(Event=unack,_From,StateName='ACK',StateData=#state{active_set=AA,history=Queue})->
 	NextState=
 	case (sets:size(AA)==0) of
 	true->
@@ -190,10 +203,10 @@ handle_sync_event(unack,_From,'ACK',StateData=#state{active_set=AA})->
 	false->
 		'ACTIVE'
 	end,
-	{reply,{ok,NextState},NextState,StateData};
+        NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
+	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
-handle_sync_event(ack,_From,'ACTIVE',StateData=#state{active_set=AA})->
-	%% TODO -- log this
+handle_sync_event(Event=ack,_From,StateName='ACTIVE',StateData=#state{active_set=AA,history=Queue})->
 	NextState=
 	case (sets:size(AA)==0) of
 	true->
@@ -201,10 +214,10 @@ handle_sync_event(ack,_From,'ACTIVE',StateData=#state{active_set=AA})->
 	false->
 		'ACK'
 	end,
-	{reply,{ok,NextState},NextState,StateData};
+        NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
+	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
-handle_sync_event(ack,_From,'ACK',StateData=#state{active_set=AA})->
-	%% TODO -- log this
+handle_sync_event(Event=ack,_From,StateName='ACK',StateData=#state{active_set=AA,history=Queue})->
 	NextState=
 	case (sets:size(AA)==0) of
 	true->
@@ -212,19 +225,26 @@ handle_sync_event(ack,_From,'ACK',StateData=#state{active_set=AA})->
 	false->
 		'ACK'
 	end,
-	{reply,{ok,NextState},NextState,StateData};
+        NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
+	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
 handle_sync_event(scan,_From,State,StateData=#state{})->
 	dispatcher:fsync(),
 	{NextState,NewStateData}=i_scan(State,StateData),
 	{reply,{ok,NextState},NextState,NewStateData};
 
-handle_sync_event(state,_From,State,StateData=#state{})->
+handle_sync_event(state,_From,State,StateData=#state{history=H})->
 	PM=scanner:getMasks(),
 	PS=lists:sort(dispatcher:pstate()),
 	MS=buildPortStatusResponse(PM,PS),
-	AS=#alarmstatus{alarmstate=atom_to_list(State),portfilter="ALL",portstate=MS},
+	AS=#alarmstatus{alarmstate=atom_to_list(State),
+			portfilter="ALL",
+			portstate=MS,
+			log=aqueue:dump(H)},
 	{reply,AS,State,StateData};
+
+handle_sync_event(history,_From,State,StateData=#state{history=H})->
+	{reply,aqueue:dump(H),State,StateData};
 
 handle_sync_event({state,AlarmState},_From,State,StateData=#state{})->
 	PM=scanner:getMasks(),
@@ -322,21 +342,21 @@ handle_alarm(N={notify,{P={port,_Port},{state,PortState}}},StateData=#state{acti
 	?info({{event,Event},{state,'ACK'}}),
 	{next_state,'ACK',StateData}.
 
-'CLEAR'(Event={notify,{{port,_Port},{state,'ACTIVE'}}},StateData)->
-	%% TODO -- Log this
+'CLEAR'(Event={notify,{{port,_Port},{state,'ACTIVE'}}},StateData=#state{history=Queue})->
 	?info({{event,Event},{state,'CLEAR'}}),
 	NewStateData=handle_alarm(Event,StateData),
-	{next_state,'ACTIVE',NewStateData};
+        NewQueue=aqueue:logFsm('CLEAR',Event,'ACTIVE',Queue),
+	{next_state,'ACTIVE',NewStateData#state{history=NewQueue}};
 
 'CLEAR'(Event,StateData)->
 	?info({{event,Event},{state,'CLEAR'}}),
 	{next_state,'CLEAR',StateData}.
 
-'ACTIVE'(Event={notify,{{port,_Port},{state,_AlarmState}}},StateData)->
-	%% TODO -- Log this
+'ACTIVE'(Event={notify,{{port,_Port},{state,_AlarmState}}},StateData=#state{history=Queue})->
 	?info({{event,Event},{state,'ACTIVE'}}),
 	NewStateData=handle_alarm(Event,StateData),
-	{next_state,'ACTIVE',NewStateData};
+        NewQueue=aqueue:logFsm('ACTIVE',Event,'ACTIVE',Queue),
+	{next_state,'ACTIVE',NewStateData#state{history=NewQueue}};
 
 'ACTIVE'(Event,StateData)->
 	?info({{event,Event},{state,'ACTIVE'}}),
