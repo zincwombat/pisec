@@ -34,7 +34,11 @@ toJson(Meta,{error,{L={location,{module,_Module},{line,_Line}},{detail,E}}},_Lin
 toJson(Meta,{error,Reason},_Links)->
 	toJson(Meta,errorutils:mkError(500,500,Reason,"error tuple returned by backend"));
 
-toJson(Meta,#portstatus{ioport=IOPort,description=Desc,iostate=IOState,maskstate=MaskState},_Links)->
+toJson(Meta,#portstatus{ioport=IOPort,
+			description=Desc,
+			iostate=IOState,
+			maskstate=MaskState,
+			log=Queue},_Links)->
 	Port={obj,
 		[
 			{port,IOPort},
@@ -50,7 +54,11 @@ toJson(Meta,#portstatus{ioport=IOPort,description=Desc,iostate=IOState,maskstate
 	       {data,	PortData}]};
 
 
-toJson(Meta,A=#alarmstatus{alarmstate=AS,portfilter=PortFilter,portstate=PortStates},_Links)->
+toJson(Meta,A=#alarmstatus{
+			alarmstate=AS,
+			portfilter=PortFilter,
+			portstate=PortStates,
+			log=Queue},_Links)->
 
 	PortData=[{obj, 
 		[
@@ -58,6 +66,7 @@ toJson(Meta,A=#alarmstatus{alarmstate=AS,portfilter=PortFilter,portstate=PortSta
 	      		{description,  	?L2B(PS#portstatus.description)},
 	      		{state, 	?L2B(PS#portstatus.iostate)},
 	      		{mask,    	?L2B(PS#portstatus.maskstate)},
+			{history,	genQueue(PS#portstatus.log)},
 			{links,		genLinks(PS)}]}
 	    || PS <- PortStates],
 
@@ -67,6 +76,7 @@ toJson(Meta,A=#alarmstatus{alarmstate=AS,portfilter=PortFilter,portstate=PortSta
 	Alarm =     {obj,[{alarmstate,	?L2B(AS)},
                           {portfilter,	?L2B(PortFilter)},
                           {portstatus, 	PortData},
+			  {history,	genQueue(Queue)},
 			  {links,	genLinks(A)}]},
 
 	AlarmData = {obj, [{alarmdata,Alarm}]},
@@ -89,6 +99,14 @@ toJson(Meta,E=#error{},_Links)->
 
 	{obj,[{meta,MetaData},
 	      {data,ErrorData}]}.
+
+genQueue(Queue) when is_list(Queue)->
+	lists:map(fun(Z)->genQueue(Z) end, Queue);
+
+genQueue({TimeStamp,Message})->
+	{obj,	[{timestamp,TimeStamp},
+		 {message,Message}]}.
+	
 
 
 %%========================
