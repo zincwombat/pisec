@@ -9,3 +9,13 @@
 	{8,"Sensor 8",disabled,0}
 ]}.
 {port_handler_history_size,	20}.
+{outputs,[
+	{1,"Power LED",off},
+	{2,"Armed State LED",off},
+	{3,"Alarm Active LED",off},
+	{4,"Siren",off},
+	{5,"Output 5",off},
+	{6,"Output 6",off},
+	{7,"Output 7",off},
+	{8,"Output 8",off}
+]}.

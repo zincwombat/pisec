@@ -20,7 +20,8 @@
 	 get/1,
 	 set/1,
 	 clear/1,
-	 clear/0
+	 clear/0,
+	 flash/1
 	]).
 
 -record(state, {}).
@@ -34,14 +35,17 @@ stop()->
 state()->
 	gen_server:call(?MODULE,state).
 
-set(outputPort)->
-	gen_server:call(?MODULE,{set,outputPort}).
+set(OutputPort)->
+	gen_server:call(?MODULE,{set,OutputPort}).
 
-get(outputPort)->
-	gen_server:call(?MODULE,{get,outputPort}).
+get(OutputPort)->
+	gen_server:call(?MODULE,{get,OutputPort}).
 
-clear(outputPort)->
-	gen_server:call(?MODULE,{clear,outputPort}).
+clear(OutputPort)->
+	gen_server:call(?MODULE,{clear,OutputPort}).
+
+flash(OutputPort)->
+	gen_server:call(?MODULE,{flash,OutputPort}).
 
 clear()->
 	gen_server:call(?MODULE,clear).
@@ -51,7 +55,20 @@ init([])->
 	State=#state{},
 	?info({starting,{pid,self()}}),
 	process_flag(trap_exit,true),
+	OutputPorts=config:get(outputs),
+	lists:map(fun(Z)->i_handleOutput(Z) end,OutputPorts),
 	{ok,State#state{}}.
+
+i_handleOutput(O={PortNum,PortDescription,OnOff})->
+	case OnOff of
+	on->
+		?info(O);
+	off->
+		?info(O);
+	Other->
+		?error(Other)
+	end.
+	
 
 handle_call(stop,_from,State)->
 	{stop,normal,ok,State};
