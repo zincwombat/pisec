@@ -1,4 +1,5 @@
 -record(portRec,{port}).
--define(is_uint8(T), (((T) band (bnot 16#ff)) =:=  0)).
--define(is_uint16(T), (((T) band (bnot 16#ffff)) =:=  0)).
--define(is_uint32(T), (((T) band (bnot 16#ffffffff)) =:=  0)).
+-define(is_uint8(T), 	(((T) band (bnot 16#ff)) =:=  0)).
+-define(is_uint16(T), 	(((T) band (bnot 16#ffff)) =:=  0)).
+-define(is_uint32(T), 	(((T) band (bnot 16#ffffffff)) =:=  0)).
+-define(is_portnum(T),	(T >= 1) andalso (T =< 8)). 

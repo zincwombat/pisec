@@ -19,3 +19,6 @@
 	{7,"Output 7",off},
 	{8,"Output 8",off}
 ]}.
+{output_flash_slow,	1000}.
+{output_flash_normal,	500}.
+{output_flash_fast,	200}.

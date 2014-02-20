@@ -10,6 +10,9 @@
 -define(JSON(STATUS,PAYLOAD),		[{status,STATUS},
 					 {content, "application/json", PAYLOAD}]).
 -define(JSON(PAYLOAD),			[{content, "application/json", PAYLOAD}]).
+-define(FLASH_SLOW,			1000).
+-define(FLASH_NORMAL,			500).
+-define(FLASH_FAST,			200).
 
 -record(portstatus,	{ioport,pid,description,iostate,maskstate,log}).
 -record(portmask,	{ioport,maskstate}).
