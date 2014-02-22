@@ -42,7 +42,7 @@ SYS_CONFIG=$(SYSCONFIG_PI)
 endif 
 
  
-.PHONY: all compile clean shell update-deps setup deps release
+.PHONY: all compile clean shell update-deps setup deps release release_clean
  
 all: 		deps compile 
 

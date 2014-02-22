@@ -21,12 +21,18 @@
 	 set/1,
 	 clear/1,
 	 clear/0,
-	 flash/1
+	 flash/1,
+	 flash/2
 	]).
 
--record(state, {slow_tm_interval,
-		normal_tm_interval,
-		fast_tm_interval}).
+
+-record(state, {otab,
+		slow_tm_int,
+		normal_tm_int,
+		fast_tm_int,
+		slow_set=0,
+		normal_set=0,
+		fast_set=0}).
 
 start()->
 	gen_server:start_link({local,?MODULE},?MODULE,[],[]).
@@ -61,22 +67,36 @@ init([])->
 	?info({starting,{pid,self()}}),
 	process_flag(trap_exit,true),
 
+	%% this stores the flash state of each LED
+
+	OTab=ets:new(otab,[set,public,named_table]),
+
 	SlowFlash=config:get(output_flash_slow,?FLASH_SLOW),
 	NormalFlash=config:get(output_flash_normal,?FLASH_NORMAL),
 	FastFlash=config:get(output_flash_fast,?FLASH_FAST),
 
 	OutputPorts=config:get(outputs),
+
+	%% process the initial state of each output port
+
 	lists:map(fun(Z)->i_handleOutput(Z) end,OutputPorts),
 
-	erlang:start_timer(SlowFlash,self(),{tm,slow}),
-	erlang:start_timer(NormalFlash,self(),{tm,normal}),
-	erlang:start_timer(FastFlash,self(),{tm,fast}),
+	%% start the flash timers
+
+	T1=erlang:start_timer(SlowFlash,self(),{tm,slow}),
+	?info({slow_timer_started,{ref,T1},{int,SlowFlash}}),
+	T2=erlang:start_timer(NormalFlash,self(),{tm,normal}),
+	?info({normal_timer_started,{ref,T2},{int,NormalFlash}}),
+	T3=erlang:start_timer(FastFlash,self(),{tm,fast}),
+	?info({fast_timer_started,{ref,T3},{int,FastFlash}}),
 	
-	{ok,State#state{slow_tm_interval=SlowFlash,
-			normal_tm_interval=NormalFlash,
-			fast_tm_interval=FastFlash}}.
+	{ok,State#state{otab=OTab,
+			slow_tm_int=SlowFlash,
+			normal_tm_int=NormalFlash,
+			fast_tm_int=FastFlash}}.
 
 i_handleOutput(O={PortNum,PortDescription,OnOff})->
+	%% TODO 
 	case OnOff of
 	on->
 		?info(O);
@@ -85,6 +105,12 @@ i_handleOutput(O={PortNum,PortDescription,OnOff})->
 	Other->
 		?error(Other)
 	end.
+
+is(Speed,{_Port,Speed})->
+	true;
+
+is(_,_)->
+	false.
 	
 
 handle_call(stop,_from,State)->
@@ -99,48 +125,62 @@ handle_call({set,OutputPort},_From,State) when ?is_portnum(OutputPort)->
 	Reply=piface:write_output(NewOutputs),
 	{reply,Reply,State};
 
+handle_call(clear,_From,State)->
+	%% TODO - do we need to stop flash as well?
+	Reply=piface:write_output(0),
+	{reply,Reply,State};
+
 handle_call({clear,OutputPort},_From,State) when ?is_portnum(OutputPort)->
+	%% TODO - do we need to stop flash as well?
 	CurrentOutputs=piface:read_output(),
 	NewOutputs=CurrentOutputs band bnot (1 bsl (OutputPort-1)),
 	Reply=piface:write_output(NewOutputs),
 	{reply,Reply,State};
 
 handle_call({flash,OutputPort,Speed},_From,State) when ?is_portnum(OutputPort)->
-	{reply,ok,State};
+	%% TODO - check that a correct speed is used
+	ets:insert(State#state.otab,{OutputPort,Speed}),
+	TL=ets:tab2list(State#state.otab),
+	Fast=lists:filter(fun(Z)->is(fast,Z) end,TL),
+	Normal=lists:filter(fun(Z)->is(normal,Z) end,TL),
+	Slow=lists:filter(fun(Z)->is(slow,Z) end,TL),
+	{reply,{Slow,Normal,Fast},State#state{slow_set=buildMask(Slow),
+					      normal_set=buildMask(Normal),
+					      fast_set=buildMask(Fast)}};
 
 handle_call(Msg,From,State)->
 	?warn({unhandled_call,{msg,Msg},{from,From}}),
 	{reply,ignored,State}.
 
 handle_cast(Msg,State)->
-	?warn({unhandled_cast,{msg,Msg}}),
 	{noreply,State}.
 
-handle_info({timeout,_TRef,{tm,slow}},State=#state{slow_tm_interval=SlowFlash})->
-	%% to test, just toggle port 3 
+handle_info({timeout,_TRef,{tm,slow}},State=#state{slow_tm_int=Slow,slow_set=S})->
+
 	CurrentOutputs=piface:read_output(),
-	NewOutputs=CurrentOutputs bxor (1 bsl 3),
+	NewOutputs=CurrentOutputs bxor S,
 	Reply=piface:write_output(NewOutputs),
 
-	erlang:start_timer(SlowFlash,self(),{tm,slow}),
+	erlang:start_timer(Slow,self(),{tm,slow}),
 	{noreply,State};
 
-handle_info({timeout,_TRef,{tm,normal}},State=#state{normal_tm_interval=NormalFlash})->
-	%% to test, just toggle port 4 
+handle_info({timeout,_TRef,{tm,normal}},State=#state{normal_tm_int=Normal,normal_set=S})->
+
 	CurrentOutputs=piface:read_output(),
-	NewOutputs=CurrentOutputs bxor (1 bsl 4),
+	NewOutputs=CurrentOutputs bxor S,
 	Reply=piface:write_output(NewOutputs),
 
-	erlang:start_timer(NormalFlash,self(),{tm,normal}),
+	erlang:start_timer(Normal,self(),{tm,normal}),
 	{noreply,State};
 
-handle_info({timeout,_TRef,{tm,fast}},State=#state{fast_tm_interval=FastFlash})->
-	%% to test, just toggle port 5 
+handle_info({timeout,_TRef,{tm,fast}},State=#state{fast_tm_int=Fast,fast_set=S})->
+
 	CurrentOutputs=piface:read_output(),
-	NewOutputs=CurrentOutputs bxor (1 bsl 5),
+	NewOutputs=CurrentOutputs bxor S,
+	
 	Reply=piface:write_output(NewOutputs),
 
-	erlang:start_timer(FastFlash,self(),{tm,fast}),
+	erlang:start_timer(Fast,self(),{tm,fast}),
 	{noreply,State};
 
 handle_info({timeout,_TRef,{tm,Speed}},State=#state{})->
@@ -156,3 +196,10 @@ code_change(_OldVsn,Ctx,_Extra) ->
 terminate(Reason,_State)->
 	?info({terminating,Reason}),
 	ok.
+
+buildMask(S) when is_list(S)->
+	lists:foldl(fun(Z,Byte)->Byte bor (1 bsl (element(1,Z)-1)) end,0,S);
+
+buildMask(_)->
+	0.
+
