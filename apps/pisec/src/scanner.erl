@@ -109,7 +109,6 @@ init(AC=#alarmconf{setmask=SetMask,clearmask=ClearMask,simulator=Simulator})->
 	?info({starting,{pid,self()},{setmask,SetMask},{clearmask,ClearMask},{simulator,Simulator},{scan_interval,State#state.interval}}),
 
 	Inputs=(State#state.scanner)(),
-	%Inputs=Scanner(),
 	TRef=erlang:start_timer(State#state.interval,self(),scan),
 	{ok,State#state{inputs=Inputs,tref=TRef}}.
 
@@ -255,6 +254,7 @@ handle_inputs(Inputs,State=#state{inputs=Inputs})->
 
 handle_inputs(Inputs,State=#state{inputs=LastInputs,dispatcher=Pid}) when is_pid(Pid)->
 	?info({state_change,{new,ioutils:blist(Inputs)},{old,ioutils:blist(LastInputs)}}),
+	%% TODO -- split control inputs from alarm inputs
 	Pid ! {inputs,Inputs},
 	{ok,State#state{inputs=Inputs}};
 

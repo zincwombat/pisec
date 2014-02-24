@@ -67,6 +67,8 @@ init([])->
 	?info({starting,{pid,self()}}),
 	process_flag(trap_exit,true),
 
+	piface:write_output(0),
+
 	%% this stores the flash state of each LED
 
 	OTab=ets:new(otab,[set,public,named_table]),
@@ -84,27 +86,29 @@ init([])->
 	%% start the flash timers
 
 	T1=erlang:start_timer(SlowFlash,self(),{tm,slow}),
-	?info({slow_timer_started,{ref,T1},{int,SlowFlash}}),
 	T2=erlang:start_timer(NormalFlash,self(),{tm,normal}),
-	?info({normal_timer_started,{ref,T2},{int,NormalFlash}}),
 	T3=erlang:start_timer(FastFlash,self(),{tm,fast}),
-	?info({fast_timer_started,{ref,T3},{int,FastFlash}}),
 	
 	{ok,State#state{otab=OTab,
 			slow_tm_int=SlowFlash,
 			normal_tm_int=NormalFlash,
 			fast_tm_int=FastFlash}}.
 
-i_handleOutput(O={PortNum,PortDescription,OnOff})->
-	%% TODO 
-	case OnOff of
-	on->
-		?info(O);
-	off->
-		?info(O);
-	Other->
-		?error(Other)
-	end.
+i_handleOutput(O={PortNum,_PortDescription,on})->
+	i_setPort(PortNum);
+
+i_handleOutput(O={PortNum,_PortDescription,off})->
+	i_clearPort(PortNum).
+
+i_clearPort(PortNum)->
+	CurrentOutputs=piface:read_output(),
+	NewOutputs=CurrentOutputs band bnot (1 bsl (PortNum-1)),
+	Reply=piface:write_output(NewOutputs).
+
+i_setPort(PortNum)->
+	CurrentOutputs=piface:read_output(),
+	NewOutputs=CurrentOutputs bor (1 bsl (PortNum-1)),
+	Reply=piface:write_output(NewOutputs).
 
 is(Speed,{_Port,Speed})->
 	true;
@@ -126,24 +130,39 @@ handle_call({set,OutputPort},_From,State) when ?is_portnum(OutputPort)->
 	{reply,Reply,State};
 
 handle_call(clear,_From,State)->
-	%% TODO - do we need to stop flash as well?
+	ets:delete_all_objects(State#state.otab),
 	Reply=piface:write_output(0),
-	{reply,Reply,State};
+	{reply,Reply,State#state{slow_set=0,normal_set=0,fast_set=0}};
 
 handle_call({clear,OutputPort},_From,State) when ?is_portnum(OutputPort)->
-	%% TODO - do we need to stop flash as well?
-	CurrentOutputs=piface:read_output(),
-	NewOutputs=CurrentOutputs band bnot (1 bsl (OutputPort-1)),
-	Reply=piface:write_output(NewOutputs),
-	{reply,Reply,State};
+	i_clearPort(OutputPort),
+	ets:delete(State#state.otab,OutputPort),
+	TL=ets:tab2list(State#state.otab),
+	Fast=lists:filter(fun(Z)->is(fast,Z) end,TL),
+	Normal=lists:filter(fun(Z)->is(normal,Z) end,TL),
+	Slow=lists:filter(fun(Z)->is(slow,Z) end,TL),
+	{reply,{Slow,Normal,Fast},State#state{slow_set=buildMask(Slow),
+					      normal_set=buildMask(Normal),
+					      fast_set=buildMask(Fast)}};
 
-handle_call({flash,OutputPort,Speed},_From,State) when ?is_portnum(OutputPort)->
-	%% TODO - check that a correct speed is used
+handle_call({flash,OutputPort,off},_From,State) when ?is_portnum(OutputPort)->
+	ets:delete(State#state.otab,OutputPort),
+	TL=ets:tab2list(State#state.otab),
+	Fast=lists:filter(fun(Z)->is(fast,Z) end,TL),
+	Normal=lists:filter(fun(Z)->is(normal,Z) end,TL),
+	Slow=lists:filter(fun(Z)->is(slow,Z) end,TL),
+	i_clearPort(OutputPort),
+	{reply,{Slow,Normal,Fast},State#state{slow_set=buildMask(Slow),
+					      normal_set=buildMask(Normal),
+					      fast_set=buildMask(Fast)}};
+
+handle_call({flash,OutputPort,Speed},_From,State) when ?is_portnum(OutputPort),?is_speed(Speed)->
 	ets:insert(State#state.otab,{OutputPort,Speed}),
 	TL=ets:tab2list(State#state.otab),
 	Fast=lists:filter(fun(Z)->is(fast,Z) end,TL),
 	Normal=lists:filter(fun(Z)->is(normal,Z) end,TL),
 	Slow=lists:filter(fun(Z)->is(slow,Z) end,TL),
+	i_setPort(OutputPort),
 	{reply,{Slow,Normal,Fast},State#state{slow_set=buildMask(Slow),
 					      normal_set=buildMask(Normal),
 					      fast_set=buildMask(Fast)}};
