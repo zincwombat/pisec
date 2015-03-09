@@ -1,5 +1,4 @@
 {sub_dirs, [
-		"apps/esn_kernel",
 		"apps/pisec",
 		"rel"
            ]}.
