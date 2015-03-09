@@ -35,7 +35,14 @@ SYS_CONFIG=$(SYSCONFIG_X86)
 endif 
 
 ifeq ($(ARCHTYPE),armv6l)
-$(info "(Raspberry Pi (ARM) architecture detected) [$(ARCHTYPE)]")
+$(info "(Raspberry Pi (ARM6) architecture detected) [$(ARCHTYPE)]")
+REBAR_CONFIG=$(REBAR_CONFIG_PI)
+RELEASE_CONFIG=$(RELEASE_CONFIG_PI)
+SYS_CONFIG=$(SYSCONFIG_PI)
+endif 
+
+ifeq ($(ARCHTYPE),armv7l)
+$(info "(Raspberry Pi (ARM7) architecture detected) [$(ARCHTYPE)]")
 REBAR_CONFIG=$(REBAR_CONFIG_PI)
 RELEASE_CONFIG=$(RELEASE_CONFIG_PI)
 SYS_CONFIG=$(SYSCONFIG_PI)

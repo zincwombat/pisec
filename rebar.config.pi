@@ -7,7 +7,7 @@
 	    {i, "deps/yaws/include/"}
 	 ]}.
 {deps, [
-	{yaws, ".*", 		{git, "git://github.com/zincwombat/yaws", {branch, "master"}}},
+	{yaws,		".*", 	{git, "git://github.com/klacke/yaws.git", "master"}},
 	{gpio, ".*", 		{git, "git://github.com/Feuerlabs/gpio.git", {branch, "master"}}},
 	{spi, ".*", 		{git, "git://github.com/tonyrog/spi.git", {branch, "master"}}},
 	{piface, ".*", 		{git, "git://github.com/tonyrog/piface.git", {branch, "master"}}},
