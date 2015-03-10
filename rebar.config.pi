@@ -1,10 +1,5 @@
-{sub_dirs, [
-		"apps/pisec",
-		"rel"
-           ]}.
-{erl_opts, [debug_info,
-	    {i, "deps/yaws/include/"}
-	 ]}.
+{sub_dirs,	["deps","rel"]}.
+{erl_opts, [debug_info,{i, "deps/yaws/include/"}]}.
 {deps, [
 	{yaws,		".*", 	{git, "git://github.com/klacke/yaws.git", "master"}},
 	{gpio, ".*", 		{git, "git://github.com/Feuerlabs/gpio.git", {branch, "master"}}},
