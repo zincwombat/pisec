@@ -1,0 +1,19 @@
+RPI_EXTRA_DEPS=[
+			{gpio, ".*", 			{git, "git://github.com/Feuerlabs/gpio.git", {branch, "master"}}},
+			{spi, ".*", 			{git, "git://github.com/tonyrog/spi.git", {branch, "master"}}},
+			{piface, ".*", 			{git, "git://github.com/tonyrog/piface.git", {branch, "master"}}}
+],
+
+
+case os:getenv("RASPBERRYPI") of
+    "true" ->
+    	case lists:keysearch(deps, 1, CONFIG) of
+            {value, {deps, Deps}} ->
+                NDeps = Deps ++ RPI_EXTRA_DEPS,
+                lists:keyreplace(deps, 1, CONFIG, {deps, NDeps});
+            false ->
+                CONFIG ++ [{deps, RPI_EXTRA_DEPS}]
+        end;
+    _->
+    	CONFIG
+end.
