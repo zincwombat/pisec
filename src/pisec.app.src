@@ -5,8 +5,7 @@
   {registered, []},
   {applications, [
                   kernel,
-                  stdlib,
-		  esn_kernel
+                  stdlib
                  ]},
   {mod, { pisec_app, []}},
   {env, []}
