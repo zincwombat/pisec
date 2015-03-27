@@ -106,7 +106,6 @@ active()->
 
 
 init(InitState)->
-	?tracelevel(?TRACE_LEVEL),
 	?info({startup_state,InitState}),
 	process_flag(trap_exit,true),
 	HistorySize=config:get(alarm_handler_history_size,?DEFAULT_ALARMHANDLER_HISTORY),

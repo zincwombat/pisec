@@ -62,7 +62,6 @@ clear()->
 	gen_server:call(?MODULE,clear).
 
 init([])->
-	?tracelevel(?TRACE_LEVEL),
 	State=#state{},
 	?info({starting,{pid,self()}}),
 	process_flag(trap_exit,true),

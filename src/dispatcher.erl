@@ -87,7 +87,6 @@ io_handlers()->
 	gen_server:call(?MODULE,io_handlers).
 
 init([])->
-	?tracelevel(?TRACE_LEVEL),
 	State=#state{},
 	?info({starting,{pid,self()}}),
 	%% subscribe to the scanner

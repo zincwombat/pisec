@@ -107,7 +107,6 @@ pstate(Port)->
 	gen_fsm:sync_send_all_state_event(Port,pstate).
 
 init([{Port,Desc,InitState,AssertLevel,_Pid},_])->
-	?tracelevel(?TRACE_LEVEL),
 	?info({started,{port,Port},{desc,Desc},{initState,InitState}}),
 	process_flag(trap_exit,true),
 	dispatcher:subscribe(Port,self()),

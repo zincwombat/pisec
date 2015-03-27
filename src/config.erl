@@ -40,7 +40,6 @@ state() ->
 
 init([])->
 	State=#state{},
-	?tracelevel(?TRACE_LEVEL),
 	DArgs=[{file,?DFILE}],
 	{ok,config}=dets:open_file(config,DArgs),
 	merge_config(config,State).

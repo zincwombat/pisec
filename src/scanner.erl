@@ -30,7 +30,6 @@
 	 setDefaults/0]).
 
 
--define(DEBUG,false).
 
 -ifndef(INTERVAL).
 -define(INTERVAL,?DEFAULT_SCAN_INTERVAL).		%% 50 millisec = 20 Hz
@@ -103,7 +102,6 @@ subscribe()->
 
 init(AC=#alarmconf{setmask=SetMask,clearmask=ClearMask,simulator=Simulator})->
 	?info({init_args,AC}),
-	?tracelevel(?TRACE_LEVEL),
 
 	State=setSimulatorState(Simulator,#state{interval=?INTERVAL,debug=?DEBUG,setmask=SetMask,clearmask=ClearMask}),
 	?info({starting,{pid,self()},{setmask,SetMask},{clearmask,ClearMask},{simulator,Simulator},{scan_interval,State#state.interval}}),
