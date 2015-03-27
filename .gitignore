@@ -11,3 +11,4 @@ rel/pisec
 *.dets
 rel/files/sys.config
 rel/reltool.config
+*/.rebar
