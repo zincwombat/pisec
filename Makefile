@@ -9,6 +9,7 @@ REBAR_CONFIG_PI=rebar.config.pi
 RELEASE_CONFIG_PI=reltool.config.pi
 SYSCONFIG_PI=sys.config.pi
 SYSCONFIG_X86=sys.config.x86
+REBAR_OPTS= -vvv
  
 # =============================================================================
 # Verify that the programs we need to run are installed on this system
@@ -67,24 +68,24 @@ setup:
 
  
 deps:		setup
-		$(REBAR) get-deps
-		$(REBAR) compile
+		$(REBAR) $(REBAR_OPTS) get-deps
+		$(REBAR) $(REBAR_OPTS) compile
 
 release:	setup
-		$(REBAR) clean
-		$(REBAR) compile
-		$(REBAR) generate
+		$(REBAR) $(REBAR_OPTS) clean
+		$(REBAR) $(REBAR_OPTS) compile
+		$(REBAR) $(REBAR_OPTS) generate
  
 update-deps:	setup
-		$(REBAR) update-deps
-		$(REBAR) compile
+		$(REBAR) $(REBAR_OPTS) update-deps
+		$(REBAR) $(REBAR_OPTS) compile
  
 compile:	setup
-		$(REBAR) skip_deps=true compile
+		$(REBAR) $(REBAR_OPTS) skip_deps=true compile
  
  
 clean:
-		$(REBAR) skip_deps=true clean
+		$(REBAR) $(REBAR_OPTS) skip_deps=true clean
 
 clean-deps:
-		$(REBAR) clean
+		$(REBAR) $(REBAR_OPTS) clean
