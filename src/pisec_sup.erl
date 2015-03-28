@@ -38,7 +38,8 @@ init(Args) ->
 	Scanner=?CHILD(scanner_sup,supervisor,Args),
 	Yaws=?CHILD(pisec_yaws_sup,supervisor),
 	Config=?CHILD(config,worker),
-	Cs=[Config,Yaws,Scanner],
+	% Cs=[Config,Yaws,Scanner],
+	Cs=[Yaws],
 	?info({starting,Cs}),
 	{ok,{{one_for_one,5,10},Cs}}.
 
