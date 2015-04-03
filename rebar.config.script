@@ -1,6 +1,6 @@
 RPI_EXTRA_DEPS=[
 			{gpio, ".*", 			{git, "git://github.com/Feuerlabs/gpio.git", {branch, "master"}}},
-			{spi, ".*", 			{git, "git://github.com/tonyrog/spi.git", {branch, "master"}}},
+			{spi, ".*", 			{git, "git://github.com/zincwombat/spi.git", {branch, "master"}}},
 			{piface, ".*", 			{git, "git://github.com/zincwombat/piface.git", {branch, "master"}}}
 ],
 
