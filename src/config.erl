@@ -7,7 +7,6 @@
 -include("debug.hrl").
 -include("alarm.hrl").
 
--define(DFILE,	"config/config.dets").
 
 -export([init/1,
          handle_call/3,
@@ -40,7 +39,8 @@ state() ->
 
 init([])->
 	State=#state{},
-	DArgs=[{file,?DFILE}],
+	{ok,DETSFile}=application:get_env(?APPNAME,config),
+	DArgs=[{file,DETSFile}],
 	{ok,config}=dets:open_file(config,DArgs),
 	merge_config(config,State).
 
@@ -49,14 +49,14 @@ merge_config(Config,State)->
 
 	ConfigFile=code:priv_dir(?APPNAME) ++ "/" ++ ?ALARMCONFIG,
 
-        case file:consult(ConfigFile) of
+	case file:consult(ConfigFile) of
         {ok,KVL}->
-		lists:map(fun(Z)->i_merge(Z,Config) end,KVL),
-		{ok,State#state{ctab=config}};
+			lists:map(fun(Z)->i_merge(Z,Config) end,KVL),
+			{ok,State#state{ctab=config}};
 
         E={error,_Error}->
-                ?critical({failed_to_open_file,E}),
-                {stop,{config_file,{file,ConfigFile},E}}
+			?critical({failed_to_open_file,E}),
+			{stop,{config_file,{file,ConfigFile},E}}
         end.
 
 i_merge(KV={Key,Value},Config)->
