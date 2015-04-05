@@ -8,7 +8,7 @@
 -define(is_control(T),	(T >= 7) andalso (T =< 8)). 
 
 %% OUTPUT PORTS
--define(is_oport(T),	(T >= 1) andalso (T =< 8))
+-define(is_oport(T),	(T >= 1) andalso (T =< 8)).
 -define(is_relay(T),	(T >= 1) andalso (T =< 2)). 
 -define(is_led(T),		(T >= 3) andalso (T =< 8)). 
 
