@@ -12,7 +12,7 @@
 -define(is_relay(T),	(T >= 1) andalso (T =< 2)). 
 -define(is_led(T),		(T >= 3) andalso (T =< 8)). 
 
--define(is_cmd(T),		(T == on) orelse (T == off) orelse (T == flash))
+-define(is_cmd(T),		(T == on) orelse (T == off) orelse (T == flash)).
 
 -define(is_speed(T),	(T == fast) orelse (T == normal) orelse (T == slow) orelse (T == off)).
 
