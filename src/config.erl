@@ -47,7 +47,7 @@ init([])->
 merge_config(Config,State)->
 	%% merge the values in the configuration file
 
-	ConfigFile=code:priv_dir(atom_to_list(?APPNAME) ++ "/" ++ ?ALARMCONFIG,
+	ConfigFile=code:priv_dir(atom_to_list(?APPNAME)) ++ "/" ++ ?ALARMCONFIG,
 
 	case file:consult(ConfigFile) of
         {ok,KVL}->
