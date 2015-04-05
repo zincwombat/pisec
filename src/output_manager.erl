@@ -23,11 +23,14 @@
 	state/0,
 	get/1,
 	set/1,
+	cmd/2,
 	clear/1,
 	clear/0,
 	flash/1,
 	flash/2
 ]).
+
+-export ([siren/1]).
 
 
 -record(state, {
@@ -49,6 +52,16 @@ stop()->
 state()->
 	gen_server:call(?MODULE,state).
 
+cmd(on,OutputPort)->
+	set(OutputPort);
+
+cmd(off,OutputPort)->
+	clear(OutputPort);
+
+cmd(Other,_)->
+	{error,{badarg,Other}}.
+
+
 set(OutputPort)->
 	gen_server:call(?MODULE,{set,OutputPort}).
 
@@ -66,6 +79,24 @@ flash(OutputPort,Speed)->
 
 clear()->
 	gen_server:call(?MODULE,clear).
+
+
+%========================================================================================
+% Utility functions
+%========================================================================================
+
+siren(Control) when ?is_onoff(Control)->
+	Outputs=config:get(outputs),
+	case lists:keyfind(siren,2,Outputs) of
+		{Port,siren,_,_}->
+			cmd(Control,Port);
+
+		false->
+			{error,badarg}
+	end.
+
+siren(Control)->
+	{error,{badarg,Control}}.
 
 init([])->
 	State=#state{},
