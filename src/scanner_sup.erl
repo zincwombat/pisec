@@ -55,7 +55,8 @@ init(Args) ->
 	InitState=config:get(initstate,'DISARMED'),
 
 	Alarm=?CHILD(alarm,worker,[InitState]),
-	Cs=[Alarm,Scanner,Dispatcher,OutputManager],
+	% Cs=[Alarm,Scanner,Dispatcher,OutputManager],
+	Cs=[OutputManager],
 	?info({starting,Cs}),
 	{ok,{{one_for_all,5,10},Cs}}.
 
