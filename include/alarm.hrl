@@ -1,4 +1,4 @@
--define(APPNAME,						"pisec").
+-define(APPNAME,						pisec).
 -define(ALARMCONFIG,					"alarmconfig.erl").
 -define(SIMULATOR_SCAN_INTERVAL,		50).
 -define(DEFAULT_SCAN_INTERVAL,			50).

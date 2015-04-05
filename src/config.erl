@@ -47,11 +47,12 @@ init([])->
 merge_config(Config,State)->
 	%% merge the values in the configuration file
 
-	ConfigFile=code:priv_dir(?APPNAME) ++ "/" ++ ?ALARMCONFIG,
+	ConfigFile=code:priv_dir(atom_to_list(?APPNAME) ++ "/" ++ ?ALARMCONFIG,
 
 	case file:consult(ConfigFile) of
         {ok,KVL}->
 			lists:map(fun(Z)->i_merge(Z,Config) end,KVL),
+			?info({merged,ConfigFile}),
 			{ok,State#state{ctab=config}};
 
         E={error,_Error}->
@@ -86,7 +87,6 @@ get(Key,Default)->
 delete(Key)->
 	gen_server:call(?MODULE,{delete,Key}).
 	
-
 set(Key,Value)->
 	set({Key,Value}).
 
@@ -129,12 +129,12 @@ handle_call(Msg,From,State)->
 handle_cast(Msg,State)->
 	Unhandled={unhandled_cast,{msg,Msg}},
 	?warn(Unhandled),
-        {noreply,State}.
+	{noreply,State}.
 
 handle_info(Msg,State)->
 	Unhandled={unhandled_info,{msg,Msg}},
 	?warn(Unhandled),
-        {noreply,State}.
+	{noreply,State}.
 
 code_change(_OldVsn,Ctx,_Extra) ->
 	{ok,Ctx}.	
