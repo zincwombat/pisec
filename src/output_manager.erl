@@ -93,7 +93,7 @@ siren(Control) when ?is_onoff(Control)->
 
 		false->
 			{error,badarg}
-	end.
+	end;
 
 siren(Control)->
 	{error,{badarg,Control}}.
