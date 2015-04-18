@@ -1,10 +1,11 @@
 {ports,[
-	{3,"Front Door Sensor",enabled,0},
-	{4,"Rear Door Sensor",enabled,0},
-	{5,"Hallway PIR Sensor",enabled,0},
-	{6,"Living Room PIR Sensor",enabled,0},
-	{7,"Sensor 5",disabled,0},
-	{8,"Sensor 6",disabled,0}
+	% format, {portNum,LogDesc,enabled,AssertLevel}
+	{3,"Front Door Sensor",true,0},
+	{4,"Rear Door Sensor",true,0},
+	{5,"Hallway PIR Sensor",true,0},
+	{6,"Living Room PIR Sensor",true,0},
+	{7,"Sensor 5",false,0},
+	{8,"Sensor 6",false,0}
 ]}.
 {control,[
 	{1,"Alarm Enable",0},
