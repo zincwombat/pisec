@@ -27,7 +27,7 @@ state() ->
 init([X={Port,Desc,true,AssertLevel}])->
 	?info({pid,self(),{args,X}}),
 	State=#state{port=Port,desc=Desc,assertLevel=AssertLevel},
-	{ok,State};
+	{ok,State}.
 
 handle_call(stop,_From,State)->
 	{stop,normal,ok,State};
