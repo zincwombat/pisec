@@ -21,7 +21,7 @@ start({Port,Desc,true,AssertLevel}) ->
 stop(Pid) ->
 	gen_server:call(Pid,stop).
 
-state() ->
+state(Pid) ->
 	gen_server:call(Pid,state).
 
 init([X={Port,Desc,true,AssertLevel}])->
