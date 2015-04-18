@@ -28,7 +28,7 @@ stop()->
 
 
 children(Ports) when is_list(Ports)->
-	lists:map(fun(Z)->?CHILD(io_handler,Z,worker) end,Ports).
+	lists:map(fun(Z)->?CHILD(input_handler,Z,worker) end,Ports).
 
 getConf()->
 	case config:get(ports) of
