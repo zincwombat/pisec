@@ -5,7 +5,7 @@
 
 
 -export([start/0,
-	 stop/0]).
+	 	 stop/0]).
 
 -export([init/1]).
 -export([getConf/0]).
@@ -27,19 +27,23 @@ stop()->
 	exit(whereis(?MODULE),shutdown).
 
 
-
 children(Ports) when is_list(Ports)->
 	lists:map(fun(Z)->?CHILD(io_handler,Z,worker) end,Ports).
 
 getConf()->
-
 	case config:get(ports) of
 	undefined->
 		[];
 	Ports when is_list(Ports)->
-		EnabledPorts=lists:filter(fun(Z)->element(3,Z)/=inactive end,Ports),
+		EnabledPorts=lists:filter(fun(Z)->isEnabled(Z) end,Ports),
 		children(EnabledPorts)
 	end.
+
+isEnabled({_,_,true,_})->
+	true;
+
+isEnabled()->
+	false.
 	
 ports()->
 	ports(getConf()).
@@ -76,6 +80,7 @@ restart(Port) when is_atom(Port)->
 init([])->
 	%% {ok,{{one_for_one,5,10},children()}}.
 	Children=getConf(),
+	?info({children,Children}),
 	SSpec={ok,{{one_for_one,5,10},Children}},
 	?info({sspec,SSpec}),
 	SSpec.
