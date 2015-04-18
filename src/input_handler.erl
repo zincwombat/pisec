@@ -1,8 +1,8 @@
 -module(input_handler).
 -behaviour(gen_server).
 
--export([start/0,
-         stop/0]).
+-export([start/1,
+         stop/1]).
 
 -include("debug.hrl").
 
