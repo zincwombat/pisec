@@ -39,7 +39,7 @@ getConf()->
 		children(EnabledPorts)
 	end.
 
-isEnabled({_,_,true,_})->
+isEnabled({_,_,_,true,_})->
 	true;
 
 isEnabled(_)->

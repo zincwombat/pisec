@@ -13,10 +13,14 @@
          terminate/2,
          code_change/3]).
 
--record (state, {port,desc,assertLevel}).
+-record (state, {port,label,desc,assertLevel}).
 
-start({Port,Desc,true,AssertLevel}) ->
-	{ok,Pid}=gen_server:start_link(?MODULE,[{Port,Desc,true,AssertLevel}],[]).
+%==============================================================================
+% API
+%==============================================================================
+
+start({Port,Label,Desc,true,AssertLevel}) ->
+	{ok,Pid}=gen_server:start_link(?MODULE,[{Port,Label,Desc,true,AssertLevel}],[]).
 
 stop(Pid) ->
 	gen_server:call(Pid,stop).
@@ -24,9 +28,13 @@ stop(Pid) ->
 state(Pid) ->
 	gen_server:call(Pid,state).
 
-init([X={Port,Desc,true,AssertLevel}])->
+%==============================================================================
+% callback functions
+%==============================================================================
+
+init([X={Port,Label,Desc,true,AssertLevel}])->
 	?info({pid,self(),{args,X}}),
-	State=#state{port=Port,desc=Desc,assertLevel=AssertLevel},
+	State=#state{port=Port,label=Label,desc=Desc,assertLevel=AssertLevel},
 	{ok,State}.
 
 handle_call(stop,_From,State)->
