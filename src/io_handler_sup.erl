@@ -13,7 +13,8 @@
 -export([restart/1]).
 
 -define(PORTNAME(I), list_to_atom("port_" ++ integer_to_list(I))).
--define(CHILD(I,Args,Type),{?PORTNAME(element(1,Args)),{I,start,[Args]},permanent,5000,Type,[I]}).
+-define(ICHILD(I,Args,Type),{?PORTNAME(element(1,Args)),{I,start,[Args]},permanent,5000,Type,[I]}).
+-define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 
 
 %% ===================================================================
@@ -28,7 +29,7 @@ stop()->
 
 
 children(Ports) when is_list(Ports)->
-	lists:map(fun(Z)->?CHILD(input_handler,Z,worker) end,Ports).
+	lists:map(fun(Z)->?ICHILD(input_handler,Z,worker) end,Ports).
 
 getConf()->
 	case config:get(ports) of
@@ -78,8 +79,9 @@ restart(Port) when is_atom(Port)->
 %% ===================================================================
 init([])->
 	%% {ok,{{one_for_one,5,10},children()}}.
+	IOManager=?CHILD(io_manager,worker),
 	Children=getConf(),
-	?info({children,Children}),
-	SSpec={ok,{{one_for_one,5,10},Children}},
+	?info({children,[IOManager,Children]}),
+	SSpec={ok,{{one_for_one,5,10},lists:append([IOManager,Children])}},
 	?info({sspec,SSpec}),
 	SSpec.
