@@ -42,7 +42,7 @@ getConf()->
 isEnabled({_,_,true,_})->
 	true;
 
-isEnabled()->
+isEnabled(_)->
 	false.
 	
 ports()->
@@ -71,7 +71,6 @@ restart(Port) when is_atom(Port)->
 			{error,{child_not_found,Port}}
 		end
 	end.
-
 
 
 %% ===================================================================
