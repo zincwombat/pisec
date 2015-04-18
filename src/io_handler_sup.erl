@@ -82,6 +82,6 @@ init([])->
 	IOManager=?CHILD(io_manager,worker),
 	Children=getConf(),
 	?info({children,[IOManager,Children]}),
-	SSpec={ok,{{one_for_one,5,10},lists:append([IOManager,Children])}},
+	SSpec={ok,{{one_for_one,5,10},lists:append([[IOManager],Children])}},
 	?info({sspec,SSpec}),
 	SSpec.
