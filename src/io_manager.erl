@@ -1,7 +1,7 @@
 -module(io_manager).
 -behaviour(gen_server).
 
--export([start/0,
+-export([start_link/0,
          stop/0]).
 
 -include("debug.hrl").
@@ -19,7 +19,7 @@
 % API
 %==============================================================================
 
-start() ->
+start_link() ->
 	gen_server:start_link({local,?MODULE},?MODULE,[],[]).
 
 stop() ->
