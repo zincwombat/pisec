@@ -80,6 +80,9 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,scanner=Scanner,
 	%% timer has fired, trigger a scan
 	%% read the raw io values
 	NewInputs=Scanner(),
+	% TODO -- apply set and clear masks 
+
+
 	handle_changes(NewInputs,Inputs),
 	
 	TRef=erlang:start_timer(Interval,self(),scan),
@@ -112,6 +115,9 @@ handle_changes(NewInputValues= << N7:1,N6:1,N5:1,N4:1,N3:1,N2:1,N1:1,N0:1 >>,
 	% pseudo code
 	% for i=0..7 if old(i) != new(i) update io_handler responsible for i
 
+	% TODO -- do this in a more efficient manner taking into account set and 
+	% clear masks etc
+
 	notify_change(7,N7,O7),
 	notify_change(6,N6,O6),
 	notify_change(5,N5,O5),
@@ -125,6 +131,7 @@ handle_changes(NewInputValues= << N7:1,N6:1,N5:1,N4:1,N3:1,N2:1,N1:1,N0:1 >>,
 	ok.
 
 notify_change(_PortNumber,Value,Value)->
+	% no change, ignore
 	ok;
 
 notify_change(PortNumber,NewValue,OldValue)->
