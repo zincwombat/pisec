@@ -13,7 +13,7 @@
          terminate/2,
          code_change/3]).
 
--export ([register/2]).
+-export ([register/1]).
 -export ([unregister/0]).
 
 -record (state, {itab}).
