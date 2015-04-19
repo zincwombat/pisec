@@ -27,7 +27,7 @@
 
 -record(state, {inputs,
 		tref,
-		interval,
+		interval=?INTERVAL,
 		dispatcher,
 		setmask=0,
 		clearmask=0,
