@@ -13,7 +13,10 @@
          terminate/2,
          code_change/3]).
 
--record (state, {}).
+-export ([register/2]).
+-export ([unregister/0]).
+
+-record (state, {itab}).
 
 %==============================================================================
 % API
@@ -28,13 +31,21 @@ stop() ->
 state(Pid) ->
 	gen_server:call(?MODULE,state).
 
+register(Port)->
+	gen_server:call(?MODULE,{register,Port,self()}).
+
+unregister()->
+	gen_server:call(?MODULE,{unregister,self()}).
+
 %==============================================================================
 % callback functions
 %==============================================================================
 
 init([])->
 	?info({pid,self()}),
-	State=#state{},
+	process_flag(trap_exit,true),
+	ITab=ets:new(itab,[set,public]),
+	State=#state{itab=ITab},
 	{ok,State}.
 
 handle_call(stop,_From,State)->
@@ -42,6 +53,17 @@ handle_call(stop,_From,State)->
 
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
+
+handle_call({register,Port,Pid},_From,State=#state{itab=ITab}) when is_pid(Pid)->
+    ets:insert(ITab,{Port,Pid}),
+    ?info({added_handler,{port,Port}}),
+    link(Pid),	
+   	{reply,ok,State};
+
+handle_call({unregister,Pid},_From,State=#state{itab=ITab}) when is_pid(Pid)->
+    ets:match_delete(ITab,{'_',Pid}),
+    unlink(Pid),	
+   	{reply,ok,State};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
@@ -51,6 +73,12 @@ handle_call(Msg,From,State)->
 handle_cast(Msg,State)->
 	Unhandled={unhandled_cast,{msg,Msg}},
 	?warn(Unhandled),
+	{noreply,State}.
+
+handle_info(Msg={'EXIT',Pid,Reason},State=#state{itab=ITab})->
+	?warn(Msg),
+	% if this is an input port handler, delete it from itab
+	ets:match_delete(ITab,{'_',Pid}),
 	{noreply,State}.
 
 handle_info(Msg,State)->
