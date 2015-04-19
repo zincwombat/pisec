@@ -79,7 +79,7 @@ handle_info(Msg={'EXIT',Pid,Reason},State=#state{itab=ITab})->
 	?warn(Msg),
 	% if this is an input port handler, delete it from itab
 	ets:match_delete(ITab,{'_',Pid}),
-	{noreply,State}.
+	{noreply,State};
 
 handle_info(Msg,State)->
 	Unhandled={unhandled_info,{msg,Msg}},
