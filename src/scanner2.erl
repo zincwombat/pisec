@@ -51,8 +51,8 @@ state()->
 	gen_server:call(?MODULE,state).
 
 init(_)->
-	Inputs=State#state.scanner(),
-	State=#state{inputs=Inputs},
+	Scanner=State#state.scanner,
+	State=#state{inputs=Scanner()},
 	TRef=erlang:start_timer(State#state.interval,self(),scan),
 	{ok,State#state{tref=TRef}}.
 
