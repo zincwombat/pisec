@@ -34,6 +34,7 @@ state(Pid) ->
 
 init([X={Port,Label,Desc,true,AssertLevel}])->
 	?info({pid,self(),{args,X}}),
+	io_manager:register(Port),
 	State=#state{port=Port,label=Label,desc=Desc,assertLevel=AssertLevel},
 	{ok,State}.
 
