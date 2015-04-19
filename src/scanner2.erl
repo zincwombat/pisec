@@ -32,7 +32,7 @@
 		setmask=0,
 		clearmask=0,
 		simulator=false,
-		scanner=fun()->piface:read_input() end,
+		scanner=fun()->piface2:read_input() end,
 		debug=false}).
 
 start()->
