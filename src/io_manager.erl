@@ -84,7 +84,7 @@ handle_call(Msg,From,State)->
 	?warn(Unhandled),
 	{reply,Unhandled,State}.
 
-handle_cast({notify,PortNumber,NewValue,OldValue}},State)->
+handle_cast({notify,PortNumber,NewValue,OldValue},State)->
 	?info({port,PortNumber,new,NewValue,old,OldValue}),
 	{noreply,State}.
 
