@@ -18,6 +18,7 @@
 -export ([register/1]).
 -export ([unregister/0]).
 -export ([show/0]).
+-export ([notify/3]).
 
 -record (state, {itab}).
 
@@ -42,6 +43,9 @@ unregister()->
 
 show()->
 	gen_server:call(?MODULE,show).
+
+notify(PortNumber,NewValue,OldValue)->
+	gen_server:cast(?MODULE,{notify,PortNumber,NewValue,OldValue}).
 
 %==============================================================================
 % callback functions
@@ -79,6 +83,10 @@ handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
 	?warn(Unhandled),
 	{reply,Unhandled,State}.
+
+handle_cast({notify,PortNumber,NewValue,OldValue}},State)->
+	?info({port,PortNumber,new,NewValue,old,OldValue}),
+	{noreply,State}.
 
 handle_cast(Msg,State)->
 	Unhandled={unhandled_cast,{msg,Msg}},
