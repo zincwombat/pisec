@@ -76,15 +76,22 @@ handle_cast(Msg,State)->
 	?warn(Unhandled),
     {noreply,State}.
 
-handle_info({timeout,_TRef,scan},State=#state{interval=Interval,scanner=Scanner})->
+handle_info({timeout,_TRef,scan},State=#state{interval=Interval,scanner=Scanner,inputs=Inputs})->
 	%% timer has fired, trigger a scan
 	%% read the raw io values
-	Inputs=Scanner(),
+	NewInputs=Scanner(),
+
+	case NewInputs of
+		Inputs->
+			ok;
+		_->
+			?info({old,Inputs,new,NewInputs})
+	end,
 	% Override=Inputs band (bnot SetMask) bor ClearMask,
 	%% restart timer
 	TRef=erlang:start_timer(Interval,self(),scan),
 	% {ok,NewState}=handle_inputs(Override,State#state{tref=TRef}),
-	{noreply,State#state{tref=TRef}};
+	{noreply,State#state{tref=TRef,inputs=NewInputs}};
 
 handle_info(Msg,State)->
 	Unhandled={unhandled_info,{msg,Msg}},
