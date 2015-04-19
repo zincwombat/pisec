@@ -49,14 +49,15 @@ init(Args) ->
 
 	
 	OutputManager=?CHILD(output_manager,worker,[]),
-	Scanner=?CHILD(scanner,worker,[AlarmConf]),
+	% Scanner=?CHILD(scanner,worker,[AlarmConf]),
+	Scanner=?CHILD(scanner2,worker,[]),
 	Dispatcher=?CHILD(dispatcher_sup,supervisor),
 
 	InitState=config:get(initstate,'DISARMED'),
 
 	Alarm=?CHILD(alarm,worker,[InitState]),
 	% Cs=[Alarm,Scanner,Dispatcher,OutputManager],
-	Cs=[OutputManager],
+	Cs=[Scanner],
 	?info({starting,Cs}),
 	{ok,{{one_for_all,5,10},Cs}}.
 

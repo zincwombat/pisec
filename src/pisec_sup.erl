@@ -40,7 +40,7 @@ init(Args) ->
 	Config=?CHILD(config,worker),
 	IO=?CHILD(io_handler_sup,supervisor),
 	% Cs=[Config,Yaws,Scanner],
-	Cs=[Config,IO],
+	Cs=[Config,IO,Scanner],
 	?info({starting,Cs}),
 	{ok,{{one_for_one,5,10},Cs}}.
 
