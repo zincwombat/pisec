@@ -51,6 +51,7 @@ state()->
 	gen_server:call(?MODULE,state).
 
 init(_)->
+	State=#state{},
 	TRef=erlang:start_timer(State#state.interval,self(),scan),
 	{ok,State#state{tref=TRef}}.
 
