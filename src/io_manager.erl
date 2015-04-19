@@ -13,8 +13,11 @@
          terminate/2,
          code_change/3]).
 
+% API
+
 -export ([register/1]).
 -export ([unregister/0]).
+-export ([show/0]).
 
 -record (state, {itab}).
 
@@ -36,6 +39,9 @@ register(Port)->
 
 unregister()->
 	gen_server:call(?MODULE,{unregister,self()}).
+
+show()->
+	gen_server:call(?MODULE,show).
 
 %==============================================================================
 % callback functions
@@ -64,6 +70,10 @@ handle_call({unregister,Pid},_From,State=#state{itab=ITab}) when is_pid(Pid)->
     ets:match_delete(ITab,{'_',Pid}),
     unlink(Pid),	
    	{reply,ok,State};
+
+handle_call(show,_From,State=#state{itab=ITab})->
+    Reply=ets:tab2list(ITab),
+   	{reply,Reply,State};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
