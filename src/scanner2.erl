@@ -83,9 +83,10 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,scanner=Scanner,
 	%% read the raw io values
 	NewInputs=Scanner(),
 	% TODO -- apply set and clear masks 
+	% TODO -- need to convert to bitstring ???
 
 
-	handle_changes(NewInputs,Inputs),
+	handle_changes(<<NewInputs>>,<<Inputs>>),
 	
 	TRef=erlang:start_timer(Interval,self(),scan),
 	{noreply,State#state{tref=TRef,inputs=NewInputs}};
