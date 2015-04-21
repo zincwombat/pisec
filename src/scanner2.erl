@@ -20,7 +20,7 @@
 -export([setInterval/1,
 	 	 state/0]).
 
--export ([bit/2]).
+-export ([isSet/2]).
 
 -ifndef(INTERVAL).
 -define(INTERVAL,?DEFAULT_SCAN_INTERVAL).		%% 50 millisec = 20 Hz
@@ -109,9 +109,16 @@ terminate(Reason,_State)->
 % Miscellaneous
 %==============================================================================
 
+getChangeSet(This,This)->
+	% no changes to process
+	[];
 
-bit(Pos,Byte)->
-	Byte band (1 bsl (Pos)).
+getChangesSet(Current,Last)->
+	Changes=Current bxor Last,
+	lists:filter(fun(Z)->isSet(Z,Changes) end,?PORTS).
+
+isSet(Pos,Byte)->
+	(Byte band (1 bsl (Pos)) > 0).
 
 handle_changes(Inputs,Inputs)->
 	% no change -- nothing to do
