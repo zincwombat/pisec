@@ -20,6 +20,8 @@
 -export([setInterval/1,
 	 	 state/0]).
 
+-export ([getChangeSet/2]).
+
 -export ([isSet/2]).
 
 -ifndef(INTERVAL).
