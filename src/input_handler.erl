@@ -19,8 +19,8 @@
 % API
 %==============================================================================
 
-start({Port,Label,Desc,true,AssertLevel}) ->
-	{ok,Pid}=gen_server:start_link(?MODULE,[{Port,Label,Desc,true,AssertLevel}],[]).
+start({Port,Label,Desc,true,AssertLevel,Type}) ->
+	{ok,Pid}=gen_server:start_link(?MODULE,[{Port,Label,Desc,true,AssertLevel,Type}],[]).
 
 stop(Pid) ->
 	gen_server:call(Pid,stop).
