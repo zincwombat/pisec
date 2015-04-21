@@ -13,7 +13,7 @@
          terminate/2,
          code_change/3]).
 
--record (state, {port,label,desc,assertLevel}).
+-record (state, {port,label,desc,assertLevel,type}).
 
 %==============================================================================
 % API
@@ -32,10 +32,10 @@ state(Pid) ->
 % callback functions
 %==============================================================================
 
-init([X={Port,Label,Desc,true,AssertLevel}])->
+init([X={Port,Label,Desc,true,AssertLevel,Type}])->
 	?info({pid,self(),{args,X}}),
 	io_manager:register(Port),
-	State=#state{port=Port,label=Label,desc=Desc,assertLevel=AssertLevel},
+	State=#state{port=Port,label=Label,desc=Desc,assertLevel=AssertLevel,type=Type},
 	{ok,State}.
 
 handle_call(stop,_From,State)->
@@ -57,7 +57,7 @@ handle_cast(Msg,State)->
 handle_info(Msg={stateChange,NewValue,OldValue},State)->
 	?info(Msg),
 	handle_state_change(NewValue,OldValue,State),
-	{noreply,State}.
+	{noreply,State};
 
 handle_info(Msg,State)->
 	Unhandled={unhandled_info,{msg,Msg}},

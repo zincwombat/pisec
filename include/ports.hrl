@@ -4,13 +4,15 @@
 -define(is_uint32(T), 	(((T) band (bnot 16#ffffffff)) =:=  0)).
 
 %% INPUT PORTS
--define(is_portnum(T),	(T >= 1) andalso (T =< 6)). 
--define(is_control(T),	(T >= 7) andalso (T =< 8)). 
+-define(PORTS,			[0,1,2,3,4,5,6,7]).
+-define(is_portnum(T),	(T >= 0) andalso (T =< 7)). 
+-define(is_control(T),	(T >= 0) andalso (T =< 2)). 
+-define(is_sensor(T),	(T >= 3) andalso (T =< 7)).
 
 %% OUTPUT PORTS
--define(is_oport(T),	(T >= 1) andalso (T =< 8)).
--define(is_relay(T),	(T >= 1) andalso (T =< 2)). 
--define(is_led(T),		(T >= 3) andalso (T =< 8)). 
+-define(is_oport(T),	(T >= 2) andalso (T =< 7)).
+-define(is_relay(T),	(T >= 0) andalso (T =< 1)). 
+-define(is_led(T),		(T >= 2) andalso (T =< 7)). 
 
 -define(is_onoff(T),	(T == on) orelse (T == off)).
 
