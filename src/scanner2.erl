@@ -126,7 +126,7 @@ handle_changes(NewInput,OldInput)->
 	% no change -- nothing to do
 	ChangeSet=getChangeSet(NewInput,OldInput),
 	?info({changeSet,ChangeSet}),
-	lists:map(fun(Z)->notify_change(Z,isSet(Z,NewInput),isSet(Z,OldInput))) end, ChangeSet).
+	lists:map(fun(Z)->notify_change(Z,isSet(Z,NewInput),isSet(Z,OldInput)) end, ChangeSet).
 
 % handle_changes(NewInputValues= << N7:1,N6:1,N5:1,N4:1,N3:1,N2:1,N1:1,N0:1 >>,
 % 			   OldInputValues= << O7:1,O6:1,O5:1,O4:1,O3:1,O2:1,O1:1,O0:1 >>)->
