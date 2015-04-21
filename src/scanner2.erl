@@ -111,7 +111,7 @@ terminate(Reason,_State)->
 
 
 bit(Pos,Byte)->
-	P band (1 bsl (PortNum)).
+	Byte band (1 bsl (Pos)).
 
 handle_changes(Inputs,Inputs)->
 	% no change -- nothing to do
