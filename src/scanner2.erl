@@ -115,7 +115,7 @@ getChangeSet(This,This)->
 	% no changes to process
 	[];
 
-getChangesSet(Current,Last)->
+getChangeSet(Current,Last)->
 	Changes=Current bxor Last,
 	lists:filter(fun(Z)->isSet(Z,Changes) end,?PORTS).
 
