@@ -87,9 +87,12 @@ handle_call(Msg,From,State)->
 handle_cast({notify,PortNumber,NewValue,OldValue},State=#state{itab=ITab})->
 	?info({port,PortNumber,new,NewValue,old,OldValue}),
 	% dispatch the message to the handler
-	[{PortNumber, Pid}]=ets:lookup(ITab, PortNumber),
-
-	Pid ! {NewValue,OldValue},
+	case ets:lookup(ITab, PortNumber) of
+		[{PortNumber, Pid}]->
+			Pid ! {NewValue,OldValue};
+		_->
+			?warn({no_handler,{port,PortNumber}})
+	end,
 
 	{noreply,State};
 
