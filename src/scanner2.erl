@@ -125,7 +125,7 @@ isSet(Pos,Byte)->
 handle_changes(NewInput,OldInput)->
 	% no change -- nothing to do
 	ChangeSet=getChangeSet(NewInput,OldInput),
-	?info({changeSet,ChangeSet}),
+	% ?info({changeSet,ChangeSet}),
 	lists:map(fun(Z)->notify_change(Z,isSet(Z,NewInput),isSet(Z,OldInput)) end, ChangeSet).
 
 % handle_changes(NewInputValues= << N7:1,N6:1,N5:1,N4:1,N3:1,N2:1,N1:1,N0:1 >>,
