@@ -8,6 +8,8 @@
 -include("debug.hrl").
 -include("alarm.hrl").
 
+-define(PORTS,	[7,6,5,4,3,2,1,0]).
+
 -export([init/1,
          handle_call/3,
          handle_cast/2,
@@ -17,6 +19,8 @@
 
 -export([setInterval/1,
 	 	 state/0]).
+
+-export ([bit/2]).
 
 -ifndef(INTERVAL).
 -define(INTERVAL,?DEFAULT_SCAN_INTERVAL).		%% 50 millisec = 20 Hz
@@ -83,8 +87,6 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,scanner=Scanner,
 	%% read the raw io values
 	NewInputs=Scanner(),
 	% TODO -- apply set and clear masks 
-	% TODO -- need to convert to bitstring ???
-
 
 	handle_changes(<<NewInputs>>,<<Inputs>>),
 	
@@ -106,6 +108,10 @@ terminate(Reason,_State)->
 %==============================================================================
 % Miscellaneous
 %==============================================================================
+
+
+bit(Pos,Byte)->
+	P band (1 bsl (PortNum)).
 
 handle_changes(Inputs,Inputs)->
 	% no change -- nothing to do
