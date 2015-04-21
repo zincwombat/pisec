@@ -32,7 +32,7 @@ children(Ports) when is_list(Ports)->
 	lists:map(fun(Z)->?ICHILD(input_handler,Z,worker) end,Ports).
 
 getConf()->
-	case config:get(ports) of
+	case config:get(inputs) of
 	undefined->
 		[];
 	Ports when is_list(Ports)->
