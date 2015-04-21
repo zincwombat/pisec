@@ -54,6 +54,11 @@ handle_cast(Msg,State)->
 	?warn(Unhandled),
 	{noreply,State}.
 
+handle_info(Msg={stateChange,NewValue,OldValue},State)->
+	?info(Msg),
+	handle_state_change(NewValue,OldValue,State),
+	{noreply,State}.
+
 handle_info(Msg,State)->
 	Unhandled={unhandled_info,{msg,Msg}},
 	?warn(Unhandled),
@@ -65,3 +70,43 @@ code_change(_OldVsn,Ctx,_Extra) ->
 terminate(Reason,#state{})->
 	?info({terminating,Reason}),
 	ok.
+
+% =============================================================================
+% Miscellaneous
+% =============================================================================
+
+handle_state_change(false,true,State=#state{port=Port,assertLevel=1})->
+	% asserted
+	handle_assert(State);
+
+handle_state_change(true,false,State=#state{port=Port,assertLevel=0})->
+	% asserted
+	handle_assert(State);
+
+handle_state_change(false,true,State=#state{port=Port,assertLevel=0})->
+	% asserted
+	handle_deassert(State);
+
+handle_state_change(true,false,State=#state{port=Port,assertLevel=1})->
+	% asserted
+	handle_deassert(State);
+
+handle_state_change(New,Old,State)->
+	% should be unreachable
+	?error({unreachable,New,Old,State}),
+	error.
+
+handle_assert(State)->
+	?info({asserted,State}),
+	ok.
+
+handle_deassert(State)->
+	?info({deasserted,State}),
+	ok.
+
+
+
+
+
+	
+
