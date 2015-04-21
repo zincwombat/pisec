@@ -111,7 +111,7 @@ terminate(Reason,_State)->
 % Miscellaneous
 %==============================================================================
 
-getChangeSet(This,This)->
+getChangeSet(Same,Same)->
 	% no changes to process
 	[];
 
@@ -123,32 +123,8 @@ isSet(Pos,Byte)->
 	(Byte band (1 bsl (Pos)) > 0).
 
 handle_changes(NewInput,OldInput)->
-	% no change -- nothing to do
 	ChangeSet=getChangeSet(NewInput,OldInput),
-	% ?info({changeSet,ChangeSet}),
-	lists:map(fun(Z)->notify_change(Z,isSet(Z,NewInput),isSet(Z,OldInput)) end, ChangeSet).
-
-% handle_changes(NewInputValues= << N7:1,N6:1,N5:1,N4:1,N3:1,N2:1,N1:1,N0:1 >>,
-% 			   OldInputValues= << O7:1,O6:1,O5:1,O4:1,O3:1,O2:1,O1:1,O0:1 >>)->
-
-% 	% values have changed, process the changes
-% 	% pseudo code
-% 	% for i=0..7 if old(i) != new(i) update io_handler responsible for i
-
-% 	% TODO -- do this in a more efficient manner taking into account set and 
-% 	% clear masks etc
-
-% 	notify_change(7,N7,O7),
-% 	notify_change(6,N6,O6),
-% 	notify_change(5,N5,O5),
-% 	notify_change(4,N4,O4),
-% 	notify_change(3,N3,O3),
-% 	notify_change(2,N2,O2),
-% 	notify_change(1,N1,O1),
-% 	notify_change(0,N0,O0),
-
-% 	?info({new,NewInputValues,old,OldInputValues}),
-% 	ok.
+	lists:foreach(fun(Z)->notify_change(Z,isSet(Z,NewInput),isSet(Z,OldInput)) end, ChangeSet).
 
 notify_change(_PortNumber,Value,Value)->
 	% no change, ignore
