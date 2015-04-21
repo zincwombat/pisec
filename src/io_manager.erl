@@ -89,8 +89,9 @@ handle_cast({notify,PortNumber,NewValue,OldValue},State=#state{itab=ITab})->
 	% dispatch the message to the handler
 	case ets:lookup(ITab, PortNumber) of
 		[{PortNumber, Pid}]->
-			Pid ! {NewValue,OldValue};
+			Pid ! {stateChange,NewValue,OldValue};
 		_->
+			% no registered handler
 			?warn({no_handler,{port,PortNumber}})
 	end,
 
