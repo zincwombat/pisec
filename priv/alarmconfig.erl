@@ -1,7 +1,7 @@
 {inputs,[
 	% format, {portNum,label,LogDesc,enabled,AssertLevel}
-	{0,enable,"Alarm Enable",0,control},
-	{1,test,"Test",0,control},
+	{0,enable,"Alarm Enable",true,0,control},
+	{1,test,"Test",true,0,control},
 	{2,front_door,"Front Door Sensor",true,0,sensor},
 	{3,rear_door,"Rear Door Sensor",true,0,sensor},
 	{4,hallway,"Hallway PIR Sensor",true,0,sensor},
