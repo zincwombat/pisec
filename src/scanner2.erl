@@ -163,9 +163,11 @@ notify_change(PortNumber,NewValue,OldValue)->
 assertAll(SetMask,PortValues)->
 	% get the set of ports to be asserted
 	AssertPortSet=lists:filter(fun(Z)->isSet(Z,SetMask) end,?PORTS),
+	?info({assertPortSet,AssertPortSet}),
 	lists:foldl(fun(Z,Acc)->assert(Z,Acc) end,PortValues,AssertPortSet).
 
 assert(PortNum,PortValues)->
+	?info({assert,PortNum,PortValues}),
 	Config=config:get(inputs),
 	case Tuple=lists:keyfind(PortNum,1,Config) of
 		{_,_,_,_,AssertLevel,_}->
