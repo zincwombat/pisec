@@ -7,6 +7,7 @@
 
 -include("debug.hrl").
 -include("alarm.hrl").
+-include("ports.hrl").
 
 -define(PORTS,	[7,6,5,4,3,2,1,0]).
 
