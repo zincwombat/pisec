@@ -96,16 +96,25 @@ handle_state_change(New,Old,State)->
 	?error({unreachable,New,Old,State}),
 	error.
 
-handle_assert(State)->
-	?info({asserted,State}),
+% =============================================================================
+%  Handling
+% =============================================================================
+
+handle_assert(State=#state{type=sensor})->
+	?info({sensor_asserted,State#state.label,State#state.desc}),
+	ok;
+
+handle_assert(State=#state{type=control})->
+	?info({control_asserted,State#state.label,State#state.desc}),
 	ok.
 
-handle_deassert(State)->
-	?info({deasserted,State}),
+handle_deassert(State=#state{type=sensor})->
+	?info({sensor_deasserted,State#state.label,State#state.desc}),
+	ok;
+
+handle_deassert(State=#state{type=control})->
+	?info({control_deasserted,State#state.label,State#state.desc}),
 	ok.
-
-
-
 
 
 	
