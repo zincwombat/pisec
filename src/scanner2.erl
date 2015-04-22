@@ -27,6 +27,7 @@
 -export([setDeAssertMask/1]).
 -export([assert/2]).
 -export([processAssertMask/2]).
+-export([processDeAssertMask/2]).
 
 -ifndef(INTERVAL).
 -define(INTERVAL,?DEFAULT_SCAN_INTERVAL).		%% 50 millisec = 20 Hz
