@@ -55,7 +55,6 @@ handle_cast(Msg,State)->
 	{noreply,State}.
 
 handle_info(Msg={stateChange,NewValue,OldValue},State)->
-	?info(Msg),
 	handle_state_change(NewValue,OldValue,State),
 	{noreply,State};
 
