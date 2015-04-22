@@ -24,6 +24,10 @@
 -export([handle_changes/2]).
 -export([isSet/2]).
 
+-export([setAssertMask/1]).
+-export([setDeAssertMask/1]).
+-export([assert/2]).
+
 -ifndef(INTERVAL).
 -define(INTERVAL,?DEFAULT_SCAN_INTERVAL).		%% 50 millisec = 20 Hz
 -endif.
@@ -56,12 +60,19 @@ setInterval(Interval)->
 state()->
 	gen_server:call(?MODULE,state).
 
+setAssertMask(Mask)->
+	gen_server:call(?MODULE,{setAssertMask,Mask}).
+
+setDeAssertMask(Mask)->
+	gen_server:call(?MODULE,{setDeAssertMask,Mask}).
+
 init(_)->
 	State=#state{},
 	Scanner=State#state.scanner,
 	Inputs=Scanner(),
+	Config=config:get(inputs),
 	TRef=erlang:start_timer(State#state.interval,self(),scan),
-	{ok,State#state{tref=TRef,inputs=Inputs}}.
+	{ok,State#state{tref=TRef,inputs=Inputs,config=Config}}.
 
 handle_call(stop,_From,State)->
 	{stop,normal,ok,State};
@@ -74,6 +85,14 @@ handle_call({interval,NewInterval},_From,State=#state{interval=Interval}) when
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
+handle_call(Msg={setAssertMask,Mask},_From,State) when ?is_uint8(Mask)->
+	?info(Msg),
+	{reply,ok,State#state{setmask=Mask}};
+
+handle_call(Msg={setDeAssertMask,Mask},_From,State) when ?is_uint8(Mask)->
+	?info(Msg),
+	{reply,ok,State#state{clearmask=Mask}};
+
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
 	?warn(Unhandled),
@@ -84,11 +103,18 @@ handle_cast(Msg,State)->
 	?warn(Unhandled),
     {noreply,State}.
 
-handle_info({timeout,_TRef,scan},State=#state{interval=Interval,scanner=Scanner,inputs=Inputs})->
+handle_info({timeout,_TRef,scan},State=#state{interval=Interval,
+											  scanner=Scanner,
+											  inputs=Inputs,
+											  setmask=SetMask,
+											  clearmask=ClearMask})->
 	%% timer has fired, trigger a scan
 	%% read the raw io values
 	NewInputs=Scanner(),
+
 	% TODO -- apply set and clear masks 
+	% foreach bit that is set in SetMask, apply the correct level
+	% foreach bit that is set in ClearMask, apply the correct level
 
 	handle_changes(<<NewInputs>>,<<Inputs>>),
 	
@@ -132,3 +158,20 @@ notify_change(_PortNumber,Value,Value)->
 
 notify_change(PortNumber,NewValue,OldValue)->
 	io_manager:notify(PortNumber,NewValue,OldValue).
+
+assert(PortNum,PortValues)->
+	Config=config:get(inputs),
+	case Tuple=lists:keyfind(PortNumber,1,Config) of
+		{_,_,_,_,AssertLevel,_}->
+			assert(PortNum,PortValues,AssertLevel);
+		_->
+			?error({nomatch,PortNum,PortValues}),
+			PortValues
+	end.
+
+assert(PortNum,PortValues,1)->
+	PortValues bor (1 bsl (PortNum));
+
+assert(PortNum,PortValues,0)->
+	PortValues band (bnot(1 bsl (PortNum))).
+
