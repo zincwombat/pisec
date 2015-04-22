@@ -161,7 +161,7 @@ notify_change(PortNumber,NewValue,OldValue)->
 
 assert(PortNum,PortValues)->
 	Config=config:get(inputs),
-	case Tuple=lists:keyfind(PortNumber,1,Config) of
+	case Tuple=lists:keyfind(PortNum,1,Config) of
 		{_,_,_,_,AssertLevel,_}->
 			assert(PortNum,PortValues,AssertLevel);
 		_->
