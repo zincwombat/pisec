@@ -9,8 +9,6 @@
 -include("alarm.hrl").
 -include("ports.hrl").
 
--define(PORTS,	[7,6,5,4,3,2,1,0]).
-
 -export([init/1,
          handle_call/3,
          handle_cast/2,
@@ -40,6 +38,7 @@
 		tref,
 		interval=?INTERVAL,
 		dispatcher,
+		config,
 		setmask=0,
 		clearmask=0,
 		simulator=false,
