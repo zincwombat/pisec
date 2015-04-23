@@ -25,7 +25,6 @@
 
 -export([setAssertMask/1]).
 -export([setDeAssertMask/1]).
--export([assert/2]).
 -export([processAssertMask/2]).
 -export([processDeAssertMask/2]).
 
@@ -161,49 +160,37 @@ notify_change(_PortNumber,Value,Value)->
 notify_change(PortNumber,NewValue,OldValue)->
 	io_manager:notify(PortNumber,NewValue,OldValue).
 
+
+override(Type,PortNum,PortValues)->
+	override(Type,PortNum,PortValues,getAssertionLevel(PortNum));
+
+override(assert,PortNum,PortValues,1)->
+	PortValues bor (1 bsl (PortNum));
+
+override(assert,PortNum,PortValues,0)->
+	PortValues band (bnot(1 bsl (PortNum)));
+
+override(deAssert,PortNum,PortValues,0)->
+	PortValues bor (1 bsl (PortNum));
+
+override(deAssert,PortNum,PortValues,1)->
+	PortValues band (bnot(1 bsl (PortNum))).
+	
+getAssertionLevel(PortNum) when ?is_portnum(PortNum)->
+	{_,_,_,_,AssertLevel,_}=lists:keyfind(PortNum,1,config:get(inputs)),
+	AssertLevel.
+
 processAssertMask(SetMask,PortValues)->
 	% get the set of ports to be asserted
 	AssertPortSet=lists:filter(fun(Z)->isSet(Z,SetMask) end,?PORTS),
 	?info({assertPortSet,AssertPortSet}),
-	lists:foldl(fun(Z,Acc)->assert(Z,Acc) end,PortValues,AssertPortSet).
+	lists:foldl(fun(Z,Acc)->override(assert,Z,Acc) end,PortValues,AssertPortSet).
 
 processDeAssertMask(ClearMask,PortValues)->
 	% get the set of ports to be asserted
 	DeAssertPortSet=lists:filter(fun(Z)->isSet(Z,ClearMask) end,?PORTS),
 	?info({deAssertPortSet,DeAssertPortSet}),
-	lists:foldl(fun(Z,Acc)->deAssert(Z,Acc) end,PortValues,DeAssertPortSet).
+	lists:foldl(fun(Z,Acc)->override(deAssert,Z,Acc) end,PortValues,DeAssertPortSet).
 
-assert(PortNum,PortValues)->
-	?info({assert,PortNum,PortValues}),
-	Config=config:get(inputs),
-	case Tuple=lists:keyfind(PortNum,1,Config) of
-		{_,_,_,_,AssertLevel,_}->
-			assert(PortNum,PortValues,AssertLevel);
-		_->
-			?error({nomatch,PortNum,PortValues}),
-			PortValues
-	end.
 
-assert(PortNum,PortValues,1)->
-	PortValues bor (1 bsl (PortNum));
-
-assert(PortNum,PortValues,0)->
-	PortValues band (bnot(1 bsl (PortNum))).
-
-deAssert(PortNum,PortValues)->
-	?info({deAssert,PortNum,PortValues}),
-	Config=config:get(inputs),
-	case Tuple=lists:keyfind(PortNum,1,Config) of
-		{_,_,_,_,AssertLevel,_}->
-			deAssert(PortNum,PortValues,AssertLevel);
-		_->
-			?error({nomatch,PortNum,PortValues}),
-			PortValues
-	end.
-
-deAssert(PortNum,PortValues,0)->
-	PortValues bor (1 bsl (PortNum));
-
-deAssert(PortNum,PortValues,1)->
-	PortValues band (bnot(1 bsl (PortNum))).
 
