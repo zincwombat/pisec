@@ -47,7 +47,7 @@
 		config,
 		setmask=0,
 		clearmask=0,
-		assertLevels,
+		assertionLevels,
 		simulator=false,
 		scanner=fun()->piface2:read_input() end,
 		debug=false}).
@@ -112,7 +112,8 @@ handle_call(readInput,_From,State)->
 	Masked=ioutils:blist(State#state.inputs),
 	Set=ioutils:blist(State#state.setmask),
 	Clr=ioutils:blist(State#state.clearmask),
-	Reply={{raw,Raw},{masked,Masked},{setmask,Set},{clearmask,Clr}},
+	AssertionLevels=ioutils:blist(State#state.assertionLevels),
+	Reply={{raw,Raw},{masked,Masked},{assertionLevels,AssertionLevels},{setmask,Set},{clearmask,Clr}},
 	{reply,Reply,State};
 
 
