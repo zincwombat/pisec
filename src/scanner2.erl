@@ -167,14 +167,15 @@ getChangeSet(Same,Same)->
 
 getChangeSet(Current,Last)->
 	Changes=Current bxor Last,
-	lists:filter(fun(Z)->isSet(Z,Changes) end,?PORTS).
+	ChangeSet=lists:filter(fun(Z)->isSet(Z,Changes) end,?PORTS),
+	?info({changeSet,ChangeSet}),
+	ChangeSet.
 
 isSet(Pos,Byte)->
 	(Byte band (1 bsl (Pos)) > 0).
 
 handle_changes(NewInput,OldInput)->
 	ChangeSet=getChangeSet(NewInput,OldInput),
-	?info({changeSet,ChangeSet}),
 	lists:foreach(fun(Z)->notify_change(Z,isSet(Z,NewInput),isSet(Z,OldInput)) end, ChangeSet).
 
 notify_change(_PortNumber,Value,Value)->
