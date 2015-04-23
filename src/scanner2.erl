@@ -23,6 +23,9 @@
 -export([handle_changes/2]).
 -export([isSet/2]).
 
+-export([setPort/1]).
+-export([clearPort/1]).
+
 -export([setAssertMask/1]).
 -export([setDeAssertMask/1]).
 -export([processAssertMask/2]).
@@ -61,6 +64,12 @@ setInterval(Interval)->
 state()->
 	gen_server:call(?MODULE,state).
 
+setPort(PortNum)->
+	gen_server:call(?MODULE,{setPort,PortNum}).
+
+clearPort(PortNum)->
+	gen_server:call(?MODULE,{clearPort,PortNum}).
+
 setAssertMask(Mask)->
 	gen_server:call(?MODULE,{setAssertMask,Mask}).
 
@@ -85,6 +94,18 @@ handle_call({interval,NewInterval},_From,State=#state{interval=Interval}) when
 
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
+
+handle_call(Msg={setPort,PortNum},_From,State=#state{setmask=SetMask,clearmask=ClearMask}) when ?is_portnum(PortNum)->
+	?info(Msg),
+	NewSetMask=SetMask bor (1 bsl (PortNum)),
+	NewClearMask=ClearMask band (bnot(1 bsl (PortNum))),
+	{reply,ok,State#state{setmask=NewSetMask,clearmask=NewClearMask}};
+
+handle_call(Msg={clearPort,PortNum},_From,State=#state{setmask=SetMask,clearmask=ClearMask}) when ?is_portnum(PortNum)->
+	?info(Msg),
+	NewClearMask=ClearMask bor (1 bsl (PortNum)),
+	NewSetMask=SetMask band (bnot(1 bsl (PortNum))),
+	{reply,ok,State#state{setmask=NewSetMask,clearmask=NewClearMask}};
 
 handle_call(Msg={setAssertMask,Mask},_From,State) when ?is_uint8(Mask)->
 	?info(Msg),
@@ -111,7 +132,10 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,
 											  clearmask=ClearMask})->
 	%% timer has fired, trigger a scan
 	%% read the raw io values
-	NewInputs=Scanner(),
+	RawInputs=Scanner(),
+
+	Set=processAssertMask(SetMask,RawInputs),
+	NewInputs=processDeAssertMask(ClearMask,Set),
 
 	% TODO -- apply set and clear masks 
 	% foreach bit that is set in SetMask, apply the correct level
