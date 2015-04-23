@@ -2,8 +2,8 @@
 -behaviour(gen_server).
 
 -export([start/0,
-	 	start/1,
-        stop/0]).
+	 	 start/1,
+         stop/0]).
 
 -include("debug.hrl").
 -include("alarm.hrl").
@@ -25,6 +25,7 @@
 
 -export([setPort/1]).
 -export([clearPort/1]).
+-export([readInput/0]).
 
 -export([setAssertMask/1]).
 -export([setDeAssertMask/1]).
@@ -37,7 +38,9 @@
 -define(MIN_INTERVAL,20).		%% 20 millisec = 50 Hz
 -define(MAX_INTERVAL,30000).	%% 30 seconds = 1 Hz
 
--record(state, {inputs,
+-record(state, {
+		raw,
+		inputs,
 		tref,
 		interval=?INTERVAL,
 		dispatcher,
@@ -69,6 +72,9 @@ setPort(PortNum)->
 clearPort(PortNum)->
 	gen_server:call(?MODULE,{clearPort,PortNum}).
 
+readInput()->
+	gen_server:call(?MODULE,readInput).
+
 setAssertMask(Mask)->
 	gen_server:call(?MODULE,{setAssertMask,Mask}).
 
@@ -76,12 +82,13 @@ setDeAssertMask(Mask)->
 	gen_server:call(?MODULE,{setDeAssertMask,Mask}).
 
 init(_)->
+	% TODO -- apply masks on input
 	State=#state{},
 	Scanner=State#state.scanner,
 	Inputs=Scanner(),
 	Config=config:get(inputs),
 	TRef=erlang:start_timer(State#state.interval,self(),scan),
-	{ok,State#state{tref=TRef,inputs=Inputs,config=Config}}.
+	{ok,State#state{tref=TRef,raw=Inputs,inputs=Inputs,config=Config}}.
 
 handle_call(stop,_From,State)->
 	{stop,normal,ok,State};
@@ -93,6 +100,15 @@ handle_call({interval,NewInterval},_From,State=#state{interval=Interval}) when
 
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
+
+handle_call(readInput,_From,State)->
+	Raw=ioutils:blist(State#state.raw),
+	Masked=ioutils:blist(State#state.inputs),
+	Set=ioutils:blist(State#state.setmask),
+	Clr=ioutils:blist(State#state.clearmask),
+	Reply={{raw,Raw},{masked,Masked},{setmask,Set},{clearmask,Clr}},
+	{reply,Reply,State};
+
 
 handle_call(Msg={setPort,PortNum},_From,State=#state{setmask=SetMask,clearmask=ClearMask}) when ?is_portnum(PortNum)->
 	?info(Msg),
@@ -144,7 +160,7 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,
 	handle_changes(NewInputs,Inputs),
 	
 	TRef=erlang:start_timer(Interval,self(),scan),
-	{noreply,State#state{tref=TRef,inputs=NewInputs}};
+	{noreply,State#state{tref=TRef,raw=RawInputs,inputs=NewInputs}};
 
 handle_info(Msg,State)->
 	Unhandled={unhandled_info,{msg,Msg}},
