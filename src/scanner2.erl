@@ -166,7 +166,9 @@ getChangeSet(Same,Same)->
 	[];
 
 getChangeSet(Current,Last)->
+	?info({current,Current,last,Last}),
 	Changes=Current bxor Last,
+	?info({changes,Changes}),
 	ChangeSet=lists:filter(fun(Z)->isSet(Z,Changes) end,?PORTS),
 	?info({changeSet,ChangeSet}),
 	ChangeSet.
@@ -184,7 +186,6 @@ notify_change(_PortNumber,Value,Value)->
 
 notify_change(PortNumber,NewValue,OldValue)->
 	io_manager:notify(PortNumber,NewValue,OldValue).
-
 
 override(Type,PortNum,PortValues)->
 	override(Type,PortNum,PortValues,getAssertionLevel(PortNum)).
