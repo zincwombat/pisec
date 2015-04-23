@@ -207,13 +207,11 @@ getAssertionLevel(PortNum) when ?is_portnum(PortNum)->
 processAssertMask(SetMask,PortValues)->
 	% get the set of ports to be asserted
 	AssertPortSet=lists:filter(fun(Z)->isSet(Z,SetMask) end,?PORTS),
-	?info({assertPortSet,AssertPortSet}),
 	lists:foldl(fun(Z,Acc)->override(assert,Z,Acc) end,PortValues,AssertPortSet).
 
 processDeAssertMask(ClearMask,PortValues)->
 	% get the set of ports to be asserted
 	DeAssertPortSet=lists:filter(fun(Z)->isSet(Z,ClearMask) end,?PORTS),
-	?info({deAssertPortSet,DeAssertPortSet}),
 	lists:foldl(fun(Z,Acc)->override(deAssert,Z,Acc) end,PortValues,DeAssertPortSet).
 
 
