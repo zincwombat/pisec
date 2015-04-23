@@ -28,8 +28,7 @@
 
 -export([setAssertMask/1]).
 -export([setDeAssertMask/1]).
--export([processAssertMask/2]).
--export([processDeAssertMask/2]).
+-export([processMask/3]).
 
 -ifndef(INTERVAL).
 -define(INTERVAL,?DEFAULT_SCAN_INTERVAL).		%% 50 millisec = 20 Hz
@@ -99,12 +98,16 @@ handle_call(Msg={setPort,PortNum},_From,State=#state{setmask=SetMask,clearmask=C
 	?info(Msg),
 	NewSetMask=SetMask bor (1 bsl (PortNum)),
 	NewClearMask=ClearMask band (bnot(1 bsl (PortNum))),
+	?info({setmask,ioutils:blist(NewSetMask)}),
+	?info({clearmask,ioutils:blist(NewClearMask)}),
 	{reply,ok,State#state{setmask=NewSetMask,clearmask=NewClearMask}};
 
 handle_call(Msg={clearPort,PortNum},_From,State=#state{setmask=SetMask,clearmask=ClearMask}) when ?is_portnum(PortNum)->
 	?info(Msg),
 	NewClearMask=ClearMask bor (1 bsl (PortNum)),
 	NewSetMask=SetMask band (bnot(1 bsl (PortNum))),
+	?info({setmask,ioutils:blist(NewSetMask)}),
+	?info({clearmask,ioutils:blist(NewClearMask)}),
 	{reply,ok,State#state{setmask=NewSetMask,clearmask=NewClearMask}};
 
 handle_call(Msg={setAssertMask,Mask},_From,State) when ?is_uint8(Mask)->
@@ -134,12 +137,8 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,
 	%% read the raw io values
 	RawInputs=Scanner(),
 
-	Set=processAssertMask(SetMask,RawInputs),
-	NewInputs=processDeAssertMask(ClearMask,Set),
-
-	% TODO -- apply set and clear masks 
-	% foreach bit that is set in SetMask, apply the correct level
-	% foreach bit that is set in ClearMask, apply the correct level
+	Set=processMask(assert,SetMask,RawInputs),
+	NewInputs=processMask(deAssert,ClearMask,Set),
 
 	handle_changes(<<NewInputs>>,<<Inputs>>),
 	
@@ -175,6 +174,7 @@ isSet(Pos,Byte)->
 
 handle_changes(NewInput,OldInput)->
 	ChangeSet=getChangeSet(NewInput,OldInput),
+	?info({changeSet,ChangeSet}),
 	lists:foreach(fun(Z)->notify_change(Z,isSet(Z,NewInput),isSet(Z,OldInput)) end, ChangeSet).
 
 notify_change(_PortNumber,Value,Value)->
@@ -204,15 +204,10 @@ getAssertionLevel(PortNum) when ?is_portnum(PortNum)->
 	{_,_,_,_,AssertLevel,_}=lists:keyfind(PortNum,1,config:get(inputs)),
 	AssertLevel.
 
-processAssertMask(SetMask,PortValues)->
-	% get the set of ports to be asserted
-	AssertPortSet=lists:filter(fun(Z)->isSet(Z,SetMask) end,?PORTS),
-	lists:foldl(fun(Z,Acc)->override(assert,Z,Acc) end,PortValues,AssertPortSet).
+processMask(Level,Mask,PortValues)->
+	PortSet=lists:filter(fun(Z)->isSet(Z,Mask) end,?PORTS),
+	lists:foldl(fun(Z,Acc)->override(Level,Z,Acc) end,PortValues,PortSet).
 
-processDeAssertMask(ClearMask,PortValues)->
-	% get the set of ports to be asserted
-	DeAssertPortSet=lists:filter(fun(Z)->isSet(Z,ClearMask) end,?PORTS),
-	lists:foldl(fun(Z,Acc)->override(deAssert,Z,Acc) end,PortValues,DeAssertPortSet).
 
 
 
