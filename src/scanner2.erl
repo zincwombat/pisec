@@ -47,6 +47,7 @@
 		config,
 		setmask=0,
 		clearmask=0,
+		assertLevels,
 		simulator=false,
 		scanner=fun()->piface2:read_input() end,
 		debug=false}).
@@ -87,8 +88,13 @@ init(_)->
 	Scanner=State#state.scanner,
 	Inputs=Scanner(),
 	Config=config:get(inputs),
+	AssertionLevels=getAssertionLevels(Config),
 	TRef=erlang:start_timer(State#state.interval,self(),scan),
-	{ok,State#state{tref=TRef,raw=Inputs,inputs=Inputs,config=Config}}.
+	{ok,State#state{tref=TRef,
+					raw=Inputs,
+					inputs=Inputs,
+					assertionLevels=AssertionLevels,
+					config=Config}}.
 
 handle_call(stop,_From,State)->
 	{stop,normal,ok,State};
@@ -218,6 +224,11 @@ override(deAssert,PortNum,PortValues,0)->
 
 override(deAssert,PortNum,PortValues,1)->
 	PortValues band (bnot(1 bsl (PortNum))).
+
+getAssertionLevels(Config)->
+	[AL7,AL6,AL5,AL4,AL3,AL2,AL1,AL0]=lists:map(fun(Z)->element(5,Z) end,Config),
+	<< Byte >> = << AL7:1,AL6:1,AL5:1,AL4:1,AL3:1,AL2:1,AL1:1,AL0:1 >>,
+	Byte.
 	
 getAssertionLevel(PortNum) when ?is_portnum(PortNum)->
 	{_,_,_,_,AssertLevel,_}=lists:keyfind(PortNum,1,config:get(inputs)),
