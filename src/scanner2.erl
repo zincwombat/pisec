@@ -162,7 +162,7 @@ notify_change(PortNumber,NewValue,OldValue)->
 
 
 override(Type,PortNum,PortValues)->
-	override(Type,PortNum,PortValues,getAssertionLevel(PortNum));
+	override(Type,PortNum,PortValues,getAssertionLevel(PortNum)).
 
 override(assert,PortNum,PortValues,1)->
 	PortValues bor (1 bsl (PortNum));
