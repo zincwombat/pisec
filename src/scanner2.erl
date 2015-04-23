@@ -140,7 +140,8 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,
 	Set=processMask(assert,SetMask,RawInputs),
 	NewInputs=processMask(deAssert,ClearMask,Set),
 
-	handle_changes(<<NewInputs>>,<<Inputs>>),
+	% handle_changes(<<NewInputs>>,<<Inputs>>),
+	handle_changes(NewInputs,Inputs),
 	
 	TRef=erlang:start_timer(Interval,self(),scan),
 	{noreply,State#state{tref=TRef,inputs=NewInputs}};
