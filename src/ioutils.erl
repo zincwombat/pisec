@@ -57,12 +57,9 @@ setPort(PortNum,0,PortRec=#portRec{port=Port})->
 	P2=Port band bnot((1 bsl (PortNum-1))),
 	PortRec#portRec{port=P2}.
 
-blist(Port) when ?is_uint8(Port)->
+blist(Port)->
 	<<I8:1,I7:1,I6:1,I5:1,I4:1,I3:1,I2:1,I1:1>> = <<Port>>,
-	[I8,I7,I6,I5,I4,I3,I2,I1];
-
-blist(_)->
-	{error,badarg}.
+	[I8,I7,I6,I5,I4,I3,I2,I1].
 
 notifySet(undefined,CurrentPort)->
 	ChangeMask=255,
