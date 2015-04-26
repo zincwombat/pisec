@@ -27,8 +27,9 @@
 -export([clearPort/1]).
 -export([readInput/0]).
 
--export([setAssertMask/1]).
--export([setDeAssertMask/1]).
+-export([setOverride/2]).
+-export([clrOverride/1]).
+
 -export([processMask/3]).
 
 -ifndef(INTERVAL).
@@ -45,8 +46,8 @@
 		interval=?INTERVAL,
 		dispatcher,
 		config,
-		setmask=0,
-		clearmask=0,
+		ovr_mask=0,
+		ovr_val=0,	% 1 = asserted, 0 = deasserted
 		assertionLevels,
 		simulator=false,
 		scanner=fun()->piface2:read_input() end,
@@ -76,11 +77,12 @@ clearPort(PortNum)->
 readInput()->
 	gen_server:call(?MODULE,readInput).
 
-setAssertMask(Mask)->
-	gen_server:call(?MODULE,{setAssertMask,Mask}).
+setOverride(PortNum,Level)->
+	gen_server:call(?MODULE,{setOverride,PortNum,Level}).
 
-setDeAssertMask(Mask)->
-	gen_server:call(?MODULE,{setDeAssertMask,Mask}).
+clrOverride(PortNum)->
+	gen_server:call(?MODULE,{setOverride,PortNum}).
+
 
 init(_)->
 	% TODO -- apply masks on input
@@ -110,36 +112,22 @@ handle_call(state,_From,State)->
 handle_call(readInput,_From,State)->
 	Raw=ioutils:blist(State#state.raw),
 	Masked=ioutils:blist(State#state.inputs),
-	Set=ioutils:blist(State#state.setmask),
-	Clr=ioutils:blist(State#state.clearmask),
+	Ovr=ioutils:blist(State#state.ovr_mask),
+	Val=ioutils:blist(State#state.ovr_val),
 	AssertionLevels=ioutils:blist(State#state.assertionLevels),
-	Reply={{raw,Raw},{masked,Masked},{assertionLevels,AssertionLevels},{setmask,Set},{clearmask,Clr}},
+	Reply={{raw,Raw},{masked,Masked},{assertionLevels,AssertionLevels},{ovr_mask,Ovr},{ovr_val,Val}},
 	{reply,Reply,State};
 
-
-handle_call(Msg={setPort,PortNum},_From,State=#state{setmask=SetMask,clearmask=ClearMask}) when ?is_portnum(PortNum)->
+handle_call(Msg={setOverride,PortNum,Level},_From,State=#state{ovr_mask=OvrMask,ovr_val=OvrVal})->
 	?info(Msg),
-	NewSetMask=SetMask bor (1 bsl (PortNum)),
-	NewClearMask=ClearMask band (bnot(1 bsl (PortNum))),
-	?info({setmask,ioutils:blist(NewSetMask)}),
-	?info({clearmask,ioutils:blist(NewClearMask)}),
-	{reply,ok,State#state{setmask=NewSetMask,clearmask=NewClearMask}};
+	NewOvrMask=setBit(PortNum,OvrMask,1),
+	NewOvrVal=setBit(PortNum,OvrVal,Level),
+	{reply,ok,State#state{ovr_mask=NewOvrMask,ovr_val=NewOvrVal}};
 
-handle_call(Msg={clearPort,PortNum},_From,State=#state{setmask=SetMask,clearmask=ClearMask}) when ?is_portnum(PortNum)->
+handle_call(Msg={clrOverride,PortNum},_From,State=#state{ovr_mask=OvrMask})->
 	?info(Msg),
-	NewClearMask=ClearMask bor (1 bsl (PortNum)),
-	NewSetMask=SetMask band (bnot(1 bsl (PortNum))),
-	?info({setmask,ioutils:blist(NewSetMask)}),
-	?info({clearmask,ioutils:blist(NewClearMask)}),
-	{reply,ok,State#state{setmask=NewSetMask,clearmask=NewClearMask}};
-
-handle_call(Msg={setAssertMask,Mask},_From,State) when ?is_uint8(Mask)->
-	?info(Msg),
-	{reply,ok,State#state{setmask=Mask}};
-
-handle_call(Msg={setDeAssertMask,Mask},_From,State) when ?is_uint8(Mask)->
-	?info(Msg),
-	{reply,ok,State#state{clearmask=Mask}};
+	NewOvrMask=setBit(PortNum,OvrMask,0),
+	{reply,ok,State#state{ovr_mask=NewOvrMask}};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
@@ -154,20 +142,19 @@ handle_cast(Msg,State)->
 handle_info({timeout,_TRef,scan},State=#state{interval=Interval,
 											  scanner=Scanner,
 											  inputs=Inputs,
-											  setmask=SetMask,
-											  clearmask=ClearMask})->
+											  assertionLevels=AssertionLevels,
+											  ovr_mask=OvrMask,
+											  ovr_val=OvrVal})->
 	%% timer has fired, trigger a scan
 	%% read the raw io values
 	RawInputs=Scanner(),
 
-	Set=processMask(assert,SetMask,RawInputs),
-	NewInputs=processMask(deAssert,ClearMask,Set),
+	Asserted = (OvrMask band OvrVal) bor ((bnot OvrMask) band (bnot(RawInputs bxor AssertionLevels))),
 
-	% handle_changes(<<NewInputs>>,<<Inputs>>),
-	handle_changes(NewInputs,Inputs),
+	handle_changes(Asserted,Inputs),
 	
 	TRef=erlang:start_timer(Interval,self(),scan),
-	{noreply,State#state{tref=TRef,raw=RawInputs,inputs=NewInputs}};
+	{noreply,State#state{tref=TRef,raw=RawInputs,inputs=Asserted}};
 
 handle_info(Msg,State)->
 	Unhandled={unhandled_info,{msg,Msg}},
@@ -211,34 +198,15 @@ notify_change(_PortNumber,Value,Value)->
 notify_change(PortNumber,NewValue,OldValue)->
 	io_manager:notify(PortNumber,NewValue,OldValue).
 
-override(Type,PortNum,PortValues)->
-	override(Type,PortNum,PortValues,getAssertionLevel(PortNum)).
-
-override(assert,PortNum,PortValues,1)->
-	PortValues bor (1 bsl (PortNum));
-
-override(assert,PortNum,PortValues,0)->
-	PortValues band (bnot(1 bsl (PortNum)));
-
-override(deAssert,PortNum,PortValues,0)->
-	PortValues bor (1 bsl (PortNum));
-
-override(deAssert,PortNum,PortValues,1)->
-	PortValues band (bnot(1 bsl (PortNum))).
-
 getAssertionLevels(Config)->
 	[AL7,AL6,AL5,AL4,AL3,AL2,AL1,AL0]=lists:map(fun(Z)->element(5,Z) end,Config),
 	<< Byte >> = << AL7:1,AL6:1,AL5:1,AL4:1,AL3:1,AL2:1,AL1:1,AL0:1 >>,
 	Byte.
 	
-getAssertionLevel(PortNum) when ?is_portnum(PortNum)->
-	{_,_,_,_,AssertLevel,_}=lists:keyfind(PortNum,1,config:get(inputs)),
-	AssertLevel.
+setBit(Bit,Byte,0)->
+	Byte band bnot(1 bsl PortNum),
 
-processMask(Level,Mask,PortValues)->
-	PortSet=lists:filter(fun(Z)->isSet(Z,Mask) end,?PORTS),
-	lists:foldl(fun(Z,Acc)->override(Level,Z,Acc) end,PortValues,PortSet).
-
-
+setBit(Bit,Byte,1)->
+	Byte bor (1 bsl Bit).
 
 

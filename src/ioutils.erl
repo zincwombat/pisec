@@ -37,6 +37,7 @@ isSet(PortNum,#portRec{port=P})->
 isSet(PortNum,P)->
 	(P band (1 bsl (PortNum-1)) > 0).
 
+
 portVal(PortNum,#portRec{port=P})->
         portVal(PortNum,P);
 
