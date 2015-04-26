@@ -30,7 +30,7 @@
 -export([setOverride/2]).
 -export([clrOverride/1]).
 
--export([processMask/3]).
+% -export([processMask/3]).
 
 -ifndef(INTERVAL).
 -define(INTERVAL,?DEFAULT_SCAN_INTERVAL).		%% 50 millisec = 20 Hz
@@ -204,7 +204,7 @@ getAssertionLevels(Config)->
 	Byte.
 	
 setBit(Bit,Byte,0)->
-	Byte band bnot(1 bsl PortNum);
+	Byte band bnot(1 bsl Bit);
 
 setBit(Bit,Byte,1)->
 	Byte bor (1 bsl Bit).
