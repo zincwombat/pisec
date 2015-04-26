@@ -204,7 +204,7 @@ getAssertionLevels(Config)->
 	Byte.
 	
 setBit(Bit,Byte,0)->
-	Byte band bnot(1 bsl PortNum),
+	Byte band bnot(1 bsl PortNum);
 
 setBit(Bit,Byte,1)->
 	Byte bor (1 bsl Bit).
