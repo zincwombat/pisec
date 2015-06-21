@@ -1,11 +1,11 @@
 {inputs,[
-	% format, {portNum,label,LogDesc,enabled,AssertLevel}
+	% format, {portNum,label,LongDesc,enabled,AssertLevel,Type}
 	{0,enable,"Alarm Enable",true,0,control},
 	{1,test,"Test",true,0,control},
-	{2,front_door,"Front Door Sensor",true,0,sensor},
-	{3,rear_door,"Rear Door Sensor",true,0,sensor},
-	{4,hallway,"Hallway PIR Sensor",true,0,sensor},
-	{5,living,"Living Room PIR Sensor",true,0,sensor},
+	{2,front_door,"Front Door Sensor",false,1,sensor},
+	{3,rear_door,"Rear Door Sensor",true,1,sensor},
+	{4,hallway,"Hallway PIR Sensor",false,0,sensor},
+	{5,living,"Living Room PIR Sensor",false,0,sensor},
 	{6,input7,"Input 6",false,0,sensor},
 	{7,input8,"Input 7",false,0,sensor}
 ]}.
