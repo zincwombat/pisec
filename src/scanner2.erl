@@ -81,7 +81,7 @@ setOverride(PortNum,Level)->
 	gen_server:call(?MODULE,{setOverride,PortNum,Level}).
 
 clrOverride(PortNum)->
-	gen_server:call(?MODULE,{setOverride,PortNum}).
+	gen_server:call(?MODULE,{clrOverride,PortNum}).
 
 
 init(_)->
