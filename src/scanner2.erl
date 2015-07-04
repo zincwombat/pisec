@@ -187,7 +187,7 @@ getChangeSet(Current,Last)->
 	Changes=Current bxor Last,
 	?info({changes,Changes}),
 	ChangeSet=lists:filter(fun(Z)->isSet(Z,Changes) end,?PORTS),
-	?info({changeSet,blist(ChangeSet)}),
+	?info({changeSet,ChangeSet}),
 	ChangeSet.
 
 blist(Port)->
