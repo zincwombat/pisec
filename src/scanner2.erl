@@ -115,7 +115,7 @@ handle_call(readInput,_From,State)->
 	Ovr=ioutils:blist(State#state.ovr_mask),
 	Val=ioutils:blist(State#state.ovr_val),
 	AssertionLevels=ioutils:blist(State#state.assertionLevels),
-	Reply={	{key_________,[0,1,2,3,4,5,6,7]},
+	Reply={	{key_________,[7,6,5,4,3,2,1,0]},
 			{raw_________,Raw},
 			{masked______,Masked},
 			{assertLevels,AssertionLevels},
@@ -154,6 +154,7 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,
 	%% read the raw io values
 	RawInputs=Scanner(),
 
+	%% apply the logic to see if the port is asserted  
 	Asserted = (OvrMask band OvrVal) bor ((bnot OvrMask) band (bnot(RawInputs bxor AssertionLevels))),
 
 	handle_changes(Asserted,Inputs),
