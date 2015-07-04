@@ -23,7 +23,7 @@
 -export([handle_changes/2]).
 -export([isSet/2]).
 
--export([setPort/1]).
+-export([assertPort/1]).
 -export([clearPort/1]).
 -export([readInput/0]).
 
@@ -68,8 +68,8 @@ setInterval(Interval)->
 state()->
 	gen_server:call(?MODULE,state).
 
-setPort(PortNum)->
-	gen_server:call(?MODULE,{setPort,PortNum}).
+assertPort(PortNum)->
+	gen_server:call(?MODULE,{assertPort,PortNum}).
 
 clearPort(PortNum)->
 	gen_server:call(?MODULE,{clearPort,PortNum}).
