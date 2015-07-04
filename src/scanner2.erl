@@ -111,14 +111,14 @@ handle_call(state,_From,State)->
 
 handle_call(readInput,_From,State)->
 	Raw=ioutils:blist(State#state.raw),
-	Masked=ioutils:blist(State#state.inputs),
+	Asserted=ioutils:blist(State#state.inputs),
 	Ovr=ioutils:blist(State#state.ovr_mask),
 	Val=ioutils:blist(State#state.ovr_val),
 	AssertionLevels=ioutils:blist(State#state.assertionLevels),
 	Reply={	{key_________,[7,6,5,4,3,2,1,0]},
 			{raw_________,Raw},
-			{masked______,Masked},
 			{assertLevels,AssertionLevels},
+			{asserted____,Asserted},
 			{ovr_mask____,Ovr},
 			{ovr_val_____,Val}},
 	{reply,Reply,State};
