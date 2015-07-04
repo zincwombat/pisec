@@ -183,12 +183,16 @@ getChangeSet(Same,Same)->
 	[];
 
 getChangeSet(Current,Last)->
-	?info({current,Current,last,Last}),
+	?info({current,blist(Current),last,blist(Last)}),
 	Changes=Current bxor Last,
 	?info({changes,Changes}),
 	ChangeSet=lists:filter(fun(Z)->isSet(Z,Changes) end,?PORTS),
-	?info({changeSet,ChangeSet}),
+	?info({changeSet,blist(ChangeSet)}),
 	ChangeSet.
+
+blist(Port)->
+	<<I7:1,I6:1,I5:1,I4:1,I3:1,I2:1,I1:1,I0:1>> = <<Port>>,
+	[I7,I6,I5,I4,I3,I2,I1,I0].
 
 isSet(Pos,Byte)->
 	(Byte band (1 bsl (Pos)) > 0).
@@ -202,6 +206,7 @@ notify_change(_PortNumber,Value,Value)->
 	ok;
 
 notify_change(PortNumber,NewValue,OldValue)->
+	?info({notify,{port,PortNumber},{new,NewValue},{old,OldValue}}),
 	io_manager:notify(PortNumber,NewValue,OldValue).
 
 getAssertionLevels(Config)->
