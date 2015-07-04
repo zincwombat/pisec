@@ -205,7 +205,7 @@ notify_change(PortNumber,NewValue,OldValue)->
 	io_manager:notify(PortNumber,NewValue,OldValue).
 
 getAssertionLevels(Config)->
-	[AL7,AL6,AL5,AL4,AL3,AL2,AL1,AL0]=lists:map(fun(Z)->element(5,Z) end,Config),
+	[AL0,AL1,AL2,AL3,AL4,AL5,AL6,AL7]=lists:map(fun(Z)->element(5,Z) end,Config),
 	<< Byte >> = << AL7:1,AL6:1,AL5:1,AL4:1,AL3:1,AL2:1,AL1:1,AL0:1 >>,
 	Byte.
 	
