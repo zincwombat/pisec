@@ -75,25 +75,20 @@ terminate(Reason,#state{})->
 % =============================================================================
 
 handle_state_change(false,true,State=#state{port=Port,assertLevel=1})->
-	% asserted
-	handle_assert(State);
+	% from 1 to 0, where 1 is asserted
+	handle_deassert(State);
 
 handle_state_change(true,false,State=#state{port=Port,assertLevel=0})->
-	% asserted
-	handle_assert(State);
+	% from 0 to 1 where 0 is asserted
+	handle_deassert(State);
 
 handle_state_change(false,true,State=#state{port=Port,assertLevel=0})->
-	% asserted
-	handle_deassert(State);
+	% from 1 to 0 where 0 is asserted
+	handle_assert(State);
 
 handle_state_change(true,false,State=#state{port=Port,assertLevel=1})->
-	% asserted
-	handle_deassert(State);
-
-handle_state_change(New,Old,State)->
-	% should be unreachable
-	?error({unreachable,New,Old,State}),
-	error.
+	% from 0 to 1 where 1 is asserted
+	handle_assert(State).
 
 % =============================================================================
 %  Handling
