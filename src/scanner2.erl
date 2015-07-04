@@ -115,7 +115,12 @@ handle_call(readInput,_From,State)->
 	Ovr=ioutils:blist(State#state.ovr_mask),
 	Val=ioutils:blist(State#state.ovr_val),
 	AssertionLevels=ioutils:blist(State#state.assertionLevels),
-	Reply={{raw,Raw},{masked,Masked},{assertionLevels,AssertionLevels},{ovr_mask,Ovr},{ovr_val,Val}},
+	Reply={	{key_________,[0,1,2,3,4,5,6,7]},
+			{raw_________,Raw},
+			{masked______,Masked},
+			{assertLevels,AssertionLevels},
+			{ovr_mask____,Ovr},
+			{ovr_val_____,Val}},
 	{reply,Reply,State};
 
 handle_call(Msg={setOverride,PortNum,Level},_From,State=#state{ovr_mask=OvrMask,ovr_val=OvrVal})->
