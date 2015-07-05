@@ -183,7 +183,7 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,
 	((bnot RawInputs) band (bnot AssertionLevels) band (bnot OvrMask)) bor
 	((bnot AssertionLevels) band OvrMask band (bnot OvrVal)) bor
 	(AssertionLevels band OvrMask band OvrVal) bor
-	(RawInputs band AssertionLevels band (bnot OvrMask));
+	(RawInputs band AssertionLevels band (bnot OvrMask)),
 
 	handle_changes(Asserted,Inputs),
 	
