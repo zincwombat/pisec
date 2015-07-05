@@ -26,7 +26,7 @@
 % assert the port regardless of the actual input values
 -export([assertPort/1]).
 % set the port to the deassrted state
--export([deassertPort/1]).
+-export([deAssertPort/1]).
 -export([resetPort/1]).
 % reset all ports - i.e. undo any hard assert/clear operations
 -export([reset/0]).
