@@ -23,8 +23,13 @@
 -export([handle_changes/2]).
 -export([isSet/2]).
 
+% assert the port regardless of the actual input values
 -export([assertPort/1]).
+% set the port to the deassrted state
 -export([clearPort/1]).
+% reset all ports - i.e. undo any hard assert/clear operations
+-export([reset/0]).
+
 -export([readInput/0]).
 
 -export([setOverride/2]).
@@ -77,6 +82,9 @@ clearPort(PortNum)->
 readInput()->
 	gen_server:call(?MODULE,readInput).
 
+reset()->
+	gen_server:call(?MODULE,reset).
+
 setOverride(PortNum,Level)->
 	gen_server:call(?MODULE,{setOverride,PortNum,Level}).
 
@@ -122,6 +130,20 @@ handle_call(readInput,_From,State)->
 			{ovr_mask____,Ovr},
 			{ovr_val_____,Val}},
 	{reply,Reply,State};
+
+handle_call(Msg=reset,_From,State)->
+	{reply,ok,State#state{ovr_mask=0,ovr_val=0}};
+
+handle_call(Msg={assertPort,PortNum},_From,State=#state{config=Config,
+														ovr_mask=OvrMask,
+														ovr_val=OvrVal})->
+	AssertionLevel=getAssertionLevel(Config,PortNum),
+	NewOvrMask=setBit(PortNum,OvrMask,1),
+	NewOvrVal=setBit(PortNumber,OvrVal,AssertionLevel),
+
+	?info({assertPort,{port,PortNum},{assertLevel,AssertionLevel}}),
+	
+	{reply,ok,State#state{ovr_mask=NewOvrMask,ovr_val=NewOvrVal}};
 
 handle_call(Msg={setOverride,PortNum,Level},_From,State=#state{ovr_mask=OvrMask,ovr_val=OvrVal})->
 	?info(Msg),
@@ -214,6 +236,10 @@ getAssertionLevels(Config)->
 	<< Byte >> = << AL7:1,AL6:1,AL5:1,AL4:1,AL3:1,AL2:1,AL1:1,AL0:1 >>,
 	?info({assertionLevels,Byte}),
 	Byte.
+
+getAssertionLevel(Config,Port)->
+	{Port,_,_,_,Level,_}=lists:keyfind(Port,1,Config),
+	Level.
 	
 setBit(Bit,Byte,0)->
 	Byte band bnot(1 bsl Bit);
