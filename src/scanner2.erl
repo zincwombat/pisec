@@ -26,16 +26,13 @@
 % assert the port regardless of the actual input values
 -export([assertPort/1]).
 % set the port to the deassrted state
--export([clearPort/1]).
+-export([deassertPort/1]).
+-export([resetPort/1]).
 % reset all ports - i.e. undo any hard assert/clear operations
 -export([reset/0]).
 
 -export([readInput/0]).
 
--export([setOverride/2]).
--export([clrOverride/1]).
-
-% -export([processMask/3]).
 
 -ifndef(INTERVAL).
 -define(INTERVAL,?DEFAULT_SCAN_INTERVAL).		%% 50 millisec = 20 Hz
@@ -76,20 +73,17 @@ state()->
 assertPort(PortNum)->
 	gen_server:call(?MODULE,{assertPort,PortNum}).
 
-clearPort(PortNum)->
-	gen_server:call(?MODULE,{clearPort,PortNum}).
+deAssertPort(PortNum)->
+	gen_server:call(?MODULE,{deAssertPort,PortNum}).
+
+resetPort(PortNum)->
+	gen_server:call(?MODULE,{resetPort,PortNum}).
 
 readInput()->
 	gen_server:call(?MODULE,readInput).
 
 reset()->
 	gen_server:call(?MODULE,reset).
-
-setOverride(PortNum,Level)->
-	gen_server:call(?MODULE,{setOverride,PortNum,Level}).
-
-clrOverride(PortNum)->
-	gen_server:call(?MODULE,{clrOverride,PortNum}).
 
 
 init(_)->
@@ -145,16 +139,24 @@ handle_call(Msg={assertPort,PortNum},_From,State=#state{config=Config,
 	
 	{reply,ok,State#state{ovr_mask=NewOvrMask,ovr_val=NewOvrVal}};
 
-handle_call(Msg={setOverride,PortNum,Level},_From,State=#state{ovr_mask=OvrMask,ovr_val=OvrVal})->
-	?info(Msg),
+handle_call(Msg={deAssertPort,PortNum},_From,State=#state{config=Config,
+														ovr_mask=OvrMask,
+														ovr_val=OvrVal})->
+	AssertionLevel=getAssertionLevel(Config,PortNum),
 	NewOvrMask=setBit(PortNum,OvrMask,1),
-	NewOvrVal=setBit(PortNum,OvrVal,Level),
+	NewOvrVal=setBit(PortNum,OvrVal,bnot(AssertionLevel)),
+
+	?info({deAssertPort,{port,PortNum},{assertLevel,AssertionLevel}}),
+	
 	{reply,ok,State#state{ovr_mask=NewOvrMask,ovr_val=NewOvrVal}};
 
-handle_call(Msg={clrOverride,PortNum},_From,State=#state{ovr_mask=OvrMask})->
-	?info(Msg),
+handle_call(Msg={resetPort,PortNum},_From,State=#state{	ovr_mask=OvrMask,
+														ovr_val=OvrVal})->
+
 	NewOvrMask=setBit(PortNum,OvrMask,0),
-	{reply,ok,State#state{ovr_mask=NewOvrMask}};
+	NewOvrVal=setBit(PortNum,OvrVal,0),
+	
+	{reply,ok,State#state{ovr_mask=NewOvrMask,ovr_val=NewOvrVal}};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
@@ -175,9 +177,6 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,
 	%% timer has fired, trigger a scan
 	%% read the raw io values
 	RawInputs=Scanner(),
-
-	%% apply the logic to see if the port is asserted  
-	% Asserted = (OvrMask band OvrVal) bor ((bnot OvrMask) band (bnot(RawInputs bxor AssertionLevels))),
 
 	Asserted=
 	((bnot RawInputs) band (bnot AssertionLevels) band (bnot OvrMask)) bor
