@@ -139,7 +139,7 @@ handle_call(Msg={assertPort,PortNum},_From,State=#state{config=Config,
 														ovr_val=OvrVal})->
 	AssertionLevel=getAssertionLevel(Config,PortNum),
 	NewOvrMask=setBit(PortNum,OvrMask,1),
-	NewOvrVal=setBit(PortNumber,OvrVal,AssertionLevel),
+	NewOvrVal=setBit(PortNum,OvrVal,AssertionLevel),
 
 	?info({assertPort,{port,PortNum},{assertLevel,AssertionLevel}}),
 	
