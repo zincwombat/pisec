@@ -144,7 +144,7 @@ handle_call(Msg={deAssertPort,PortNum},_From,State=#state{config=Config,
 														ovr_val=OvrVal})->
 	AssertionLevel=getAssertionLevel(Config,PortNum),
 	NewOvrMask=setBit(PortNum,OvrMask,1),
-	NewOvrVal=setBit(PortNum,OvrVal,bnot(AssertionLevel)),
+	NewOvrVal=setBit(PortNum,OvrVal,negate(AssertionLevel)),
 
 	?info({deAssertPort,{port,PortNum},{assertLevel,AssertionLevel}}),
 	
@@ -251,5 +251,11 @@ setBit(Bit,Byte,0)->
 
 setBit(Bit,Byte,1)->
 	Byte bor (1 bsl Bit).
+
+negate(1)->
+	0;
+
+negate(0)->
+	1.
 
 
