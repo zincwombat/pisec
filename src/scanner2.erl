@@ -126,9 +126,9 @@ handle_call(readInput,_From,State)->
 	Reply={	{key_________,[7,6,5,4,3,2,1,0]},
 			{raw_________,Raw},
 			{assertLevels,AssertionLevels},
-			{asserted____,Asserted},
 			{ovr_mask____,Ovr},
-			{ovr_val_____,Val}},
+			{ovr_val_____,Val},
+			{asserted____,Asserted}},
 	{reply,Reply,State};
 
 handle_call(Msg=reset,_From,State)->
@@ -179,9 +179,11 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,
 	%% apply the logic to see if the port is asserted  
 	% Asserted = (OvrMask band OvrVal) bor ((bnot OvrMask) band (bnot(RawInputs bxor AssertionLevels))),
 
-	Asserted = (bnot RawInputs) band (bnot AssertionLevels) bor
-	(OvrMask band OvrVal) bor
-	(RawInputs band AssertionLevels band (bnot OvrMask)),
+	Asserted=
+	((bnot RawInputs) band (bnot AssertionLevels) band (bnot OvrMask)) bor
+	((bnot AssertionLevels) band OvrMask band (bnot OvrVal)) bor
+	(AssertionLevels band OvrMask band OvrVal) bor
+	(RawInputs band AssertionLevels band (bnot OvrMask));
 
 	handle_changes(Asserted,Inputs),
 	
