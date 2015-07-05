@@ -177,7 +177,11 @@ handle_info({timeout,_TRef,scan},State=#state{interval=Interval,
 	RawInputs=Scanner(),
 
 	%% apply the logic to see if the port is asserted  
-	Asserted = (OvrMask band OvrVal) bor ((bnot OvrMask) band (bnot(RawInputs bxor AssertionLevels))),
+	% Asserted = (OvrMask band OvrVal) bor ((bnot OvrMask) band (bnot(RawInputs bxor AssertionLevels))),
+
+	Asserted = (bnot RawInputs) band (bnot AssertionLevels) bor
+	(OvrMask band OvrVal) bor
+	(RawInputs band AssertionLevels band (bnot OvrMask)),
 
 	handle_changes(Asserted,Inputs),
 	
