@@ -13,7 +13,7 @@
          terminate/2,
          code_change/3]).
 
--export([getState/0]).
+-export([getState/1]).
 
 -record (state, {port,sensorStatus,label,desc,assertLevel,type}).
 
