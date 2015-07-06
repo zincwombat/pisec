@@ -22,6 +22,7 @@
 -export([getChangeSet/2]).
 -export([handle_changes/2]).
 -export([isSet/2]).
+-export([getState/1]).
 
 % assert the port regardless of the actual input values
 -export([assertPort/1]).
@@ -70,6 +71,9 @@ setInterval(Interval)->
 state()->
 	gen_server:call(?MODULE,state).
 
+getState(PortNum)->
+	gen_server:call(?MODULE,{getState,PortNum}).
+
 assertPort(PortNum)->
 	gen_server:call(?MODULE,{assertPort,PortNum}).
 
@@ -110,6 +114,25 @@ handle_call({interval,NewInterval},_From,State=#state{interval=Interval}) when
 
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
+
+handle_call({getState,PortNum},_From,State=#state{interval=Interval,
+											  scanner=Scanner,
+											  inputs=Inputs,
+											  assertionLevels=AssertionLevels,
+											  ovr_mask=OvrMask,
+											  ovr_val=OvrVal})->
+
+	RawInputs=Scanner(),
+
+	Asserted=
+	((bnot RawInputs) band (bnot AssertionLevels) band (bnot OvrMask)) bor
+	((bnot AssertionLevels) band OvrMask band (bnot OvrVal)) bor
+	(AssertionLevels band OvrMask band OvrVal) bor
+	(RawInputs band AssertionLevels band (bnot OvrMask)),
+
+	Reply=isSet(PortNum,Asserted),
+
+	{reply,Reply,State#state{raw=RawInputs,inputs=Asserted}};
 
 handle_call(readInput,_From,State)->
 	Raw=ioutils:blist(State#state.raw),
@@ -223,7 +246,6 @@ isSet(Pos,Byte)->
 
 handle_changes(NewInput,OldInput)->
 	ChangeSet=getChangeSet(NewInput,OldInput),
-	%% TODO filter out the input ports that are not enabled and dont notify them
 	lists:foreach(fun(Z)->notify_change(Z,isSet(Z,NewInput),isSet(Z,OldInput)) end, ChangeSet).
 
 notify_change(_PortNumber,Value,Value)->
@@ -231,8 +253,7 @@ notify_change(_PortNumber,Value,Value)->
 	ok;
 
 notify_change(PortNumber,NewValue,OldValue)->
-	% TODO first check if the port is enabled
-	?info({notify,{port,PortNumber},{new,NewValue},{old,OldValue}}),
+ 	?info({notify,{port,PortNumber},{new,NewValue},{old,OldValue}}),
 	io_manager:notify(PortNumber,NewValue,OldValue).
 
 getAssertionLevels(Config)->

@@ -19,7 +19,8 @@
 -export ([unregister/0]).
 -export ([show/0]).
 -export ([notify/3]).
--export ([getStatus/0]).
+-export ([getState/0]).
+-export ([getState/1]).
 
 -record (state, {itab}).
 
@@ -45,8 +46,11 @@ unregister()->
 show()->
 	gen_server:call(?MODULE,show).
 
-getStatus()->
-	gen_server:call(?MODULE,getStatus).
+getState()->
+	gen_server:call(?MODULE,getState).
+
+getState(Port)->
+	gen_server:call(?MODULE,{getState,Port}).
 
 notify(PortNumber,NewValue,OldValue)->
 	gen_server:cast(?MODULE,{notify,PortNumber,NewValue,OldValue}).
@@ -83,8 +87,22 @@ handle_call(show,_From,State=#state{itab=ITab})->
     Reply=ets:tab2list(ITab),
    	{reply,Reply,State};
 
-handle_call(getStatus,_From,State=#state{itab=ITab})->
+handle_call(getState,_From,State=#state{itab=ITab})->
     Handlers=ets:tab2list(ITab),
+    Reply=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
+   	{reply,Reply,State};
+
+handle_call({getState,Port},_From,State=#state{itab=ITab})->
+    Reply=
+    case ets:lookup(ITab,Port) of
+    	[{Port,Pid}]->
+    		input_handler:getState(Pid);
+    	_->
+    		?error({badarg,Port}),
+    		[]
+    end,
+    {reply,Reply,State};
+
     Reply=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
    	{reply,Reply,State};
 

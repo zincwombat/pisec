@@ -40,6 +40,14 @@ getState(Pid)->
 init([X={Port,Label,Desc,true,AssertLevel,Type}])->
 	?info({pid,self(),{args,X}}),
 	io_manager:register(Port),
+	Asserted=scanner2:getState(Port),
+	AssertLevel=
+	case Asserted of
+		true->
+			asserted;
+		_->
+			deAsserted
+	end,
 	State=#state{port=Port,label=Label,desc=Desc,assertLevel=AssertLevel,type=Type},
 	{ok,State}.
 
