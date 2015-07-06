@@ -49,8 +49,10 @@ handle_call(stop,_From,State)->
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
-handle_call(getState,_From,State=#state{sensorStatus=SensorStatus})->
-	{reply,{sensorStatus,SensorStatus},State};
+handle_call(getState,_From,State=#state{port=Port,
+										sensorStatus=SensorStatus,
+										desc=Desc})->
+	{reply,{sensorStatus,{port,Port},{desc,Desc},{status,SensorStatus}},State};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},

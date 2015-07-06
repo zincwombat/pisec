@@ -19,6 +19,7 @@
 -export ([unregister/0]).
 -export ([show/0]).
 -export ([notify/3]).
+-export ([getStatus/0]).
 
 -record (state, {itab}).
 
@@ -43,6 +44,9 @@ unregister()->
 
 show()->
 	gen_server:call(?MODULE,show).
+
+getStatus()->
+	gen_server:call(?MODULE,getStatus).
 
 notify(PortNumber,NewValue,OldValue)->
 	gen_server:cast(?MODULE,{notify,PortNumber,NewValue,OldValue}).
@@ -79,6 +83,11 @@ handle_call(show,_From,State=#state{itab=ITab})->
     Reply=ets:tab2list(ITab),
    	{reply,Reply,State};
 
+handle_call(getStatus,_From,State=#state{itab=ITab})->
+    Handlers=ets:tab2list(ITab),
+    Reply=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
+   	{reply,Reply,State};
+
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
 	?warn(Unhandled),
@@ -94,7 +103,6 @@ handle_cast({notify,PortNumber,NewValue,OldValue},State=#state{itab=ITab})->
 			% no registered handler
 			?warn({no_handler,{port,PortNumber}})
 	end,
-
 	{noreply,State};
 
 handle_cast(Msg,State)->
