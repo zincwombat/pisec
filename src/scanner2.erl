@@ -210,11 +210,8 @@ getChangeSet(Same,Same)->
 	[];
 
 getChangeSet(Current,Last)->
-	?info({current,blist(Current),last,blist(Last)}),
 	Changes=Current bxor Last,
-	?info({changes,Changes}),
 	ChangeSet=lists:filter(fun(Z)->isSet(Z,Changes) end,?PORTS),
-	?info({changeSet,ChangeSet}),
 	ChangeSet.
 
 blist(Port)->
@@ -226,6 +223,7 @@ isSet(Pos,Byte)->
 
 handle_changes(NewInput,OldInput)->
 	ChangeSet=getChangeSet(NewInput,OldInput),
+	%% TODO filter out the input ports that are not enabled and dont notify them
 	lists:foreach(fun(Z)->notify_change(Z,isSet(Z,NewInput),isSet(Z,OldInput)) end, ChangeSet).
 
 notify_change(_PortNumber,Value,Value)->
@@ -233,6 +231,7 @@ notify_change(_PortNumber,Value,Value)->
 	ok;
 
 notify_change(PortNumber,NewValue,OldValue)->
+	% TODO first check if the port is enabled
 	?info({notify,{port,PortNumber},{new,NewValue},{old,OldValue}}),
 	io_manager:notify(PortNumber,NewValue,OldValue).
 
@@ -258,4 +257,5 @@ negate(1)->
 negate(0)->
 	1.
 
-
+isEnabled(PortNum,Config)->
+	ok.

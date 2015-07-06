@@ -13,7 +13,9 @@
          terminate/2,
          code_change/3]).
 
--record (state, {port,label,desc,assertLevel,type}).
+--export([getState/0]).
+
+-record (state, {port,sensorStatus,label,desc,assertLevel,type}).
 
 %==============================================================================
 % API
@@ -27,6 +29,9 @@ stop(Pid) ->
 
 state(Pid) ->
 	gen_server:call(Pid,state).
+
+getState(Pid)->
+	gen_server:call(Pid,getState).
 
 %==============================================================================
 % callback functions
@@ -44,6 +49,9 @@ handle_call(stop,_From,State)->
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
+handle_call(getState,_From,State=#state{sensorStatus=SensorStatus})->
+	{reply,{sensorStatus,SensorStatus},State};
+
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
 	?warn(Unhandled),
@@ -55,8 +63,8 @@ handle_cast(Msg,State)->
 	{noreply,State}.
 
 handle_info(Msg={stateChange,NewValue,OldValue},State)->
-	handle_state_change(NewValue,OldValue,State),
-	{noreply,State};
+	NewState=handle_state_change(NewValue,OldValue,State),
+	{noreply,NewState};
 
 handle_info(Msg,State)->
 	Unhandled={unhandled_info,{msg,Msg}},
@@ -96,19 +104,19 @@ handle_state_change(true,false,State=#state{port=Port,assertLevel=1})->
 
 handle_assert(State=#state{type=sensor})->
 	?info({sensor_asserted,State#state.label,State#state.desc}),
-	ok;
+	State#state{sensorStatus=asserted};
 
 handle_assert(State=#state{type=control})->
 	?info({control_asserted,State#state.label,State#state.desc}),
-	ok.
+	State#state{sensorStatus=asserted}.
 
 handle_deassert(State=#state{type=sensor})->
 	?info({sensor_deasserted,State#state.label,State#state.desc}),
-	ok;
+	State#state{sensorStatus=deAsserted};
 
 handle_deassert(State=#state{type=control})->
 	?info({control_deasserted,State#state.label,State#state.desc}),
-	ok.
+	State#state{sensorStatus=deAsserted}.
 
 
 	
