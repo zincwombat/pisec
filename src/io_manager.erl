@@ -101,9 +101,6 @@ handle_call({getState,Port},_From,State=#state{itab=ITab})->
     		?error({badarg,Port}),
     		[]
     end,
-    {reply,Reply,State};
-
-    Reply=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
    	{reply,Reply,State};
 
 handle_call(Msg,From,State)->
