@@ -40,14 +40,6 @@ getState(Pid)->
 init([X={Port,Label,Desc,true,AssertLevel,Type}])->
 	?info({pid,self(),{args,X}}),
 	io_manager:register(Port),
-	Asserted=scanner2:getState(Port),
-	AssertLevel=
-	case Asserted of
-		true->
-			asserted;
-		_->
-			deAsserted
-	end,
 	State=#state{port=Port,label=Label,desc=Desc,assertLevel=AssertLevel,type=Type},
 	{ok,State}.
 
@@ -58,9 +50,17 @@ handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
 handle_call(getState,_From,State=#state{port=Port,
-										sensorStatus=SensorStatus,
 										desc=Desc})->
-	{reply,{sensorStatus,{port,Port},{desc,Desc},{status,SensorStatus}},State};
+
+	Asserted=scanner2:getState(Port),
+	SensorStatus=
+	case Asserted of
+		true->
+			asserted;
+		_->
+			deAsserted
+	end,
+	{reply,{sensorStatus,{port,Port},{desc,Desc},{status,SensorStatus}},State#state{sensorStatus=SensorStatus}};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
