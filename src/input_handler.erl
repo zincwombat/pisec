@@ -5,6 +5,7 @@
          stop/1]).
 
 -include("debug.hrl").
+-include("alarm.hrl").
 
 -export([init/1,
          handle_call/3,
@@ -109,24 +110,38 @@ handle_state_change(true,false,State=#state{port=Port,assertLevel=1})->
 	handle_assert(State).
 
 % =============================================================================
-%  Handling
+%  Handling, send changes to the alarm manager FSM
 % =============================================================================
 
-handle_assert(State=#state{type=sensor})->
+handle_assert(State)->
 	?info({sensor_asserted,State#state.label,State#state.desc}),
-	State#state{sensorStatus=asserted};
+	NewState=State#state{sensorStatus=asserted},
+	alarm:notify(stateToEvent(NewState)),
+	NewState.
 
-handle_assert(State=#state{type=control})->
-	?info({control_asserted,State#state.label,State#state.desc}),
-	State#state{sensorStatus=asserted}.
-
-handle_deassert(State=#state{type=sensor})->
+handle_deassert(State)->
 	?info({sensor_deasserted,State#state.label,State#state.desc}),
-	State#state{sensorStatus=deAsserted};
+	NewState=State#state{sensorStatus=deAsserted},
+	alarm:notify(stateToEvent(NewState)),
+	NewState.
 
-handle_deassert(State=#state{type=control})->
-	?info({control_deasserted,State#state.label,State#state.desc}),
-	State#state{sensorStatus=deAsserted}.
+% =============================================================================
+%  Convert to a record type that alarm FSM expects
+% =============================================================================
+
+stateToEvent(State=#state{	port=Port,
+							assertLevel=AssertLevel,
+							sensorStatus=SensorStatus,
+							desc=Desc,
+							label,
+							type=Type })->
+	#event{	port=Port,
+			sensorStatus=SensorStatus,
+			label=Label,
+			desc=Desc,
+			assertLevel=AssertLevel,
+			type=Type}.
+
 
 
 	

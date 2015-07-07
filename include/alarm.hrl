@@ -22,3 +22,6 @@
 
 -record(json,			{meta,data}).
 -record(link,			{type,rel,href}).
+
+
+-record(event, 			{port,sensorStatus,label,desc,assertLevel,type}).

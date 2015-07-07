@@ -7,23 +7,23 @@
 -define(SYNC_INTERVAL,5000).		%% 5 seconds
 
 -export([
-        init/1,
-        handle_event/3,
-        handle_sync_event/4,
-        handle_info/3,
-        terminate/3,
+	init/1,
+	handle_event/3,
+	handle_sync_event/4,
+	handle_info/3,
+	terminate/3,
 	code_change/4
 ]).
 
 -export([
-        start/1,        %% start the FSM
+	start/1,        %% start the FSM
 	stop/0,
-	state/0,	%% return all alarms
-	state/1,	%% return all alarms in given state
+	state/0,		%% return all alarms
+	state/1,		%% return all alarms in given state
 	portstate/1,	%% return the particular portstate
 	masks/0,
 	history/0,
-	notify/2	%% client notifies of state change
+	notify/2		%% client notifies of state change
 ]).
 
 -export([
