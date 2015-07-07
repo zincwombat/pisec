@@ -133,7 +133,7 @@ stateToEvent(State=#state{	port=Port,
 							assertLevel=AssertLevel,
 							sensorStatus=SensorStatus,
 							desc=Desc,
-							label,
+							label=Label,
 							type=Type })->
 	#event{	port=Port,
 			sensorStatus=SensorStatus,
