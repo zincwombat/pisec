@@ -220,11 +220,41 @@ i_handle_event(Event=#event{type=sensor},StateName,StateData)->
 i_handle_event(Event=#event{type=control},StateName,StateData)->
 	handle_control(Event,StateName,StateData).
 
-handle_alarm(Event,StateName,StateData)->
+handle_alarm(Event=#event{sensorStatus=SensorStatus},
+			 StateName,
+			 StateData=#state{active_count=ActiveCount,
+			 				  active_set=ActiveSet,
+			 				  history=Queue})->
 	?info({alarm_event,Event}),
-	{StateName,StateData}.
 
-handle_control(Event,StateName,StateData)->
+	NewActiveSet=
+	case SensorStatus of
+		asserted->
+			sets:add_element(Event,ActiveSet);
+		_=>
+			sets:del_element(Event,ActiveSet)
+	end,
+	NewActiveCount=sets:size(ActiveSet),
+
+	NextState=
+	case {StateName,ActiveCount} of
+		{'DISABLED',_}->
+			'DISABLED';
+		{'ACK',0}->
+			'CLEAR';
+		{'CLEAR',N} where N>0->
+			'ACTIVE';
+		_->
+			StateName
+	end,
+	
+	?info({next_state,NextState}),
+	% TODO -- add history
+	{NextState,StateData#state{	active_count=NewActiveCount,
+								active_set=NewActiveSet}};
+
+
+handle_control(Event=#event{},StateName,StateData)->
 	?info({control_event,Event}),
 	{StateName,StateData}.
 
