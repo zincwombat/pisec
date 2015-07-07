@@ -37,8 +37,7 @@
 	'DISARMED'/2,
 	'CLEAR'/2,
 	'ACTIVE'/2,
-	'ACK'/2,
-	'SYNC'/2
+	'ACK'/2
 ]).
 
 -define(START_OPTIONS,  []).
@@ -63,7 +62,7 @@ stop()->
 	gen_fsm:send_all_state_event(?MODULE,{stop,normal}).
 
 notify(Event=#event{})->
-	gen_fsm:send_event(?MODULE,Event).
+	gen_fsm:send_all_state_event(?MODULE,Event).
 
 disarm()->
 	gen_fsm:sync_send_all_state_event(?MODULE,disarm).
@@ -87,7 +86,7 @@ state()->
 init(Args)->
 	?info({starting,self()}),
 	process_flag(trap_exit,true),
-	
+
 	HistorySize=config:get(alarm_handler_history_size,?DEFAULT_ALARMHANDLER_HISTORY),
 	InitState=config:get(initstate,?DEFAULT_ALARM_INIT_STATE),
 	config:set(initstate,InitState),
@@ -186,11 +185,24 @@ handle_sync_event(state,_From,State,StateData)->
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
 	{reply,{error,{unhandled,Event}},StateName,StateData}.
 
+
+%% ============================================================================
+%% HANDLE ALL STATE EVENT CALLBACKS
+%% ============================================================================
+
+handle_event(Event=#event{},StateName,StateData)->
+	{NextState,NextStateData}=i_handle_event(Event,StateName,StateData),
+	{next_state,NextState,NextStateData};
+
 handle_event(_Event={stop,Reason},_StateName,StateData=#state{})->
 	{stop,Reason,StateData};
 
 handle_event(_Event,StateName,StateData)->
 	{next_state,StateName,StateData}.
+
+%% ============================================================================
+%% HANDLE TIMERS etc
+%% ============================================================================
 
 handle_info(Event,State,StateData)->
 	?info({ignored_info,Event}),
@@ -202,15 +214,28 @@ terminate(Reason,_StateName,_StateData)->
 code_change(_OldVsn,StateName,StateData,_Extra)->
 	{ok,StateName,StateData}.	
 
+i_handle_event(Event=#event{type=sensor},StateName,StateData)->
+	handle_alarm(Event,StateName,StateData);
+
+i_handle_event(Event=#event{type=control},StateName,StateData)->
+	handle_control(Event,StateName,StateData);
+
+handle_alarm(Event,StateName,StateData)->
+	?info({alarm_event,Event}),
+	{StateName,StateData}.
+
+handle_control(Event,StateName,StateData)->
+	?info({control_event,Event}),
+	{StateName,StateData}.
+
+
+%% ============================================================================
 %% STATE CALLBACKS
+%% ============================================================================
 
 'DISARMED'(Event,StateData)->
 	?info({{event,Event},{state,'DISARMED'}}),
 	{next_state,'DISARMED',StateData}.
-
-'SYNC'(Event,StateData)->
-	?info({{event,Event},{state,'SYNC'}}),
-	{next_state,'SYNC',StateData}.
 
 'ACK'(Event,StateData)->
 	?info({{event,Event},{state,'ACK'}}),
