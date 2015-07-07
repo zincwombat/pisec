@@ -50,8 +50,7 @@ handle_call(stop,_From,State)->
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
-handle_call(getState,_From,State=#state{port=Port,
-										desc=Desc})->
+handle_call(getState,_From,State=#state{port=Port})->
 
 	Asserted=scanner2:getState(Port),
 	SensorStatus=
@@ -61,7 +60,9 @@ handle_call(getState,_From,State=#state{port=Port,
 		_->
 			deAsserted
 	end,
-	{reply,{sensorStatus,{port,Port},{desc,Desc},{status,SensorStatus}},State#state{sensorStatus=SensorStatus}};
+	NewState=State#state{sensorStatus=SensorStatus},
+
+	{reply,stateToEvent(NewState),NewState};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},

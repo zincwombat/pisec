@@ -100,6 +100,9 @@ init(Args)->
 
 	?info({SensorStates,SensorStates}),
 
+	% get the list of asserted sensors (not controls)
+	% Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
+
 
 	{ok,InitState,StateData}.
 
@@ -200,4 +203,11 @@ code_change(_OldVsn,StateName,StateData,_Extra)->
 'ACTIVE'(Event,StateData)->
 	?info({{event,Event},{state,'ACTIVE'}}),
 	{next_state,'ACTIVE',StateData}.
+
+
+%% ============================================================================
+%% Utility Routines
+%% ============================================================================
+
+
 
