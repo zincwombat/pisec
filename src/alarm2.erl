@@ -76,13 +76,16 @@ ack()->
 unack()->
 	gen_fsm:sync_send_all_state_event(?MODULE,unack).
 
+history()->
+	gen_fsm:sync_send_all_state_event(?MODULE,history).
+
 
 init(Args)->
 	?info({starting,self()}),
 	process_flag(trap_exit,true),
 	HistorySize=config:get(alarm_handler_history_size,?DEFAULT_ALARMHANDLER_HISTORY),
 	Queue=aqueue:new(HistorySize),
-    NewQueue=aqueue:logFsm(InitState,"init",'SYNC',Queue),
+    NewQueue=aqueue:logFsm('DISARMED',"init",'SYNC',Queue),
 	StateData=#state{active_set=sets:new(),active_count=0,history=NewQueue},
 	{ok,'DISARMED',StateData}.
 
