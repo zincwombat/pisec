@@ -164,7 +164,7 @@ code_change(_OldVsn,StateName,StateData,_Extra)->
 
 'DISARMED'(Event,StateData)->
 	?info({{event,Event},{state,'DISARMED'}}),
-	{next_state,'DISARMED',StateData};
+	{next_state,'DISARMED',StateData}.
 
 'SYNC'(Event,StateData)->
 	?info({{event,Event},{state,'SYNC'}}),
