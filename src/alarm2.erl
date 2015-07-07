@@ -22,7 +22,8 @@
 
 -export([
 	notify/1,
-	history/0
+	history/0,
+	state/0
 ]).
 
 -export([
@@ -79,16 +80,20 @@ unack()->
 history()->
 	gen_fsm:sync_send_all_state_event(?MODULE,history).
 
+state()->
+	gen_fsm:sync_send_all_state_event(?MODULE,state).
+
 
 init(Args)->
 	?info({starting,self()}),
 	process_flag(trap_exit,true),
 	HistorySize=config:get(alarm_handler_history_size,?DEFAULT_ALARMHANDLER_HISTORY),
+	InitState=config:get(initstate,?DEFAULT_ALARM_INIT_STATE),
+	config:set(initstate,InitState),
 	Queue=aqueue:new(HistorySize),
-    NewQueue=aqueue:logFsm('DISARMED',"init",'SYNC',Queue),
+    NewQueue=aqueue:logFsm(InitState,"init",'SYNC',Queue),
 	StateData=#state{active_set=sets:new(),active_count=0,history=NewQueue},
-	{ok,'DISARMED',StateData}.
-
+	{ok,InitState,StateData}.
 
 handle_sync_event(Event=disarm,_From,StateName,StateData=#state{history=Queue}) when StateName /= 'DISARMED'->
 	config:set(initstate,'DISARMED'),
@@ -143,6 +148,9 @@ handle_sync_event(Event=ack,_From,StateName='ACK',StateData=#state{active_set=AA
 
 handle_sync_event(history,_From,State,StateData=#state{history=H})->
 	{reply,aqueue:dump(H),State,StateData};
+
+handle_sync_event(state,_From,State,StateData)->
+	{reply,{ok,State},State,StateData};
 		
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
 	{reply,?error({unhandled,Event}),StateName,StateData}.
