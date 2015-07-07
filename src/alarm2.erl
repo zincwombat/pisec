@@ -87,24 +87,44 @@ state()->
 init(Args)->
 	?info({starting,self()}),
 	process_flag(trap_exit,true),
+	
 	HistorySize=config:get(alarm_handler_history_size,?DEFAULT_ALARMHANDLER_HISTORY),
 	InitState=config:get(initstate,?DEFAULT_ALARM_INIT_STATE),
 	config:set(initstate,InitState),
 	Queue=aqueue:new(HistorySize),
-    NewQueue=aqueue:logFsm(InitState,"init",'SYNC',Queue),
-	StateData=#state{active_set=sets:new(),active_count=0,history=NewQueue},
 
 	% we need to get the asserted states of all the alarms
 
 	SensorStates=io_manager:getState(),
 
-	?info({SensorStates,SensorStates}),
+	?info({sensorStates,SensorStates}),
 
 	% get the list of asserted sensors (not controls)
-	% Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
 
+	Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
+	ActiveSet=sets:from_list(Asserted),
+	ActiveCount=sets:size(ActiveSet),
 
-	{ok,InitState,StateData}.
+	NextState=
+	case InitState of 
+		'DISARMED'->
+			'DISARMED';
+
+		_->
+			case ActiveCount of
+				0 ->
+					'CLEAR';
+				_->
+					'ACTIVE'
+			end
+	end,
+
+	NewQueue=aqueue:logFsm(InitState,"init",NextState,Queue),
+	?info({initstate,NextState}),
+
+	{ok,NextState,StateData=#state{	active_count=ActiveCount,
+									active_set=ActiveSet,
+									history=NewQueue}}.
 
 handle_sync_event(Event=disarm,_From,StateName,StateData=#state{history=Queue}) when StateName /= 'DISARMED'->
 	config:set(initstate,'DISARMED'),
@@ -209,5 +229,9 @@ code_change(_OldVsn,StateName,StateData,_Extra)->
 %% Utility Routines
 %% ============================================================================
 
+isSensorAsserted(#event{type=sensor,sensorStatus=asserted})->
+	true;
 
+isSensorAsserted(_)->
+	false.
 
