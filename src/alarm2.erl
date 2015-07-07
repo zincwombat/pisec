@@ -93,6 +93,14 @@ init(Args)->
 	Queue=aqueue:new(HistorySize),
     NewQueue=aqueue:logFsm(InitState,"init",'SYNC',Queue),
 	StateData=#state{active_set=sets:new(),active_count=0,history=NewQueue},
+
+	% we need to get the asserted states of all the alarms
+
+	SensorStates=io_manager:getState(),
+
+	?info({SensorStates,SensorStates}),
+
+
 	{ok,InitState,StateData}.
 
 handle_sync_event(Event=disarm,_From,StateName,StateData=#state{history=Queue}) when StateName /= 'DISARMED'->
@@ -153,7 +161,7 @@ handle_sync_event(state,_From,State,StateData)->
 	{reply,{ok,State},State,StateData};
 		
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
-	{reply,?error({unhandled,Event}),StateName,StateData}.
+	{reply,{error,{unhandled,Event}},StateName,StateData}.
 
 handle_event(_Event={stop,Reason},_StateName,StateData=#state{})->
 	{stop,Reason,StateData};
