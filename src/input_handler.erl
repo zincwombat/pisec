@@ -94,6 +94,14 @@ terminate(Reason,#state{})->
 % Miscellaneous
 % =============================================================================
 
+handle_state_change(false,true,State)->
+	handle_deassert(State);
+
+handle_state_change(true,false,State)->
+	handle_assert(State);
+
+% TODO following may be redundant
+
 handle_state_change(false,true,State=#state{port=Port,assertLevel=1})->
 	% from 1 to 0, where 1 is asserted
 	handle_deassert(State);
