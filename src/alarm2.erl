@@ -218,7 +218,7 @@ i_handle_event(Event=#event{type=sensor},StateName,StateData)->
 	handle_alarm(Event,StateName,StateData);
 
 i_handle_event(Event=#event{type=control},StateName,StateData)->
-	handle_control(Event,StateName,StateData);
+	handle_control(Event,StateName,StateData).
 
 handle_alarm(Event,StateName,StateData)->
 	?info({alarm_event,Event}),
