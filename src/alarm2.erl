@@ -231,7 +231,7 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 	case SensorStatus of
 		asserted->
 			sets:add_element(Event,ActiveSet);
-		_=>
+		_->
 			sets:del_element(Event,ActiveSet)
 	end,
 	NewActiveCount=sets:size(ActiveSet),
@@ -247,7 +247,7 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 		_->
 			StateName
 	end,
-	
+
 	?info({next_state,NextState}),
 	% TODO -- add history
 	{NextState,StateData#state{	active_count=NewActiveCount,
@@ -256,6 +256,7 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 
 handle_control(Event=#event{},StateName,StateData)->
 	?info({control_event,Event}),
+
 	{StateName,StateData}.
 
 
