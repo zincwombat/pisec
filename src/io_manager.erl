@@ -22,7 +22,6 @@
 -export ([notify/3]).
 -export ([getState/0]).
 -export ([getState/1]).
--export ([isAsserted/1]).
 
 -record (state, {itab}).
 
@@ -53,6 +52,9 @@ getState()->
 
 getState(Port)->
 	gen_server:call(?MODULE,{getState,Port}).
+
+isAsserted(Port)->
+	gen_server:call(?MODULE,{isAsserted,Port}).
 
 notify(PortNumber,NewValue,OldValue)->
 	gen_server:cast(?MODULE,{notify,PortNumber,NewValue,OldValue}).
@@ -118,6 +120,7 @@ handle_call({getState,Label},_From,State=#state{itab=ITab}) when is_atom(Label)-
 			[]
 	end,
 	{reply,Reply,State};
+
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
