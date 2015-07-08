@@ -37,8 +37,8 @@ stop() ->
 state(Pid) ->
 	gen_server:call(?MODULE,state).
 
-register(Port)->
-	gen_server:call(?MODULE,{register,Port,self()}).
+register(Port,Label)->
+	gen_server:call(?MODULE,{register,Port,self(),Label}).
 
 unregister()->
 	gen_server:call(?MODULE,{unregister,self()}).
@@ -72,8 +72,8 @@ handle_call(stop,_From,State)->
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
-handle_call({register,Port,Pid},_From,State=#state{itab=ITab}) when is_pid(Pid)->
-    ets:insert(ITab,{Port,Pid}),
+handle_call({register,Port,Pid,Label},_From,State=#state{itab=ITab}) when is_pid(Pid)->
+    ets:insert(ITab,{Port,Pid,Label}),
     ?info({added_handler,{port,Port}}),
     link(Pid),	
    	{reply,ok,State};
@@ -92,16 +92,30 @@ handle_call(getState,_From,State=#state{itab=ITab})->
     Reply=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
    	{reply,Reply,State};
 
-handle_call({getState,Port},_From,State=#state{itab=ITab})->
+% 	allow both port labels (atoms) and integers to be used 
+
+handle_call({getState,Port},_From,State=#state{itab=ITab}) when ?is_portnum(Port)->
     Reply=
     case ets:lookup(ITab,Port) of
-    	[{Port,Pid}]->
+    	[{Port,Pid,_}]->
     		input_handler:getState(Pid);
     	_->
     		?error({badarg,Port}),
     		[]
     end,
    	{reply,Reply,State};
+
+handle_call({getState,Label},_From,State=#state{itab=ITab}) when is_atom(Label)->
+	Handlers=ets:tab2list(ITab),
+	Reply=
+	case lists:keyfind(Label,3,Handlers) of
+		[{Port,Pid,Label}]->
+			input_handler:getState(Pid);
+		_->
+			?error({badarg,Label}),
+			[]
+	end,
+	{reply,Reply,State};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
