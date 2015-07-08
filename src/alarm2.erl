@@ -253,7 +253,7 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 	?info({next_state,NextState}),
 	% TODO -- add history
 	{NextState,StateData#state{	active_count=NewActiveCount,
-								active_set=NewActiveSet}};
+								active_set=NewActiveSet}}.
 
 
 handle_control(Event=#event{},StateName,StateData)->
