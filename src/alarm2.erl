@@ -105,7 +105,7 @@ init(Args)->
 	% get the list of asserted sensors (not controls)
 
 	Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
-	ActiveSet=sets:from_list(lists:map(fun(Z)->eventToState(Z) end,Asserted)),
+	ActiveSet=sets:from_list(lists:map(fun(Z)->eventToAlarm(Z) end,Asserted)),
 	ActiveCount=sets:size(ActiveSet),
 
 	NextState=
