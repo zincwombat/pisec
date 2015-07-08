@@ -216,6 +216,7 @@ handle_event(_Event,StateName,StateData)->
 handle_info(Event=tm_sync,'WAIT_ARM',StateData)->
 	?info({event,Event}),
 
+	SensorStates=io_manager:getState(),
 	Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
 	ActiveSet=sets:from_list(lists:map(fun(Z)->eventToAlarm(Z) end,Asserted)),
 	ActiveCount=sets:size(ActiveSet),
