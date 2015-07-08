@@ -262,7 +262,7 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 			 StateData=#state{active_count=ActiveCount,
 			 				  active_set=ActiveSet,
 			 				  history=Queue}) when StateName /= 'DISARMED' ->
-	?info({alarm_event,Event}),
+	?info({alarm_event,Event,StateName}),
 
 	NewActiveSet=
 	case SensorStatus of
