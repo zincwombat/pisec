@@ -230,7 +230,7 @@ handle_info(Event=tm_sync,'WAIT_ARM',StateData)->
 
 	NextStateData=#state{	active_count=ActiveCount,
 							active_set=ActiveSet,
-							history=NewQueue}
+							history=NewQueue},
 
 	?info({next_state,NextState}),
 
