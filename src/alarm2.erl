@@ -242,7 +242,9 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 			'DISABLED';
 		{'ACK',0}->
 			'CLEAR';
-		{'CLEAR',N} where N>0->
+		{'CLEAR',0}->
+			'CLEAR';
+		{'CLEAR',_N}->
 			'ACTIVE';
 		_->
 			StateName
