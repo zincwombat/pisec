@@ -95,12 +95,19 @@ init(_)->
 	State=#state{},
 	Scanner=State#state.scanner,
 	Inputs=Scanner(),
+	
 	Config=config:get(inputs),
+	OvrMask=config:get(ovrmask,0),
+	OvrVal=config:get(ovrval,0),
+
 	AssertionLevels=getAssertionLevels(Config),
 	TRef=erlang:start_timer(State#state.interval,self(),scan),
+
 	{ok,State#state{tref=TRef,
 					raw=Inputs,
 					inputs=Inputs,
+					ovr_mask=OvrMask,
+					ovr_val=OvrVal,
 					assertionLevels=AssertionLevels,
 					config=Config}}.
 
@@ -158,6 +165,9 @@ handle_call(Msg={assertPort,PortNum},_From,State=#state{config=Config,
 	NewOvrMask=setBit(PortNum,OvrMask,1),
 	NewOvrVal=setBit(PortNum,OvrVal,AssertionLevel),
 
+	config:set(ovrmask,NewOvrMask),
+	config:set(ovrval,NewOvrVal),
+
 	?info({assertPort,{port,PortNum},{assertLevel,AssertionLevel}}),
 	
 	{reply,ok,State#state{ovr_mask=NewOvrMask,ovr_val=NewOvrVal}};
@@ -168,6 +178,9 @@ handle_call(Msg={deAssertPort,PortNum},_From,State=#state{config=Config,
 	AssertionLevel=getAssertionLevel(Config,PortNum),
 	NewOvrMask=setBit(PortNum,OvrMask,1),
 	NewOvrVal=setBit(PortNum,OvrVal,negate(AssertionLevel)),
+
+	config:set(ovrmask,NewOvrMask),
+	config:set(ovrval,NewOvrVal),
 
 	?info({deAssertPort,{port,PortNum},{assertLevel,AssertionLevel}}),
 	
