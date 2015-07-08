@@ -341,7 +341,7 @@ eventToAlarm(#event{port=Port,label=Label,desc=Desc})->
 
 isAlarmEnabled()->
 	case io_manager:getState(enable) of
-		#event{sensorState=asserted}->
+		#event{sensorStatus=asserted}->
 			true;
 		_->
 			false
