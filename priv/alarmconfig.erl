@@ -24,3 +24,4 @@
 {output_flash_slow,		500}.
 {output_flash_normal,	250}.
 {output_flash_fast,		100}.
+{timer_wait_arm,		30000}.

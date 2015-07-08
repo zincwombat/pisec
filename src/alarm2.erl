@@ -38,7 +38,8 @@
 	'DISARMED'/2,
 	'CLEAR'/2,
 	'ACTIVE'/2,
-	'ACK'/2
+	'ACK'/2,
+	'WAIT_ARM'/2
 ]).
 
 -define(START_OPTIONS,  []).
@@ -93,6 +94,8 @@ init(Args)->
 
 	HistorySize=config:get(alarm_handler_history_size,?DEFAULT_ALARMHANDLER_HISTORY),
 	InitState=config:get(initstate,?DEFAULT_ALARM_INIT_STATE),
+	
+
 	config:set(initstate,InitState),
 	Queue=aqueue:new(HistorySize),
 
@@ -108,18 +111,16 @@ init(Args)->
 	ActiveSet=sets:from_list(lists:map(fun(Z)->eventToAlarm(Z) end,Asserted)),
 	ActiveCount=sets:size(ActiveSet),
 
-	NextState=
-	case InitState of 
-		'DISARMED'->
-			'DISARMED';
+	WaitArmTimeout=config:get(timer_wait_arm,?DEFAULT_WAIT_ARM_INTERVAL),
 
+	NextState=
+	case isAlarmEnabled() of 
+		false->
+			'DISARMED';
 		_->
-			case ActiveCount of
-				0 ->
-					'CLEAR';
-				_->
-					'ACTIVE'
-			end
+			% set the arming timer
+			TRef=erlang:start_timer(WaitArmTimeout,self(),tm_sync),
+			'WAIT_ARM'
 	end,
 
 	NewQueue=aqueue:logFsm(InitState,"init",NextState,Queue),
@@ -212,9 +213,37 @@ handle_event(_Event,StateName,StateData)->
 %% HANDLE TIMERS etc
 %% ============================================================================
 
+handle_info(Event=tm_sync,'WAIT_ARM',StateData)->
+	?info({event,Event}),
+
+	Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
+	ActiveSet=sets:from_list(lists:map(fun(Z)->eventToAlarm(Z) end,Asserted)),
+	ActiveCount=sets:size(ActiveSet),
+
+	NextState=
+	case ActiveCount of
+		0->
+			'CLEAR';
+		_->
+			'ACTIVE'
+	end,
+
+	NextStateData=#state{	active_count=ActiveCount,
+							active_set=ActiveSet,
+							history=NewQueue}
+
+	?info({next_state,NextState}),
+
+	{next_state,NextState,NextStateData};
+
+
 handle_info(Event,State,StateData)->
 	?info({ignored_info,Event}),
 	{next_state,State,StateData}.
+
+%% ============================================================================
+%% OTHER
+%% ============================================================================
 
 terminate(Reason,_StateName,_StateData)->
 	{stop,Reason}.
@@ -232,7 +261,7 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 			 StateName,
 			 StateData=#state{active_count=ActiveCount,
 			 				  active_set=ActiveSet,
-			 				  history=Queue})->
+			 				  history=Queue}) when StateName /= 'DISARMED' ->
 	?info({alarm_event,Event}),
 
 	NewActiveSet=
@@ -246,8 +275,8 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 
 	NextState=
 	case {StateName,ActiveCount} of
-		{'DISABLED',_}->
-			'DISABLED';
+		{'DISARMED',_}->
+			'DISARMED';
 		{'ACK',0}->
 			'CLEAR';
 		{'CLEAR',0}->
@@ -261,8 +290,10 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 	?info({next_state,NextState}),
 	% TODO -- add history
 	{NextState,StateData#state{	active_count=NewActiveCount,
-								active_set=NewActiveSet}}.
+								active_set=NewActiveSet}};
 
+handle_alarm(Event,StateName,StateData)->
+	{StateName,StateData}.
 
 handle_control(Event=#event{},StateName,StateData)->
 	?info({control_event,Event}),
@@ -303,4 +334,12 @@ isSensorAsserted(_)->
 
 eventToAlarm(#event{port=Port,label=Label,desc=Desc})->
 	#alarm{port=Port,label=Label,desc=Desc}.
+
+isAlarmEnabled()->
+	case io_manager:getState(enable) of
+		#event{sensorState=asserted}->
+			true;
+		_->
+			false
+	end.
 

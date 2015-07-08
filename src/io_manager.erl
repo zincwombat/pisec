@@ -22,6 +22,7 @@
 -export ([notify/3]).
 -export ([getState/0]).
 -export ([getState/1]).
+-export ([isAsserted/1]).
 
 -record (state, {itab}).
 
@@ -101,7 +102,7 @@ handle_call({getState,Port},_From,State=#state{itab=ITab}) when ?is_portnum(Port
     	[{Port,Pid,_}]->
     		input_handler:getState(Pid);
     	_->
-    		?error({badarg,Port}),
+    		?error({badarg,{port,Port}}),
     		[]
     end,
    	{reply,Reply,State};
@@ -113,7 +114,7 @@ handle_call({getState,Label},_From,State=#state{itab=ITab}) when is_atom(Label)-
 		{Port,Pid,Label}->
 			input_handler:getState(Pid);
 		_->
-			?error({badarg,Label}),
+			?error({badarg,{label,Label}}),
 			[]
 	end,
 	{reply,Reply,State};
