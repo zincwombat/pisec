@@ -83,7 +83,7 @@ handle_call({register,Port,Pid,Label},_From,State=#state{itab=ITab}) when is_pid
    	{reply,ok,State};
 
 handle_call({unregister,Pid},_From,State=#state{itab=ITab}) when is_pid(Pid)->
-    ets:match_delete(ITab,{'_',Pid}),
+    ets:match_delete(ITab,{'_',Pid,'_'}),
     unlink(Pid),	
    	{reply,ok,State};
 
@@ -131,7 +131,7 @@ handle_cast({notify,PortNumber,NewValue,OldValue},State=#state{itab=ITab})->
 	?info({port,PortNumber,new,NewValue,old,OldValue}),
 	% dispatch the message to the handler
 	case ets:lookup(ITab, PortNumber) of
-		[{PortNumber, Pid}]->
+		[{PortNumber, Pid, _}]->
 			Pid ! {stateChange,NewValue,OldValue};
 		_->
 			% no registered handler
@@ -147,7 +147,7 @@ handle_cast(Msg,State)->
 handle_info(Msg={'EXIT',Pid,Reason},State=#state{itab=ITab})->
 	?warn(Msg),
 	% if this is an input port handler, delete it from itab
-	ets:match_delete(ITab,{'_',Pid}),
+	ets:match_delete(ITab,{'_',Pid,'_'}),
 	{noreply,State};
 
 handle_info(Msg,State)->
