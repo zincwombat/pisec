@@ -213,7 +213,7 @@ handle_event(_Event,StateName,StateData)->
 %% HANDLE TIMERS etc
 %% ============================================================================
 
-handle_info(Event=tm_sync,'WAIT_ARM',StateData)->
+handle_info(Event={timeout,_,tm_sync},'WAIT_ARM',StateData)->
 	?info({event,Event}),
 
 	SensorStates=io_manager:getState(),
