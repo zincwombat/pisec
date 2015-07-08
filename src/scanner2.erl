@@ -95,10 +95,12 @@ init(_)->
 	State=#state{},
 	Scanner=State#state.scanner,
 	Inputs=Scanner(),
-	
+
 	Config=config:get(inputs),
 	OvrMask=config:get(ovrmask,0),
 	OvrVal=config:get(ovrval,0),
+	config:set(ovrmask,OvrMask),
+	config:set(ovrval,OvrVal),
 
 	AssertionLevels=getAssertionLevels(Config),
 	TRef=erlang:start_timer(State#state.interval,self(),scan),
