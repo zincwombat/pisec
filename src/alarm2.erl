@@ -187,7 +187,7 @@ handle_sync_event(state,_From,State,StateData)->
 	{reply,{ok,State},State,StateData};
 
 handle_sync_event(alarmCount,_From,State,StateData=#state{active_count=ActiveCount,
-														  active_set=ActiveSet)->
+														  active_set=ActiveSet})->
 	{reply,{ok,ActiveCount},State,StateData};
 		
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
