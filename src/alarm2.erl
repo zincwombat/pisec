@@ -23,7 +23,8 @@
 -export([
 	notify/1,
 	history/0,
-	state/0
+	state/0,
+	alarmCount/0
 ]).
 
 -export([
@@ -79,8 +80,11 @@ unack()->
 history()->
 	gen_fsm:sync_send_all_state_event(?MODULE,history).
 
+alarmCount()->
+	gen_fsm:sync_send_all_state_event(?MODULE,history).
+
 state()->
-	gen_fsm:sync_send_all_state_event(?MODULE,state).
+	gen_fsm:sync_send_all_state_event(?MODULE,alarmCount).
 
 
 init(Args)->
@@ -181,6 +185,10 @@ handle_sync_event(history,_From,State,StateData=#state{history=H})->
 
 handle_sync_event(state,_From,State,StateData)->
 	{reply,{ok,State},State,StateData};
+
+handle_sync_event(alarmCount,_From,State,StateData=#state{active_count=ActiveCount,
+														  active_set=ActiveSet)->
+	{reply,{ok,ActiveCount},State,StateData};
 		
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
 	{reply,{error,{unhandled,Event}},StateName,StateData}.
@@ -230,9 +238,9 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 	NewActiveSet=
 	case SensorStatus of
 		asserted->
-			sets:add_element(Event,ActiveSet);
+			sets:add_element(eventToAlarm(Event),ActiveSet);
 		_->
-			sets:del_element(Event,ActiveSet)
+			sets:del_element(eventToAlarm(Event),ActiveSet)
 	end,
 	NewActiveCount=sets:size(ActiveSet),
 
@@ -292,4 +300,7 @@ isSensorAsserted(#event{type=sensor,sensorStatus=asserted})->
 
 isSensorAsserted(_)->
 	false.
+
+eventToAlarm(#event{port=Port,label=Label,desc=Desc})->
+	#alarm{port=Port,label=Label,desc=Desc}.
 
