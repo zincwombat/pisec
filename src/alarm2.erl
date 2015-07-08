@@ -81,10 +81,10 @@ history()->
 	gen_fsm:sync_send_all_state_event(?MODULE,history).
 
 alarmCount()->
-	gen_fsm:sync_send_all_state_event(?MODULE,history).
+	gen_fsm:sync_send_all_state_event(?MODULE,alarmCount).
 
 state()->
-	gen_fsm:sync_send_all_state_event(?MODULE,alarmCount).
+	gen_fsm:sync_send_all_state_event(?MODULE,state).
 
 
 init(Args)->
@@ -105,7 +105,10 @@ init(Args)->
 	% get the list of asserted sensors (not controls)
 
 	Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
-	ActiveSet=sets:from_list(Asserted),
+
+
+	ActiveSet=sets:from_list(lists:map(fun(Z)->EventToState(Z) end,Asserted)),
+	
 	ActiveCount=sets:size(ActiveSet),
 
 	NextState=
@@ -242,7 +245,7 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 		_->
 			sets:del_element(eventToAlarm(Event),ActiveSet)
 	end,
-	NewActiveCount=sets:size(ActiveSet),
+	NewActiveCount=sets:size(NewActiveSet),
 
 	NextState=
 	case {StateName,ActiveCount} of
