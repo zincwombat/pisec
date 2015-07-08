@@ -5,6 +5,7 @@
          stop/0]).
 
 -include("debug.hrl").
+-include("ports.hrl").
 
 -export([init/1,
          handle_call/3,
