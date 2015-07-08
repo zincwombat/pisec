@@ -309,6 +309,10 @@ handle_control(Event=#event{},StateName,StateData)->
 	?info({{event,Event},{state,'DISARMED'}}),
 	{next_state,'DISARMED',StateData}.
 
+'WAIT_ARM'(Event,StateData)->
+	?info({{event,Event},{state,'WAIT_ARM'}}),
+	{next_state,'WAIT_ARM',StateData}.
+
 'ACK'(Event,StateData)->
 	?info({{event,Event},{state,'ACK'}}),
 	{next_state,'ACK',StateData}.
