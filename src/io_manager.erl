@@ -110,7 +110,7 @@ handle_call({getState,Label},_From,State=#state{itab=ITab}) when is_atom(Label)-
 	Handlers=ets:tab2list(ITab),
 	Reply=
 	case lists:keyfind(Label,3,Handlers) of
-		[{Port,Pid,Label}]->
+		{Port,Pid,Label}->
 			input_handler:getState(Pid);
 		_->
 			?error({badarg,Label}),
