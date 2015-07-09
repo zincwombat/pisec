@@ -8,6 +8,9 @@
 -export ([active/0]).
 -export ([state/0]).
 -export ([sensors/0]).
+-export ([controls/0]).
+-export ([leds/0]).
+-export ([relays/0]).
 
 arm()->
 	scanner2:assertPort(getPort(enable)).
@@ -22,11 +25,19 @@ active()->
 	io_manager:getAssertedAlarms().
 
 state()->
-	{ok,State}=alarm2:state(),
-	{state,State}.
+	alarm2:state().
 
 sensors()->
 	scanner2:readInput().
+
+controls()->
+	io_manager:getAssertedControls().
+
+leds()->
+	not_yet_implemented.
+
+relays()->
+	not_yet_implemented.
 
 % ==============================================================================
 % utility functions

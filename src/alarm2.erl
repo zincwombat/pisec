@@ -154,7 +154,7 @@ handle_sync_event(history,_From,State,StateData=#state{history=H})->
 	{reply,aqueue:dump(H),State,StateData};
 
 handle_sync_event(state,_From,State,StateData)->
-	{reply,{ok,State},State,StateData};
+	{reply,{state,State},State,StateData};
 
 handle_sync_event(alarmCount,_From,State,StateData=#state{active_count=ActiveCount,
 														  active_set=ActiveSet})->
