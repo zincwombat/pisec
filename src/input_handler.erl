@@ -51,7 +51,6 @@ handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
 handle_call(getState,_From,State=#state{port=Port})->
-
 	Asserted=scanner2:getState(Port),
 	SensorStatus=
 	case Asserted of

@@ -295,10 +295,17 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 handle_alarm(Event,StateName,StateData)->
 	{StateName,StateData}.
 
-handle_control(Event=#event{},StateName,StateData)->
+handle_control(Event=#event{sensorStatus=asserted,label=enable},'DISARMED',StateData)->
 	?info({control_event,Event}),
 
-	{StateName,StateData}.
+	% we need to arm the system, first set timer
+	TRef=erlang:start_timer(WaitArmTimeout,self(),tm_sync),
+
+	{'WAIT_ARM',StateData};
+
+handle_control(Event=#event{sensorStatus=deAsserted,label=enable},State,StateData)->
+	?info({control_event,Event}),
+	{'DISARMED',StateData}.
 
 
 %% ============================================================================
