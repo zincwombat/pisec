@@ -7,10 +7,10 @@
 -export ([reset/0]).
 
 arm()->
-	scanner2:assert(getPort(enable)).
+	scanner2:assertPort(getPort(enable)).
 
 disarm()->
-	scanner2:deAssert(getPort(enable)).
+	scanner2:deAssertPort(getPort(enable)).
 
 reset()->
 	scanner2:reset().
