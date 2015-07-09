@@ -22,6 +22,7 @@
 -export ([notify/3]).
 -export ([getState/0]).
 -export ([getState/1]).
+-export ([getAssertedAlarms/0]).
 
 -record (state, {itab}).
 
@@ -55,6 +56,9 @@ getState(Port)->
 
 isAsserted(Port)->
 	gen_server:call(?MODULE,{isAsserted,Port}).
+
+getAssertedAlarms()->
+	gen_server:call(?MODULE,getAssertedAlarms).
 
 notify(PortNumber,NewValue,OldValue)->
 	gen_server:cast(?MODULE,{notify,PortNumber,NewValue,OldValue}).
@@ -94,6 +98,12 @@ handle_call(show,_From,State=#state{itab=ITab})->
 handle_call(getState,_From,State=#state{itab=ITab})->
     Handlers=ets:tab2list(ITab),
     Reply=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
+   	{reply,Reply,State};
+
+handle_call(getAssertedAlarms,_From,State=#state{itab=ITab})->
+    Handlers=ets:tab2list(ITab),
+    Status=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
+    Reply=lists:filter(fun(Z)->isAssertedAlarm(Z) end,Status),
    	{reply,Reply,State};
 
 % 	allow both port labels (atoms) and integers to be used 
@@ -161,3 +171,16 @@ code_change(_OldVsn,Ctx,_Extra) ->
 terminate(Reason,#state{})->
 	?info({terminating,Reason}),
 	ok.
+
+%==============================================================================
+% Utility
+%==============================================================================
+
+isAssertedAlarm(#event{type=sensor,sensorStatus=asserted})->
+	true;
+
+isAssertedAlarm(_)->
+	false.
+
+
+

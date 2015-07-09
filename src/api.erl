@@ -5,6 +5,9 @@
 -export ([arm/0]).	
 -export ([disarm/0]).
 -export ([reset/0]).
+-export ([active/0]).
+-export ([state/0]).
+-export ([sensors/0]).
 
 arm()->
 	scanner2:assertPort(getPort(enable)).
@@ -14,6 +17,16 @@ disarm()->
 
 reset()->
 	scanner2:reset().
+
+active()->
+	io_manager:getAssertedAlarms().
+
+state()->
+	{ok,State}=alarm2:state(),
+	{state,State}.
+
+sensors()->
+	scanner2:readInput().
 
 % ==============================================================================
 % utility functions
