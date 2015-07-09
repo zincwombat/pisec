@@ -109,13 +109,15 @@ handle_call(getState,_From,State=#state{itab=ITab})->
 handle_call(getAssertedAlarms,_From,State=#state{itab=ITab})->
     Handlers=ets:tab2list(ITab),
     Status=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
-    Alarms=lists:filter(fun(Z)->isAssertedAlarm(Z) end,Status),
+    AlarmEvents=lists:filter(fun(Z)->isAssertedAlarm(Z) end,Status),
+    Alarms=lists:map(fun(Z)->ioutils:eventToAlarm(Z) end,AlarmEvents),
    	{reply,{alarms,Alarms},State};
 
 handle_call(getAssertedControls,_From,State=#state{itab=ITab})->
     Handlers=ets:tab2list(ITab),
     Status=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
-    Controls=lists:filter(fun(Z)->isAssertedControl(Z) end,Status),
+    ControlEvents=lists:filter(fun(Z)->isAssertedControl(Z) end,Status),
+    Controls=lists:map(fun(Z)->ioutils:eventToControl(Z) end,ControlEvents),
    	{reply,{controls,Controls},State};
 
 % 	allow both port labels (atoms) and integers to be used 

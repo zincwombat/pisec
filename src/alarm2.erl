@@ -98,7 +98,7 @@ init(Args)->
 	% get the list of asserted sensors (not controls)
 
 	Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
-	ActiveSet=sets:from_list(lists:map(fun(Z)->eventToAlarm(Z) end,Asserted)),
+	ActiveSet=sets:from_list(lists:map(fun(Z)->ioutils:eventToAlarm(Z) end,Asserted)),
 	ActiveCount=sets:size(ActiveSet),
 
 	WaitArmTimeout=config:get(timer_wait_arm,?DEFAULT_WAIT_ARM_INTERVAL),
@@ -187,7 +187,7 @@ handle_info(Event={timeout,_,tm_sync},'WAIT_ARM',StateData)->
 
 	SensorStates=io_manager:getState(),
 	Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
-	ActiveSet=sets:from_list(lists:map(fun(Z)->eventToAlarm(Z) end,Asserted)),
+	ActiveSet=sets:from_list(lists:map(fun(Z)->ioutils:eventToAlarm(Z) end,Asserted)),
 	ActiveCount=sets:size(ActiveSet),
 
 	NextState=
@@ -236,9 +236,9 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 	NewActiveSet=
 	case SensorStatus of
 		asserted->
-			sets:add_element(eventToAlarm(Event),ActiveSet);
+			sets:add_element(ioutils:eventToAlarm(Event),ActiveSet);
 		_->
-			sets:del_element(eventToAlarm(Event),ActiveSet)
+			sets:del_element(ioutils:eventToAlarm(Event),ActiveSet)
 	end,
 	NewActiveCount=sets:size(NewActiveSet),
 
@@ -311,9 +311,6 @@ isSensorAsserted(#event{type=sensor,sensorStatus=asserted})->
 
 isSensorAsserted(_)->
 	false.
-
-eventToAlarm(#event{port=Port,label=Label,desc=Desc})->
-	#alarm{port=Port,label=Label,desc=Desc}.
 
 isAlarmEnabled()->
 	case io_manager:getState(enable) of
