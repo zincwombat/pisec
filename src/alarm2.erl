@@ -243,7 +243,7 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 	NewActiveCount=sets:size(NewActiveSet),
 
 	NextState=
-	case {StateName,ActiveCount} of
+	case {StateName,NewActiveCount} of
 		{'DISARMED',_}->
 			'DISARMED';
 		{'ACK',0}->
