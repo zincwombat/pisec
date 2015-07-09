@@ -6,6 +6,7 @@
 
 -include("debug.hrl").
 -include("ports.hrl").
+-include("alarm.hrl").
 
 -export([init/1,
          handle_call/3,
