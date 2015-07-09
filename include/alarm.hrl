@@ -28,3 +28,4 @@
 
 -record(event, 			{port,sensorStatus,label,desc,assertLevel,type}).
 -record(alarm, 			{port,label,desc}).
+-record(control, 		{port,label,desc}).
