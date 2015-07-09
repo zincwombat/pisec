@@ -28,8 +28,6 @@
 ]).
 
 -export([
-	arm/0,
-	disarm/0,
 	ack/0,
 	unack/0
 ]).
@@ -67,12 +65,6 @@ stop()->
 notify(Event=#event{})->
 	gen_fsm:send_all_state_event(?MODULE,Event).
 
-disarm()->
-	gen_fsm:sync_send_all_state_event(?MODULE,disarm).
-
-arm()->
-	gen_fsm:sync_send_all_state_event(?MODULE,arm).
-
 ack()->
 	gen_fsm:sync_send_all_state_event(?MODULE,ack).
 
@@ -94,9 +86,6 @@ init(Args)->
 	process_flag(trap_exit,true),
 
 	HistorySize=config:get(alarm_handler_history_size,?DEFAULT_ALARMHANDLER_HISTORY),
-	InitState=config:get(initstate,?DEFAULT_ALARM_INIT_STATE),
-	
-
 	config:set(initstate,InitState),
 	Queue=aqueue:new(HistorySize),
 
@@ -132,54 +121,32 @@ init(Args)->
 									active_set=ActiveSet,
 									history=NewQueue}}.
 
-handle_sync_event(Event=disarm,_From,StateName,StateData=#state{history=Queue}) when StateName /= 'DISARMED'->
-	config:set(initstate,'DISARMED'),
-	?info({state,'DISARMED'}),
-    NewQueue=aqueue:logFsm(StateName,Event,'DISARM',Queue),
-	{reply,{ok,'DISARMED'},'DISARMED',StateData#state{history=NewQueue}};
 
-handle_sync_event(Event=arm,_From,StateName='DISARMED',StateData=#state{active_set=AA,history=Queue})->
-	config:set(initstate,'ARMED'),
-	NextState=
-	case (sets:size(AA)==0) of
-	true->
-		'CLEAR';
-	false->
-		'ACTIVE'
-	end,
+%% ============================================================================
+%% SYNC STATE TRANSITIONS 
+%% ============================================================================									
+
+handle_sync_event(Event=unack,_From,StateName='ACK',
+				  StateData=#state{history=Queue,active_count=0})->
+	NextState='CLEAR',
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
-handle_sync_event(Event=unack,_From,StateName='ACK',StateData=#state{active_set=AA,history=Queue})->
-	NextState=
-	case (sets:size(AA)==0) of
-	true->
-		'CLEAR';
-	false->
-		'ACTIVE'
-	end,
+handle_sync_event(Event=unack,_From,StateName='ACK',
+				  StateData=#state{history=Queue})->
+	NextState='ACTIVE',
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
-handle_sync_event(Event=ack,_From,StateName='ACTIVE',StateData=#state{active_set=AA,history=Queue})->
-	NextState=
-	case (sets:size(AA)==0) of
-	true->
-		'CLEAR';
-	false->
-		'ACK'
-	end,
+handle_sync_event(Event=ack,_From,StateName='ACTIVE',
+				  StateData=#state{history=Queue,active_count=0})->
+	NextState='CLEAR',
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
-handle_sync_event(Event=ack,_From,StateName='ACK',StateData=#state{active_set=AA,history=Queue})->
-	NextState=
-	case (sets:size(AA)==0) of
-	true->
-		'CLEAR';
-	false->
-		'ACK'
-	end,
+handle_sync_event(Event=ack,_From,StateName='ACTIVE',
+				  StateData=#state{history=Queue})->
+	NextState='ACK',
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
