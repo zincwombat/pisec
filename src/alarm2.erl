@@ -54,7 +54,8 @@
 	tm_sync,
 	active_set,
 	active_count,
-	history
+	history,
+	wait_timeout
 }).
 
 start(_InitState)->
@@ -126,7 +127,8 @@ init(Args)->
 	NewQueue=aqueue:logFsm(InitState,"init",NextState,Queue),
 	?info({initstate,NextState}),
 
-	{ok,NextState,StateData=#state{	active_count=ActiveCount,
+	{ok,NextState,StateData=#state{	wait_timeout=WaitArmTimeout,
+									active_count=ActiveCount,
 									active_set=ActiveSet,
 									history=NewQueue}}.
 
@@ -299,7 +301,7 @@ handle_control(Event=#event{sensorStatus=asserted,label=enable},'DISARMED',State
 	?info({control_event,Event}),
 
 	% we need to arm the system, first set timer
-	TRef=erlang:start_timer(WaitArmTimeout,self(),tm_sync),
+	TRef=erlang:start_timer(StateData#state.wait_timeout,self(),tm_sync),
 
 	{'WAIT_ARM',StateData};
 
