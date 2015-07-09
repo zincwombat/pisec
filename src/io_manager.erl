@@ -24,6 +24,8 @@
 -export ([getState/0]).
 -export ([getState/1]).
 -export ([getAssertedAlarms/0]).
+-export ([getAssertedControls/0]).
+
 
 -record (state, {itab}).
 
@@ -60,6 +62,9 @@ isAsserted(Port)->
 
 getAssertedAlarms()->
 	gen_server:call(?MODULE,getAssertedAlarms).
+
+getAssertedControls()->
+	gen_server:call(?MODULE,getAssertedControls).
 
 notify(PortNumber,NewValue,OldValue)->
 	gen_server:cast(?MODULE,{notify,PortNumber,NewValue,OldValue}).
@@ -104,8 +109,14 @@ handle_call(getState,_From,State=#state{itab=ITab})->
 handle_call(getAssertedAlarms,_From,State=#state{itab=ITab})->
     Handlers=ets:tab2list(ITab),
     Status=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
-    Reply=lists:filter(fun(Z)->isAssertedAlarm(Z) end,Status),
-   	{reply,Reply,State};
+    Alarms=lists:filter(fun(Z)->isAssertedAlarm(Z) end,Status),
+   	{reply,{alarms,Alarms},State};
+
+handle_call(getAssertedControls,_From,State=#state{itab=ITab})->
+    Handlers=ets:tab2list(ITab),
+    Status=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
+    Controls=lists:filter(fun(Z)->isAssertedControl(Z) end,Status),
+   	{reply,{controls,Controls},State};
 
 % 	allow both port labels (atoms) and integers to be used 
 
@@ -181,6 +192,12 @@ isAssertedAlarm(#event{type=sensor,sensorStatus=asserted})->
 	true;
 
 isAssertedAlarm(_)->
+	false.
+
+isAssertedControl(#event{type=control,sensorStatus=asserted})->
+	true;
+
+isAssertedControl(_)->
 	false.
 
 
