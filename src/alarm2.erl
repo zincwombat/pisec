@@ -86,7 +86,7 @@ init(Args)->
 	process_flag(trap_exit,true),
 
 	HistorySize=config:get(alarm_handler_history_size,?DEFAULT_ALARMHANDLER_HISTORY),
-	config:set(initstate,InitState),
+
 	Queue=aqueue:new(HistorySize),
 
 	% we need to get the asserted states of all the alarms
