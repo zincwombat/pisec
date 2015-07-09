@@ -113,7 +113,7 @@ init(Args)->
 			'WAIT_ARM'
 	end,
 
-	NewQueue=aqueue:logFsm(InitState,"init",NextState,Queue),
+	NewQueue=aqueue:logFsm(NextState,"init",NextState,Queue),
 	?info({initstate,NextState}),
 
 	{ok,NextState,StateData=#state{	wait_timeout=WaitArmTimeout,
