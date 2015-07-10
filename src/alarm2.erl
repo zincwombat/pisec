@@ -187,7 +187,7 @@ handle_info(Event={timeout,_,tm_sync},'WAIT_ARM',StateData)->
 
 	SensorStates=io_manager:getState(),
 	Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
-	ActiveSet=sets:from_list(lists:map(fun(Z)->ioutils:eventToAlarm(Z) end,Asserted)),
+	ActiveSet=sets:from_list(lists:map(fun(Z)->{Z#sensor.label,Z#sensor.desc} end,Asserted)),
 	ActiveCount=sets:size(ActiveSet),
 
 	NextState=
@@ -198,8 +198,8 @@ handle_info(Event={timeout,_,tm_sync},'WAIT_ARM',StateData)->
 			'ACTIVE'
 	end,
 
-	NextStateData=#state{	active_count=ActiveCount,
-							active_set=ActiveSet},
+	NextStateData=StateData#state{	active_count=ActiveCount,
+									active_set=ActiveSet},
 
 	?info({next_state,NextState}),
 
