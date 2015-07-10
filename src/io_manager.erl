@@ -190,13 +190,13 @@ terminate(Reason,#state{})->
 % Utility
 %==============================================================================
 
-isAssertedAlarm(#event{type=sensor,sensorStatus=asserted})->
+isAssertedAlarm(#sensor{type=sensor,state=asserted})->
 	true;
 
 isAssertedAlarm(_)->
 	false.
 
-isAssertedControl(#event{type=control,sensorStatus=asserted})->
+isAssertedControl(#sensor{type=control,state=asserted})->
 	true;
 
 isAssertedControl(_)->
