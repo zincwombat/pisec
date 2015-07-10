@@ -231,7 +231,7 @@ handle_alarm(Sensor=#sensor{state=SensorStatus},
 			 StateData=#state{active_count=ActiveCount,
 			 				  active_set=ActiveSet,
 			 				  history=Queue}) when StateName /= 'DISARMED' ->
-	?info({alarm_event,Event,StateName}),
+	?info({alarm_event,Sensor,StateName}),
 
 	NewActiveSet=
 	case SensorStatus of
@@ -265,7 +265,7 @@ handle_alarm(Sensor,StateName,StateData)->
 	{StateName,StateData}.
 
 handle_control(Sensor=#sensor{state=asserted,label=enable},'DISARMED',StateData)->
-	?info({control_event,Event}),
+	?info({control_event,Sensor}),
 
 	% we need to arm the system, first set timer
 	TRef=erlang:start_timer(StateData#state.wait_timeout,self(),tm_sync),
@@ -273,7 +273,7 @@ handle_control(Sensor=#sensor{state=asserted,label=enable},'DISARMED',StateData)
 	{'WAIT_ARM',StateData};
 
 handle_control(Sensor=#sensor{state=deAsserted,label=enable},State,StateData)->
-	?info({control_event,Event}),
+	?info({control_event,Sensor}),
 	{'DISARMED',StateData}.
 
 
