@@ -115,7 +115,7 @@ handle_call(getAssertedAlarms,_From,State=#state{itab=ITab})->
 handle_call(getAssertedControls,_From,State=#state{itab=ITab})->
     Handlers=ets:tab2list(ITab),
     Status=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
-    Control=lists:filter(fun(Z)->isAssertedControl(Z) end,Status),
+    Controls=lists:filter(fun(Z)->isAssertedControl(Z) end,Status),
    	{reply,{controls,Controls},State};
 
 % 	allow both port labels (atoms) and integers to be used 
