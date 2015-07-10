@@ -5,8 +5,9 @@
 
 -export([
 	 blist/1,
-	 eventToAlarm/1,
-	 eventToControl/1
+	 % eventToAlarm/1,
+	 % eventToControl/1,
+	 eventToSensor/1
 ]).
 
 

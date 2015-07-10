@@ -62,8 +62,8 @@ start(_InitState)->
 stop()->
 	gen_fsm:send_all_state_event(?MODULE,{stop,normal}).
 
-notify(Event=#event{})->
-	gen_fsm:send_all_state_event(?MODULE,Event).
+notify(Sensor=#sensor{})->
+	gen_fsm:send_all_state_event(?MODULE,Sensor).
 
 ack()->
 	gen_fsm:sync_send_all_state_event(?MODULE,ack).
@@ -168,8 +168,8 @@ handle_sync_event(Event,_From,StateName,StateData=#state{})->
 %% HANDLE ALL STATE EVENT CALLBACKS
 %% ============================================================================
 
-handle_event(Event=#event{},StateName,StateData)->
-	{NextState,NextStateData}=i_handle_event(Event,StateName,StateData),
+handle_event(Sensor=#sensor{},StateName,StateData)->
+	{NextState,NextStateData}=i_handle_event(Sensor,StateName,StateData),
 	{next_state,NextState,NextStateData};
 
 handle_event(_Event={stop,Reason},_StateName,StateData=#state{})->
@@ -220,13 +220,13 @@ terminate(Reason,_StateName,_StateData)->
 code_change(_OldVsn,StateName,StateData,_Extra)->
 	{ok,StateName,StateData}.	
 
-i_handle_event(Event=#event{type=sensor},StateName,StateData)->
-	handle_alarm(Event,StateName,StateData);
+i_handle_event(Sensor=#sensor{type=sensor},StateName,StateData)->
+	handle_alarm(Sensor,StateName,StateData);
 
-i_handle_event(Event=#event{type=control},StateName,StateData)->
-	handle_control(Event,StateName,StateData).
+i_handle_event(Sensor=#sensor{type=control},StateName,StateData)->
+	handle_control(Sensor,StateName,StateData).
 
-handle_alarm(Event=#event{sensorStatus=SensorStatus},
+handle_alarm(Sensor=#sensor{state=SensorStatus},
 			 StateName,
 			 StateData=#state{active_count=ActiveCount,
 			 				  active_set=ActiveSet,
@@ -261,10 +261,10 @@ handle_alarm(Event=#event{sensorStatus=SensorStatus},
 	{NextState,StateData#state{	active_count=NewActiveCount,
 								active_set=NewActiveSet}};
 
-handle_alarm(Event,StateName,StateData)->
+handle_alarm(Sensor,StateName,StateData)->
 	{StateName,StateData}.
 
-handle_control(Event=#event{sensorStatus=asserted,label=enable},'DISARMED',StateData)->
+handle_control(Sensor=#sensor{state=asserted,label=enable},'DISARMED',StateData)->
 	?info({control_event,Event}),
 
 	% we need to arm the system, first set timer
@@ -272,7 +272,7 @@ handle_control(Event=#event{sensorStatus=asserted,label=enable},'DISARMED',State
 
 	{'WAIT_ARM',StateData};
 
-handle_control(Event=#event{sensorStatus=deAsserted,label=enable},State,StateData)->
+handle_control(Sensor=#sensor{state=deAsserted,label=enable},State,StateData)->
 	?info({control_event,Event}),
 	{'DISARMED',StateData}.
 
