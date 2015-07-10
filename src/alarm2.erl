@@ -101,7 +101,6 @@ init(Args)->
 	ActiveSet=sets:from_list(lists:map(fun(Z)->{Z#sensor.label,Z#sensor.desc} end,Asserted)),
 	ActiveCount=sets:size(ActiveSet),
 
-
 	WaitArmTimeout=config:get(timer_wait_arm,?DEFAULT_WAIT_ARM_INTERVAL),
 
 	NextState=
