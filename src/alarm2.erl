@@ -306,7 +306,7 @@ handle_control(Sensor=#sensor{state=deAsserted,label=enable},State,StateData)->
 %% Utility Routines
 %% ============================================================================
 
-isSensorAsserted(#event{type=sensor,sensorStatus=asserted})->
+isSensorAsserted(#sensor{type=sensor,state=asserted})->
 	true;
 
 isSensorAsserted(_)->
@@ -314,7 +314,7 @@ isSensorAsserted(_)->
 
 isAlarmEnabled()->
 	case io_manager:getState(enable) of
-		#event{sensorStatus=asserted}->
+		#sensor{state=asserted}->
 			true;
 		_->
 			false
