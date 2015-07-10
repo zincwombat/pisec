@@ -5,7 +5,7 @@
 -export ([arm/0]).	
 -export ([disarm/0]).
 -export ([reset/0]).
--export ([active/0]).
+-export ([alarms/0]).
 -export ([state/0]).
 -export ([sensors/0]).
 -export ([controls/0]).
@@ -21,7 +21,7 @@ disarm()->
 reset()->
 	scanner2:reset().
 
-active()->
+alarms()->
 	io_manager:getAssertedAlarms().
 
 state()->

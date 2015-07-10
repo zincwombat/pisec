@@ -60,8 +60,7 @@ handle_call(getState,_From,State=#state{port=Port})->
 			deAsserted
 	end,
 	NewState=State#state{sensorStatus=SensorStatus},
-
-	{reply,stateToEvent(NewState),NewState};
+	{reply,stateToSensor(NewState),NewState};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
@@ -132,6 +131,16 @@ stateToEvent(State=#state{	port=Port,
 			assertLevel=AssertLevel,
 			type=Type}.
 
+stateToSensor(#state{	port=Port,
+						assertLevel=AssertLevel,
+						sensorStatus=SensorStatus,
+						desc=Desc,
+						label=Label,
+						type=Type })->
+	#sensor{ type=Type,
+			 label=Label,
+			 desc=Desc,
+			 state=SensorStatus}.
 
 
 	
