@@ -264,7 +264,7 @@ handle_alarm(Sensor=#sensor{state=SensorStatus,desc=Desc},
 	NewQueue=aqueue:logFsm(NextState,LogMessage,NextState,Queue),
 
 	{NextState,StateData#state{	active_count=NewActiveCount,
-								active_set=NewActiveSet
+								active_set=NewActiveSet,
 								history=NewQueue}};
 
 handle_alarm(Sensor,StateName,StateData)->
