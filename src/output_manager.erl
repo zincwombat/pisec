@@ -103,7 +103,7 @@ init([])->
 	?info({starting,{pid,self()}}),
 	process_flag(trap_exit,true),
 
-	piface:write_output(0),
+	piface2:write_output(0),
 
 	%% this stores the flash state of each LED
 
@@ -137,14 +137,14 @@ i_handleOutput(O={PortNum,_,_,off})->
 	i_clearPort(PortNum).
 
 i_clearPort(PortNum)->
-	CurrentOutputs=piface:read_output(),
+	CurrentOutputs=piface2:read_output(),
 	NewOutputs=CurrentOutputs band bnot (1 bsl (PortNum-1)),
-	Reply=piface:write_output(NewOutputs).
+	Reply=piface2:write_output(NewOutputs).
 
 i_setPort(PortNum)->
-	CurrentOutputs=piface:read_output(),
+	CurrentOutputs=piface2:read_output(),
 	NewOutputs=CurrentOutputs bor (1 bsl (PortNum-1)),
-	Reply=piface:write_output(NewOutputs).
+	Reply=piface2:write_output(NewOutputs).
 
 is(Speed,{_Port,Speed})->
 	true;
@@ -159,14 +159,14 @@ handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
 handle_call({set,OutputPort},_From,State) when ?is_oport(OutputPort)->
-	CurrentOutputs=piface:read_output(),
+	CurrentOutputs=piface2:read_output(),
 	NewOutputs=CurrentOutputs bor (1 bsl (OutputPort-1)),
-	Reply=piface:write_output(NewOutputs),
+	Reply=piface2:write_output(NewOutputs),
 	{reply,Reply,State};
 
 handle_call(clear,_From,State)->
 	ets:delete_all_objects(State#state.otab),
-	Reply=piface:write_output(0),
+	Reply=piface2:write_output(0),
 	{reply,Reply,State#state{slow_set=0,normal_set=0,fast_set=0}};
 
 handle_call({clear,OutputPort},_From,State) when ?is_oport(OutputPort)->
@@ -211,27 +211,27 @@ handle_cast(Msg,State)->
 
 handle_info({timeout,_TRef,{tm,slow}},State=#state{slow_tm_int=Slow,slow_set=S})->
 
-	CurrentOutputs=piface:read_output(),
+	CurrentOutputs=piface2:read_output(),
 	NewOutputs=CurrentOutputs bxor S,
-	Reply=piface:write_output(NewOutputs),
+	Reply=piface2:write_output(NewOutputs),
 
 	erlang:start_timer(Slow,self(),{tm,slow}),
 	{noreply,State};
 
 handle_info({timeout,_TRef,{tm,normal}},State=#state{normal_tm_int=Normal,normal_set=S})->
 
-	CurrentOutputs=piface:read_output(),
+	CurrentOutputs=piface2:read_output(),
 	NewOutputs=CurrentOutputs bxor S,
-	Reply=piface:write_output(NewOutputs),
+	Reply=piface2:write_output(NewOutputs),
 
 	erlang:start_timer(Normal,self(),{tm,normal}),
 	{noreply,State};
 
 handle_info({timeout,_TRef,{tm,fast}},State=#state{fast_tm_int=Fast,fast_set=S})->
 
-	CurrentOutputs=piface:read_output(),
+	CurrentOutputs=piface2:read_output(),
 	NewOutputs=CurrentOutputs bxor S,
-	Reply=piface:write_output(NewOutputs),
+	Reply=piface2:write_output(NewOutputs),
 
 	erlang:start_timer(Fast,self(),{tm,fast}),
 	{noreply,State};
