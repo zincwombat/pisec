@@ -11,12 +11,21 @@
 -export ([controls/0]).
 -export ([leds/0]).
 -export ([relays/0]).
+-export ([ack/0]).
+-export ([unack/0]).
+
 
 arm()->
 	scanner2:assertPort(getPort(enable)).
 
 disarm()->
 	scanner2:deAssertPort(getPort(enable)).
+
+ack()->
+	alarm2:ack().
+
+unack()->
+	alarm2:unack().
 
 reset()->
 	scanner2:reset().
@@ -32,6 +41,8 @@ sensors()->
 
 controls()->
 	io_manager:getAssertedControls().
+
+
 
 leds()->
 	not_yet_implemented.

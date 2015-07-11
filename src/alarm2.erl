@@ -226,12 +226,15 @@ i_handle_event(Sensor=#sensor{type=sensor},StateName,StateData)->
 i_handle_event(Sensor=#sensor{type=control},StateName,StateData)->
 	handle_control(Sensor,StateName,StateData).
 
-handle_alarm(Sensor=#sensor{state=SensorStatus},
+handle_alarm(Sensor=#sensor{state=SensorStatus,desc=Desc},
 			 StateName,
 			 StateData=#state{active_count=ActiveCount,
 			 				  active_set=ActiveSet,
 			 				  history=Queue}) when StateName /= 'DISARMED' ->
+
 	?info({alarm_event,Sensor,StateName}),
+
+	LogMessage=io_lib:format("alarm: %s is %p",[Desc,SensorStatus]),
 
 	NewActiveSet=
 	case SensorStatus of
@@ -257,9 +260,12 @@ handle_alarm(Sensor=#sensor{state=SensorStatus},
 	end,
 
 	?info({next_state,NextState}),
-	% TODO -- add history
+
+	NewQueue=aqueue:logFsm(NextState,LogMessage,NextState,Queue),
+
 	{NextState,StateData#state{	active_count=NewActiveCount,
-								active_set=NewActiveSet}};
+								active_set=NewActiveSet
+								history=NewQueue}};
 
 handle_alarm(Sensor,StateName,StateData)->
 	{StateName,StateData}.
