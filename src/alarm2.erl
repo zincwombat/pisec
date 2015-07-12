@@ -95,6 +95,8 @@ init(Args)->
 
 	?info({sensorStates,SensorStates}),
 
+	Outputs=config:get(outputs),
+
 	% get the list of asserted sensors (not controls)
 
 	Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
@@ -106,20 +108,25 @@ init(Args)->
 	NextState=
 	case isAlarmEnabled() of 
 		false->
+			%% turn off alarm status LED
 			'DISARMED';
 		_->
 			% set the arming timer
 			TRef=erlang:start_timer(WaitArmTimeout,self(),tm_sync),
+			%% fast flash the alarm status LED
 			'WAIT_ARM'
 	end,
 
 	NewQueue=aqueue:logFsm(NextState,"init",NextState,Queue),
 	?info({initstate,NextState}),
 
+	alarmStatusLed(NextState);
+
 	{ok,NextState,StateData=#state{	wait_timeout=WaitArmTimeout,
 									active_count=ActiveCount,
 									active_set=ActiveSet,
-									history=NewQueue}}.
+									history=NewQueue,
+									alarm_status_led_port=AlarmStatusLedPort}}.
 
 
 %% ============================================================================
@@ -129,24 +136,28 @@ init(Args)->
 handle_sync_event(Event=unack,_From,StateName='ACK',
 				  StateData=#state{history=Queue,active_count=0})->
 	NextState='CLEAR',
+	alarmStatusLed(NextState);
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
 handle_sync_event(Event=unack,_From,StateName='ACK',
 				  StateData=#state{history=Queue})->
 	NextState='ACTIVE',
+	alarmStatusLed(NextState);
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue,active_count=0})->
 	NextState='CLEAR',
+	alarmStatusLed(NextState);
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue})->
 	NextState='ACK',
+	alarmStatusLed(NextState);
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
@@ -202,6 +213,7 @@ handle_info(Event={timeout,_,tm_sync},'WAIT_ARM',StateData)->
 									active_set=ActiveSet},
 
 	?info({next_state,NextState}),
+	alarmStatusLed(NextState);
 
 	{next_state,NextState,NextStateData};
 
@@ -260,8 +272,9 @@ handle_alarm(Sensor=#sensor{state=SensorStatus,desc=Desc},
 	end,
 
 	?info({next_state,NextState}),
+	alarmStatusLed(NextState);
 
-	NewQueue=aqueue:logFsm(NextState,LogMessage,NextState,Queue),
+	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
 
 	{NextState,StateData#state{	active_count=NewActiveCount,
 								active_set=NewActiveSet,
@@ -270,17 +283,28 @@ handle_alarm(Sensor=#sensor{state=SensorStatus,desc=Desc},
 handle_alarm(Sensor,StateName,StateData)->
 	{StateName,StateData}.
 
-handle_control(Sensor=#sensor{state=asserted,label=enable},'DISARMED',StateData)->
+handle_control(	Sensor=#sensor{state=asserted,label=enable},'DISARMED',
+				StateData=#state{history=Queue})->
+
 	?info({control_event,Sensor}),
 
-	% we need to arm the system, first set timer
+	LogMessage=io_lib:format("alarm enabled"),
+	NextState='WAIT_ARM',
+	NewQueue=aqueue:logFsm('DISARMED',LogMessage,NextState,Queue),
 	TRef=erlang:start_timer(StateData#state.wait_timeout,self(),tm_sync),
+	alarmStatusLed(NextState),
+	{NextState,StateData#state{history=NewQueue}};
 
-	{'WAIT_ARM',StateData};
+handle_control(	Sensor=#sensor{state=deAsserted,label=enable},State,
+				StateData=#state{history=Queue})->
 
-handle_control(Sensor=#sensor{state=deAsserted,label=enable},State,StateData)->
 	?info({control_event,Sensor}),
-	{'DISARMED',StateData}.
+
+	LogMessage=io_lib:format("alarm disabled"),
+	NextState='DISARMED',
+	NewQueue=aqueue:logFsm(State,LogMessage,'DISARMED',Queue),
+	alarmStatusLed(NextState),	
+	{NextState,StateData#state{history=NewQueue}}.
 
 
 %% ============================================================================
@@ -331,4 +355,41 @@ addToSet(#sensor{label=Label,desc=Desc},Set)->
 
 removeFromSet(#sensor{label=Label,desc=Desc},Set)->
 	sets:del_element({Label,Desc},Set).
+
+alarmStatusLed('ACTIVE')->
+	alarmStatusLed(on);
+
+alarmStatusLed('WAIT_ARM')->
+	alarmStatusLed({flash,fast});
+
+alarmStatusLed('DISARMED')->
+	alarmStatusLed(off);
+
+alarmStatusLed('CLEAR')->
+	alarmStatusLed({flash,slow});
+
+alarmStatusLed('ACTIVE')->
+	alarmStatusLed(on);
+
+alarmStatusLed('ACK')->
+	alarmStatusLed({flash,normal}).
+
+alarmStatusLed(Control)->
+	Outputs=config:get(outputs),
+	case lists:keyfind(alarm_status_led,2,Outputs) of
+		{Port,_,_,_}->
+			case Control of
+				on->
+					output_manager:set(Port);
+				off->
+					output_manager:clear(Port);
+				{flash,Speed} when ?is_speed(Speed)->
+					output_manager:flash(Port,Speed);
+				Other->
+					{error,{badarg,Other}}
+			end;		
+
+		false->
+			{error,badarg}
+	end.
 

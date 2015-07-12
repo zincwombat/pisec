@@ -88,7 +88,7 @@ clear()->
 siren(Control) when ?is_onoff(Control)->
 	Outputs=config:get(outputs),
 	case lists:keyfind(siren,2,Outputs) of
-		{Port,siren,_,_}->
+		{Port,_,_,_}->
 			cmd(Control,Port);
 
 		false->
@@ -97,6 +97,10 @@ siren(Control) when ?is_onoff(Control)->
 
 siren(Control)->
 	{error,{badarg,Control}}.
+
+
+
+
 
 init([])->
 	State=#state{},
@@ -250,9 +254,16 @@ terminate(Reason,_State)->
 	?info({terminating,Reason}),
 	ok.
 
+%%========================================================================================
+%% Utility functions
+%%========================================================================================
+
+
 buildMask(S) when is_list(S)->
 	lists:foldl(fun(Z,Byte)->Byte bor (1 bsl (element(1,Z)-1)) end,0,S);
 
 buildMask(_)->
 	0.
+
+
 

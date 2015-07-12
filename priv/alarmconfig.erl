@@ -15,7 +15,7 @@
 	{0,siren,"Siren (Relay 1)",off},
 	{1,relay1,"Relay 2",off},
 	{2,power_led,"Power On LED",off},
-	{3,alarm_active_led,"Alarm Active LED",off},
+	{3,alarm_status_led,"Alarm Status LED",off},
 	{4,output4,"Output 4",off},
 	{5,output5,"Output 5",off},
 	{6,output6,"Output 6",off},
