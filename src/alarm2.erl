@@ -126,8 +126,7 @@ init(Args)->
 	{ok,NextState,StateData=#state{	wait_timeout=WaitArmTimeout,
 									active_count=ActiveCount,
 									active_set=ActiveSet,
-									history=NewQueue,
-									alarm_status_led_port=AlarmStatusLedPort}}.
+									history=NewQueue}}.
 
 
 %% ============================================================================
@@ -144,21 +143,21 @@ handle_sync_event(Event=unack,_From,StateName='ACK',
 handle_sync_event(Event=unack,_From,StateName='ACK',
 				  StateData=#state{history=Queue})->
 	NextState='ACTIVE',
-	alarmStatusLed(NextState);
+	alarmStatusLed(NextState),
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue,active_count=0})->
 	NextState='CLEAR',
-	alarmStatusLed(NextState);
+	alarmStatusLed(NextState),
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue})->
 	NextState='ACK',
-	alarmStatusLed(NextState);
+	alarmStatusLed(NextState),
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
@@ -373,7 +372,7 @@ alarmStatusLed('ACTIVE')->
 	alarmStatusLed(on);
 
 alarmStatusLed('ACK')->
-	alarmStatusLed({flash,normal}).
+	alarmStatusLed({flash,normal});
 
 alarmStatusLed(Control)->
 	Outputs=config:get(outputs),
