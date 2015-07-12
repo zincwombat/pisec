@@ -288,7 +288,7 @@ handle_control(	Sensor=#sensor{state=asserted,label=enable},'DISARMED',
 
 	?info({control_event,Sensor}),
 
-	LogMessage=io_lib:format("alarm enabled"),
+	LogMessage=io_lib:format("alarm enabled",[]),
 	NextState='WAIT_ARM',
 	NewQueue=aqueue:logFsm('DISARMED',LogMessage,NextState,Queue),
 	TRef=erlang:start_timer(StateData#state.wait_timeout,self(),tm_sync),
@@ -300,7 +300,7 @@ handle_control(	Sensor=#sensor{state=deAsserted,label=enable},State,
 
 	?info({control_event,Sensor}),
 
-	LogMessage=io_lib:format("alarm disabled"),
+	LogMessage=io_lib:format("alarm disabled",[]),
 	NextState='DISARMED',
 	NewQueue=aqueue:logFsm(State,LogMessage,'DISARMED',Queue),
 	alarmStatusLed(NextState),	

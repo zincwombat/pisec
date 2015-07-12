@@ -163,6 +163,7 @@ handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
 handle_call({set,OutputPort},_From,State) when ?is_oport(OutputPort)->
+	ets:delete(State#state.otab,OutputPort),
 	CurrentOutputs=piface2:read_output(),
 	NewOutputs=CurrentOutputs bor (1 bsl (OutputPort-1)),
 	Reply=piface2:write_output(NewOutputs),
