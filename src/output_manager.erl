@@ -142,12 +142,12 @@ i_handleOutput(O={PortNum,_,_,off})->
 
 i_clearPort(PortNum)->
 	CurrentOutputs=piface2:read_output(),
-	NewOutputs=CurrentOutputs band bnot (1 bsl (PortNum-1)),
+	NewOutputs=CurrentOutputs band bnot (1 bsl (PortNum)),
 	Reply=piface2:write_output(NewOutputs).
 
 i_setPort(PortNum)->
 	CurrentOutputs=piface2:read_output(),
-	NewOutputs=CurrentOutputs bor (1 bsl (PortNum-1)),
+	NewOutputs=CurrentOutputs bor (1 bsl (PortNum)),
 	Reply=piface2:write_output(NewOutputs).
 
 is(Speed,{_Port,Speed})->
@@ -165,7 +165,7 @@ handle_call(state,_From,State)->
 handle_call({set,OutputPort},_From,State) when ?is_oport(OutputPort)->
 	ets:delete(State#state.otab,OutputPort),
 	CurrentOutputs=piface2:read_output(),
-	NewOutputs=CurrentOutputs bor (1 bsl (OutputPort-1)),
+	NewOutputs=CurrentOutputs bor (1 bsl (OutputPort)),
 	Reply=piface2:write_output(NewOutputs),
 	{reply,Reply,State};
 
@@ -261,7 +261,7 @@ terminate(Reason,_State)->
 
 
 buildMask(S) when is_list(S)->
-	lists:foldl(fun(Z,Byte)->Byte bor (1 bsl (element(1,Z)-1)) end,0,S);
+	lists:foldl(fun(Z,Byte)->Byte bor (1 bsl (element(1,Z))) end,0,S);
 
 buildMask(_)->
 	0.
