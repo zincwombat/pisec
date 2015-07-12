@@ -234,7 +234,7 @@ handle_alarm(Sensor=#sensor{state=SensorStatus,desc=Desc},
 
 	?info({alarm_event,Sensor,StateName}),
 
-	LogMessage=io_lib:format("alarm: %s is %p",[Desc,SensorStatus]),
+	LogMessage=io_lib:format("alarm: ~s is ~p",[Desc,SensorStatus]),
 
 	NewActiveSet=
 	case SensorStatus of
