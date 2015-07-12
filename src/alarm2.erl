@@ -2,6 +2,7 @@
 -behaviour(gen_fsm).
 -include("debug.hrl").
 -include("alarm.hrl").
+-include("ports.hrl").
 
 -define(ALARMING_INTERVAL,5000).	%% 5 seconds
 -define(SYNC_INTERVAL,5000).		%% 5 seconds
@@ -120,7 +121,7 @@ init(Args)->
 	NewQueue=aqueue:logFsm(NextState,"init",NextState,Queue),
 	?info({initstate,NextState}),
 
-	alarmStatusLed(NextState);
+	alarmStatusLed(NextState),
 
 	{ok,NextState,StateData=#state{	wait_timeout=WaitArmTimeout,
 									active_count=ActiveCount,
@@ -136,7 +137,7 @@ init(Args)->
 handle_sync_event(Event=unack,_From,StateName='ACK',
 				  StateData=#state{history=Queue,active_count=0})->
 	NextState='CLEAR',
-	alarmStatusLed(NextState);
+	alarmStatusLed(NextState),
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
@@ -213,7 +214,7 @@ handle_info(Event={timeout,_,tm_sync},'WAIT_ARM',StateData)->
 									active_set=ActiveSet},
 
 	?info({next_state,NextState}),
-	alarmStatusLed(NextState);
+	alarmStatusLed(NextState),
 
 	{next_state,NextState,NextStateData};
 
@@ -272,7 +273,7 @@ handle_alarm(Sensor=#sensor{state=SensorStatus,desc=Desc},
 	end,
 
 	?info({next_state,NextState}),
-	alarmStatusLed(NextState);
+	alarmStatusLed(NextState),
 
 	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
 
