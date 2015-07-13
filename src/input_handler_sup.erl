@@ -1,4 +1,4 @@
--module(io_handler_sup).
+-module(input_handler_sup).
 -behaviour(supervisor).
 -include("debug.hrl").
 -include("alarm.hrl").
