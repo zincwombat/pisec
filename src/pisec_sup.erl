@@ -38,7 +38,7 @@ init(Args) ->
 	Scanner=?CHILD(scanner_sup,supervisor,Args),
 	Yaws=?CHILD(pisec_yaws_sup,supervisor),
 	Config=?CHILD(config,worker),
-	IO=?CHILD(io_handler_sup,supervisor),
+	IO=?CHILD(input_handler_sup,supervisor),
 	OM=?CHILD(output_manager,worker),
 	% Cs=[Config,Yaws,Scanner],
 	Cs=[Config,IO,OM,Scanner],
