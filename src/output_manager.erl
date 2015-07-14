@@ -134,10 +134,10 @@ init([])->
 			normal_tm_int=NormalFlash,
 			fast_tm_int=FastFlash}}.
 
-i_handleOutput(O={PortNum,_,_,on})->
+i_handleOutput(O={PortNum,_,_,on,_})->
 	i_setPort(PortNum);
 
-i_handleOutput(O={PortNum,_,_,off})->
+i_handleOutput(O={PortNum,_,_,off,_})->
 	i_clearPort(PortNum).
 
 i_clearPort(PortNum)->
