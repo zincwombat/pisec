@@ -17,6 +17,24 @@
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 
 
+% {start_spec,
+% 	{ok,{{one_for_one,5,10},[{io_manager,{io_manager,start_link,[]},permanent,5000,worker,[io_manager]},
+% 							 {port_0,{input_handler,start,[{0,enable,"Alarm Enable",true,0,control}]},permanent,5000,worker,[input_handler]},
+% 							 {port_1,{input_handler,start,[{1,test,"Test",true,0,control}]},permanent,5000,worker,[input_handler]},
+% 							 {port_2,{input_handler,start,[{2,front_door,"Front Door Sensor",true,1,sensor}]},permanent,5000,worker,[input_handler]},
+% 							 {port_3,{input_handler,start,[{3,rear_door,"Rear Door Sensor",true,1,sensor}]},permanent,5000,worker,[input_handler]}]}}};
+
+
+% {start_spec,
+% 	{ok,{{one_for_one,5,10},[{"power_0",{power_handler,start,[{0,siren,"Siren (Relay 1)",true,off,power}]},permanent,5000,worker,[0]},
+% 							 {"power_1",{power_handler,start,[{1,relay1,"Relay 2",true,off,power}]},permanent,5000,worker,[1]},
+% 							 {"led_2",{led_handler,start,[{2,power_led,"Power On LED",true,off,led}]},permanent,5000,worker,[2]},
+% 							 {"led_3",{led_handler,start,[{3,alarm_status_led,"Alarm Status LED",true,off,led}]},permanent,5000,worker,[3]},
+% 							 {"power_4",{power_handler,start,[{4,output4,"Output 4",true,off,power}]},permanent,5000,worker,[4]},
+% 							 {"power_5",{power_handler,start,[{5,output5,"Output 5",true,off,power}]},permanent,5000,worker,[5]},
+% 							 {"power_6",{power_handler,start,[{6,output6,"Output 6",true,off,power}]},permanent,5000,worker,[6]},
+% 							 {"power_7",{power_handler,start,[{7,output7,"Output 7",true,off,power}]},permanent,5000,worker,[7]}]}}}
+
 %% ===================================================================
 %% API functions
 %% ===================================================================

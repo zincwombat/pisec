@@ -29,10 +29,10 @@ children(_)->
 	[].
 
 child(X={Port,Label,Desc,true,InitState,led})->
-	{"led_" ++ integer_to_list(Port),{led_handler,start,[X]},permanent,5000,worker,[Port]};
+	{list_to_atom("led_" ++ integer_to_list(Port)),{led_handler,start,[X]},permanent,5000,worker,[led_handler]};
 
 child(X={Port,Label,Desc,true,InitState,power})->
-	{"power_" ++ integer_to_list(Port),{power_handler,start,[X]},permanent,5000,worker,[Port]};
+	{list_to_atom("power_" ++ integer_to_list(Port)),{power_handler,start,[X]},permanent,5000,worker,[power_handler]};
 
 child(_)->
 	[].
