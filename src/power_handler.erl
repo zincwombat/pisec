@@ -1,8 +1,8 @@
 -module(power_handler).
 -behaviour(gen_server).
 
--export([start/0,
-         stop/0]).
+-export([start/1,
+         stop/1]).
 
 -include("debug.hrl").
 -include("ports.hrl").
@@ -23,8 +23,8 @@
 % API
 %==============================================================================
 
-start({Port,Label,Desc,true,AssertLevel,led}) ->
-	{ok,Pid}=gen_server:start_link(?MODULE,[{Port,Label,Desc,true,AssertLevel,Type}],[]).
+start({Port,Label,Desc,true,AssertLevel,power}) ->
+	{ok,Pid}=gen_server:start_link(?MODULE,[{Port,Label,Desc,true,AssertLevel,power}],[]).
 
 stop(Pid) ->
 	gen_server:call(Pid,stop).

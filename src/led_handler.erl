@@ -1,8 +1,8 @@
 -module(led_handler).
 -behaviour(gen_server).
 
--export([start/0,
-         stop/0]).
+-export([start/1,
+         stop/1]).
 
 -include("debug.hrl").
 -include("ports.hrl").
@@ -24,7 +24,7 @@
 %==============================================================================
 
 start({Port,Label,Desc,true,AssertLevel,led}) ->
-	{ok,Pid}=gen_server:start_link(?MODULE,[{Port,Label,Desc,true,AssertLevel,Type}],[]).
+	{ok,Pid}=gen_server:start_link(?MODULE,[{Port,Label,Desc,true,AssertLevel,led}],[]).
 
 stop(Pid) ->
 	gen_server:call(Pid,stop).
