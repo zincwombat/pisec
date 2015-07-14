@@ -42,7 +42,7 @@ init(Args) ->
 	OMS=?CHILD(output_handler_sup,supervisor),
 	OM=?CHILD(output_manager,worker),
 	% Cs=[Config,Yaws,Scanner],
-	Cs=[Config,IS,OM,Scanner],
+	Cs=[Config,IS,OM,OMS,Scanner],
 	?info({starting,Cs}),
 	{ok,{{one_for_one,5,10},Cs}}.
 
