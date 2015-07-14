@@ -134,10 +134,12 @@ init([])->
 			normal_tm_int=NormalFlash,
 			fast_tm_int=FastFlash}}.
 
-i_handleOutput(O={PortNum,_,_,on,_})->
+% {0,siren,"Siren (Relay 1)",true,off,power}
+
+i_handleOutput(O={PortNum,_,_,_,on,_})->
 	i_setPort(PortNum);
 
-i_handleOutput(O={PortNum,_,_,off,_})->
+i_handleOutput(O={PortNum,_,_,_,off,_})->
 	i_clearPort(PortNum).
 
 i_clearPort(PortNum)->
