@@ -20,7 +20,7 @@ stop()->
 	exit(whereis(?MODULE),shutdown).
 
 children()->
-	children(config:get(outputs));
+	children(config:get(outputs)).
 
 children(Ports) when is_list(Ports)->
 	lists:map(fun(Z)->child(Z) end, Ports);
@@ -29,10 +29,10 @@ children(_)->
 	[].
 
 child(X={Port,Label,Desc,true,InitState,led})->
-	{"led_" ++ integer_to_list(Port),{led_handler,start,[X]},permanent,5000,Worker,[Port]};
+	{"led_" ++ integer_to_list(Port),{led_handler,start,[X]},permanent,5000,worker,[Port]};
 
-child({Port,Label,Desc,true,InitState,power})->
-	{"power_" ++ integer_to_list(Port),{power_handler,start,[X]},permanent,5000,Worker,[Port]};
+child(X={Port,Label,Desc,true,InitState,power})->
+	{"power_" ++ integer_to_list(Port),{power_handler,start,[X]},permanent,5000,worker,[Port]};
 
 child(_)->
 	[].
