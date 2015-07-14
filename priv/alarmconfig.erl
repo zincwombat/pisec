@@ -12,14 +12,14 @@
 {port_handler_history_size,	20}.
 {outputs,[
 	% format, {PortNum,desc,LongDesc,initialState,led|power}
-	{0,siren,"Siren (Relay 1)",off,power},
-	{1,relay1,"Relay 2",off,power},
-	{2,power_led,"Power On LED",off,led},
-	{3,alarm_status_led,"Alarm Status LED",off,led},
-	{4,output4,"Output 4",off,power},
-	{5,output5,"Output 5",off,power},
-	{6,output6,"Output 6",off,power},
-	{7,output7,"Output 7",off,power}
+	{0,siren,"Siren (Relay 1)",true,off,power},
+	{1,relay1,"Relay 2",true,off,power},
+	{2,power_led,"Power On LED",true,off,led},
+	{3,alarm_status_led,"Alarm Status LED",true,off,led},
+	{4,output4,"Output 4",true,off,power},
+	{5,output5,"Output 5",true,off,power},
+	{6,output6,"Output 6",true,off,power},
+	{7,output7,"Output 7",true,off,power}
 ]}.
 {output_flash_slow,		500}.
 {output_flash_normal,	250}.

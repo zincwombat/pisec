@@ -44,4 +44,5 @@ child(_)->
 init([])->
 	Children=children(),
 	SSpec={ok,{{one_for_one,5,10},Children}},
+	?info({start_spec,SSpec}),
 	SSpec.
