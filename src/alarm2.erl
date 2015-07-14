@@ -377,7 +377,7 @@ alarmStatusLed('ACK')->
 alarmStatusLed(Control)->
 	Outputs=config:get(outputs),
 	case lists:keyfind(alarm_status_led,2,Outputs) of
-		{Port,_,_,_}->
+		{Port,_,_,_,_}->
 			case Control of
 				on->
 					output_manager:set(Port);
