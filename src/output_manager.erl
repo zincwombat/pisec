@@ -133,7 +133,7 @@ handle_call({flash,Port,Speed},_From,State=#state{itab=ITab}) when ?is_portnum(P
     	[{Port,Pid,_,led}]->
     		led_handler:flash(Pid,Speed);
     	[{Port,Pid,_,power}]->
-    		ignoredl
+    		ignored;
     	_->
     		?error({badarg,{port,Port}}),
     		[]
