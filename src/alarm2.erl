@@ -92,7 +92,7 @@ init(Args)->
 
 	% we need to get the asserted states of all the alarms
 
-	SensorStates=io_manager:getState(),
+	SensorStates=input_manager:getState(),
 
 	?info({sensorStates,SensorStates}),
 
@@ -196,7 +196,7 @@ handle_event(_Event,StateName,StateData)->
 handle_info(Event={timeout,_,tm_sync},'WAIT_ARM',StateData)->
 	?info({event,Event}),
 
-	SensorStates=io_manager:getState(),
+	SensorStates=input_manager:getState(),
 	Asserted=lists:filter(fun(Z)->isSensorAsserted(Z) end, SensorStates),
 	ActiveSet=sets:from_list(lists:map(fun(Z)->{Z#sensor.label,Z#sensor.desc} end,Asserted)),
 	ActiveCount=sets:size(ActiveSet),
@@ -343,7 +343,7 @@ isSensorAsserted(_)->
 	false.
 
 isAlarmEnabled()->
-	case io_manager:getState(enable) of
+	case input_manager:getState(enable) of
 		#sensor{state=asserted}->
 			true;
 		_->

@@ -17,7 +17,9 @@
 
 % API
 
--record (state, {}).
+-export ([on/1]).
+
+-record (state, {port,ledStatus,label,desc}).
 
 %==============================================================================
 % API
@@ -32,6 +34,12 @@ stop(Pid) ->
 state(Pid) ->
 	gen_server:call(Pid,state).
 
+on(Pid) ->
+	gen_server:call(Pid,on).
+
+off(Pid) ->
+	gen_server:call(Pid,off)
+
 %==============================================================================
 % callback functions
 %==============================================================================
@@ -39,7 +47,7 @@ state(Pid) ->
 init([X={Port,Label,Desc,true,AssertLevel,led}])->
 	?info({pid,self()}),
 	process_flag(trap_exit,true),
-	State=#state{},
+	State=#state{port=Port,label=Label,desc=Desc},
 	{ok,State}.
 
 handle_call(stop,_From,State)->
@@ -47,6 +55,20 @@ handle_call(stop,_From,State)->
 
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
+
+handle_call(on,_From,State=#state{port=Port})->
+	% turn led on
+	CurrentOutputs=piface2:read_output(),
+	NewOutputs=CurrentOutputs bor (1 bsl (Port)),
+	Reply=piface2:write_output(NewOutputs),
+	{reply,ok,State#state{ledStatus=on}};
+
+handle_call(off,_From,State)->
+	% turn led off
+	CurrentOutputs=piface2:read_output(),
+	NewOutputs=CurrentOutputs band bnot (1 bsl (PortNum)),
+	Reply=piface2:write_output(NewOutputs).
+	{reply,ok,State#state{ledStatus=off}};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},

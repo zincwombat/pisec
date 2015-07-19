@@ -269,7 +269,7 @@ notify_change(_PortNumber,Value,Value)->
 
 notify_change(PortNumber,NewValue,OldValue)->
  	?info({notify,{port,PortNumber},{new,NewValue},{old,OldValue}}),
-	io_manager:notify(PortNumber,NewValue,OldValue).
+	input_manager:notify(PortNumber,NewValue,OldValue).
 
 getAssertionLevels(Config)->
 	[AL0,AL1,AL2,AL3,AL4,AL5,AL6,AL7]=lists:map(fun(Z)->element(5,Z) end,Config),

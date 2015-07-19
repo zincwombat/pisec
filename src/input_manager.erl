@@ -1,4 +1,4 @@
--module(io_manager).
+-module(input_manager).
 -behaviour(gen_server).
 
 -export([start_link/0,

@@ -18,7 +18,7 @@
 
 
 % {start_spec,
-% 	{ok,{{one_for_one,5,10},[{io_manager,{io_manager,start_link,[]},permanent,5000,worker,[io_manager]},
+% 	{ok,{{one_for_one,5,10},[{input_manager,{input_manager,start_link,[]},permanent,5000,worker,[input_manager]},
 % 							 {port_0,{input_handler,start,[{0,enable,"Alarm Enable",true,0,control}]},permanent,5000,worker,[input_handler]},
 % 							 {port_1,{input_handler,start,[{1,test,"Test",true,0,control}]},permanent,5000,worker,[input_handler]},
 % 							 {port_2,{input_handler,start,[{2,front_door,"Front Door Sensor",true,1,sensor}]},permanent,5000,worker,[input_handler]},
@@ -97,7 +97,7 @@ restart(Port) when is_atom(Port)->
 %% ===================================================================
 init([])->
 	%% {ok,{{one_for_one,5,10},children()}}.
-	IOManager=?CHILD(io_manager,worker),
+	IOManager=?CHILD(input_manager,worker),
 	Children=getConf(),
 	SSpec={ok,{{one_for_one,5,10},lists:append([[IOManager],Children])}},
 	?info({start_spec,SSpec}),
