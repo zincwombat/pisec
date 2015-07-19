@@ -17,7 +17,7 @@
 
 % API
 
--export ([register/2]).
+-export ([register/3]).
 -export ([unregister/0]).
 -export ([notify/3]).
 -export ([getState/0]).
