@@ -106,7 +106,7 @@ handle_info({timeout,TRef,{fl_timeout,Speed}},State=#state{timer=TRef,timer_intv
 	{noreply,State};
 
 handle_info(Msg,State)->
-	Unhandled={unhandled_info,{msg,Msg}},
+	Unhandled={unhandled_info,{msg,Msg},{state,State}},
 	?warn(Unhandled),
 	{noreply,State}.
 
