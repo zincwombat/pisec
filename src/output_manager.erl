@@ -64,8 +64,7 @@ clear(Port)->
 	gen_server:call(?MODULE,{clear,Port}).
 
 flash(Port,Speed)->
-	% TODO
-	ok.
+	gen_server:call(?MODULE,{flash,Port,Speed}).
 
 %==============================================================================
 % callback functions
@@ -122,6 +121,19 @@ handle_call({clear,Port},_From,State=#state{itab=ITab}) when ?is_portnum(Port)->
     		led_handler:off(Pid);
     	[{Port,Pid,_,power}]->
     		power_handler:off(Pid);
+    	_->
+    		?error({badarg,{port,Port}}),
+    		[]
+    end,
+   	{reply,Reply,State};
+
+handle_call({flash,Port,Speed},_From,State=#state{itab=ITab}) when ?is_portnum(Port)->
+	Reply=
+    case ets:lookup(ITab,Port) of
+    	[{Port,Pid,_,led}]->
+    		led_handler:flash(Pid,Speed);
+    	[{Port,Pid,_,power}]->
+    		ignoredl
     	_->
     		?error({badarg,{port,Port}}),
     		[]
