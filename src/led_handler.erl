@@ -18,6 +18,7 @@
 % API
 
 -export ([on/1]).
+-export ([off/1]).
 
 -record (state, {port,ledStatus,label,desc}).
 
