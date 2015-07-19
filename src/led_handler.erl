@@ -38,7 +38,7 @@ on(Pid) ->
 	gen_server:call(Pid,on).
 
 off(Pid) ->
-	gen_server:call(Pid,off)
+	gen_server:call(Pid,off).
 
 %==============================================================================
 % callback functions
@@ -67,7 +67,7 @@ handle_call(off,_From,State)->
 	% turn led off
 	CurrentOutputs=piface2:read_output(),
 	NewOutputs=CurrentOutputs band bnot (1 bsl (PortNum)),
-	Reply=piface2:write_output(NewOutputs).
+	Reply=piface2:write_output(NewOutputs),
 	{reply,ok,State#state{ledStatus=off}};
 
 handle_call(Msg,From,State)->
