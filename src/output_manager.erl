@@ -19,11 +19,9 @@
 
 -export ([register/2]).
 -export ([unregister/0]).
--export ([show/0]).
 -export ([notify/3]).
 -export ([getState/0]).
 -export ([getState/1]).
-
 
 
 -record (state, {itab}).
