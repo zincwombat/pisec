@@ -23,6 +23,9 @@
 -export ([getState/0]).
 -export ([getState/1]).
 
+-export ([set/1]).
+-export ([clear/1]).
+-export ([flash/2]).
 
 -record (state, {itab}).
 
@@ -39,8 +42,8 @@ stop() ->
 state(Pid) ->
 	gen_server:call(?MODULE,state).
 
-register(Port,Label)->
-	gen_server:call(?MODULE,{register,Port,self(),Label}).
+register(Port,Label,Type)->
+	gen_server:call(?MODULE,{register,Port,self(),Label,Type}).
 
 unregister()->
 	gen_server:call(?MODULE,{unregister,self()}).
@@ -53,6 +56,16 @@ getState(Port)->
 
 notify(PortNumber,NewValue,OldValue)->
 	gen_server:cast(?MODULE,{notify,PortNumber,NewValue,OldValue}).
+
+set(Port)->
+	gen_server:call(?MODULE,{set,Port}).
+
+clear(Port)->
+	gen_server:call(?MODULE,{clear,Port}).
+
+flash(Port,Speed)->
+	% TODO
+	ok.
 
 %==============================================================================
 % callback functions
@@ -71,22 +84,49 @@ handle_call(stop,_From,State)->
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
-handle_call({register,Port,Pid,Label},_From,State=#state{itab=ITab}) when is_pid(Pid)->
-    ets:insert(ITab,{Port,Pid,Label}),
-    ?info({added_handler,{port,Port}}),
+handle_call({register,Port,Pid,Label,Type},_From,State=#state{itab=ITab}) when is_pid(Pid)->
+    ets:insert(ITab,X={Port,Pid,Label,Type}),
+    ?info({added_handler,X}),
     link(Pid),	
    	{reply,ok,State};
 
 handle_call({unregister,Pid},_From,State=#state{itab=ITab}) when is_pid(Pid)->
-    ets:match_delete(ITab,{'_',Pid,'_'}),
+    ets:match_delete(ITab,{'_',Pid,'_','_'}),
     unlink(Pid),	
    	{reply,ok,State};
+
 
 handle_call(getState,_From,State=#state{itab=ITab})->
     Handlers=ets:tab2list(ITab),
     Reply=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
    	{reply,Reply,State};
 
+
+handle_call({set,Port},_From,State=#state{itab=ITab}) when ?is_portnum(Port)->
+	Reply=
+    case ets:lookup(ITab,Port) of
+    	[{Port,Pid,_,led}]->
+    		led_handler:on(Pid);
+    	[{Port,Pid,_,power}]->
+    		power_handler:on(Pid);
+    	_->
+    		?error({badarg,{port,Port}}),
+    		[]
+    end,
+   	{reply,Reply,State};
+
+handle_call({clear,Port},_From,State=#state{itab=ITab}) when ?is_portnum(Port)->
+	Reply=
+    case ets:lookup(ITab,Port) of
+    	[{Port,Pid,_,led}]->
+    		led_handler:off(Pid);
+    	[{Port,Pid,_,power}]->
+    		power_handler:off(Pid);
+    	_->
+    		?error({badarg,{port,Port}}),
+    		[]
+    end,
+   	{reply,Reply,State};
 
 % 	allow both port labels (atoms) and integers to be used 
 

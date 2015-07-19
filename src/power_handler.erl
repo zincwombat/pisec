@@ -39,6 +39,7 @@ state(Pid) ->
 init([X={Port,Label,Desc,true,AssertLevel,power}])->
 	?info({pid,self()}),
 	process_flag(trap_exit,true),
+	output_manager:register(Port,Label,power),
 	State=#state{},
 	{ok,State}.
 
