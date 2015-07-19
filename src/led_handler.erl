@@ -63,10 +63,10 @@ handle_call(on,_From,State=#state{port=Port})->
 	Reply=piface2:write_output(NewOutputs),
 	{reply,ok,State#state{ledStatus=on}};
 
-handle_call(off,_From,State)->
+handle_call(off,_From,State=#state{port=Port})->
 	% turn led off
 	CurrentOutputs=piface2:read_output(),
-	NewOutputs=CurrentOutputs band bnot (1 bsl (PortNum)),
+	NewOutputs=CurrentOutputs band bnot (1 bsl (Port)),
 	Reply=piface2:write_output(NewOutputs),
 	{reply,ok,State#state{ledStatus=off}};
 
