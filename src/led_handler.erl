@@ -54,6 +54,7 @@ init([X={Port,Label,Desc,true,AssertLevel,led}])->
 	process_flag(trap_exit,true),
 	output_manager:register(Port,Label,led),
 	State=#state{port=Port,label=Label,desc=Desc},
+	?info({init,State}),
 	{ok,State}.
 
 handle_call(stop,_From,State)->
@@ -73,17 +74,22 @@ handle_call(off,_From,State=#state{port=Port})->
 	{reply,ok,State#state{ledStatus=off}};
 
 handle_call({flash,off},_From,State=#state{port=Port,timer=TRef}) when is_reference(TRef)->
+	?info({flash_off,{timer_is_reference,TRef}}),
 	erlang:cancel_timer(TRef),
 	i_off(Port),
 	{reply,ok,State#state{timer=null,ledStatus=off,timer_intv=null}};
 
 handle_call({flash,Speed},_From,State=#state{port=Port,timer=TRef}) when is_reference(TRef)->
+	?info({flash,Speed,{timer_is_reference,TRef}}),
 	erlang:cancel_timer(TRef),
 	NewTRef=erlang:start_timer(Speed,self(),{fl_timeout,Speed}),
+	?info({new_tref,NewTRef}),
 	{reply,ok,State#state{timer=NewTRef,ledStatus={flash,Speed},timer_intv=Speed}};
 
 handle_call({flash,Speed},_From,State=#state{port=Port,timer=TRef})->
+	?info({flash,Speed,{timer_is_not_reference,TRef}}),
 	NewTRef=erlang:start_timer(Speed,self(),{fl_timeout,Speed}),
+	?info({new_tref,NewTRef}),
 	{reply,ok,State#state{timer=NewTRef,ledStatus={flash,Speed},timer_intv=Speed}};
 
 handle_call(Msg,From,State)->
@@ -98,12 +104,12 @@ handle_cast(Msg,State)->
 
 handle_info({timeout,TRef,{fl_timeout,Speed}},State=#state{timer=TRef,timer_intv=S})->
 
-	CurrentOutputs=piface2:read_output(),
-	NewOutputs=CurrentOutputs bxor S,
-	Reply=piface2:write_output(NewOutputs),
+	% CurrentOutputs=piface2:read_output(),
+	% NewOutputs=CurrentOutputs bxor S,
+	% Reply=piface2:write_output(NewOutputs),
 
-	erlang:start_timer(S,self(),{fl_timeout,S}),
-	{noreply,State};
+	NewTRef=erlang:start_timer(S,self(),{fl_timeout,S}),
+	{noreply,State#state{timer=NewTRef}};
 
 handle_info(Msg,State)->
 	Unhandled={unhandled_info,{msg,Msg},{state,State}},
