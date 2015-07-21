@@ -79,6 +79,10 @@ handle_call({flash,off},_From,State=#state{port=Port,timer=TRef}) when is_refere
 	i_off(Port),
 	{reply,ok,State#state{timer=null,ledStatus=off,timer_intv=null}};
 
+handle_call(Msg={flash,off},_From,State)->
+	?info({ignored,Msg}),
+	{reply,ok,State};
+
 handle_call({flash,Speed},_From,State=#state{port=Port,timer=TRef}) when is_reference(TRef)->
 	?info({flash,Speed,{timer_is_reference,TRef}}),
 	erlang:cancel_timer(TRef),
