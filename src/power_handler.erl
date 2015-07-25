@@ -17,6 +17,9 @@
 
 % API
 
+-export ([on/1]).
+-export ([off/1]).
+
 -record (state, {}).
 
 %==============================================================================
@@ -31,6 +34,12 @@ stop(Pid) ->
 
 state(Pid) ->
 	gen_server:call(Pid,state).
+
+on(Pid)->
+	gen_server:call(Pid,on).
+
+off(Pid)->
+	gen_server:call(Pid,off).
 
 %==============================================================================
 % callback functions
