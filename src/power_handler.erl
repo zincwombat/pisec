@@ -51,7 +51,7 @@ init([X={Port,Label,Desc,true,InitState,power}])->
 	?info({pid,self()}),
 	process_flag(trap_exit,true),
 	output_manager:register(Port,Label,power),
-	i_set(InitState),
+	i_set(Port,InitState),
 	% get the initial state by reading the register
 	State=#state{port=Port,powerStatus=InitState,label=Label,desc=Desc},
 	{ok,State}.

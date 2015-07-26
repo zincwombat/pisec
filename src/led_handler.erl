@@ -57,7 +57,7 @@ init([X={Port,Label,Desc,true,InitState,led}])->
 	?info({pid,self()}),
 	process_flag(trap_exit,true),
 	output_manager:register(Port,Label,led),
-	i_set(InitState),
+	i_set(Port,InitState),
 	State=#state{port=Port,ledStatus=InitState,label=Label,desc=Desc},
 	?info({init,State}),
 	{ok,State}.
