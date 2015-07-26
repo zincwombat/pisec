@@ -160,8 +160,14 @@ handle_call({getState,Label},_From,State=#state{itab=ITab}) when is_atom(Label)-
 	{reply,not_implemented,State};
 
 handle_call({getStatus,Type},_From,State=#state{itab=ITab})->
-	Handlers=getHandlers(Type,ITab),
-	{reply,{Type,Handlers},State};
+	Reply=
+	case Type of
+		power->
+			lists:map(fun(Z)->power_handler:getStatus(element(2,Z)) end, getHandlers(power,ITab));
+		led->
+			lists:map(fun(Z)->led_handler:getStatus(element(2,Z)) end, getHandlers(led,ITab))
+	end,
+	{reply,{Type,Reply},State};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},

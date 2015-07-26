@@ -19,8 +19,11 @@
 
 -export ([on/1]).
 -export ([off/1]).
+-export ([status/1]).
+-export ([getStatus/1]).
 
--record (state, {}).
+
+-record (state, {port,powerStatus,label,desc,timer,timer_intv}).
 
 %==============================================================================
 % API
@@ -41,6 +44,9 @@ on(Pid)->
 off(Pid)->
 	gen_server:call(Pid,off).
 
+getStatus(Pid)->
+	gen_server:call(Pid,getStatus).
+
 %==============================================================================
 % callback functions
 %==============================================================================
@@ -52,11 +58,34 @@ init([X={Port,Label,Desc,true,AssertLevel,power}])->
 	State=#state{},
 	{ok,State}.
 
+handle_call(on,_From,State=#state{port=Port})->
+	% turn led on
+	i_on(Port),
+	{reply,ok,State#state{ledStatus=on}};
+
+handle_call(off,_From,State=#state{port=Port})->
+	% turn led off
+	i_off(Port),
+	{reply,ok,State#state{ledStatus=off}};
+
 handle_call(stop,_From,State)->
 	{stop,normal,ok,State};
 
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
+
+handle_call(on,_From,State=#state{port=Port})->
+	% turn led on
+	i_on(Port),
+	{reply,ok,State#state{ledStatus=on}};
+
+handle_call(off,_From,State=#state{port=Port})->
+	% turn led off
+	i_off(Port),
+	{reply,ok,State#state{ledStatus=off}};
+
+handle_call(Msg=getStatus,_From,State)->
+	{reply,State,State};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
@@ -84,6 +113,20 @@ terminate(Reason,#state{})->
 % Utility
 %==============================================================================
 
+i_on(Port)->
+	CurrentOutputs=piface2:read_output(),
+	NewOutputs=CurrentOutputs bxor (1 bsl (Port)),
+	piface2:write_output(NewOutputs).
+
+i_off(Port)->
+	CurrentOutputs=piface2:read_output(),
+	NewOutputs=CurrentOutputs band bnot (1 bsl (Port)),
+	piface2:write_output(NewOutputs).
+
+i_toggle(Port)->
+	CurrentOutputs=piface2:read_output(),
+	NewOutputs=CurrentOutputs bxor (1 bsl (Port)),
+	piface2:write_output(NewOutputs).
 
 
 
