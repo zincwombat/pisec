@@ -42,11 +42,11 @@ sensors()->
 controls()->
 	input_manager:getAssertedControls().
 
-leds()->
-	not_yet_implemented.
+led_outputs()->
+	output_manager:getLedStatus().
 
-relays()->
-	not_yet_implemented.
+power_outputs()->
+	output_manager:getPowerStatus().
 
 % ==============================================================================
 % utility functions

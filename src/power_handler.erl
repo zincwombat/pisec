@@ -51,7 +51,7 @@ init([X={Port,Label,Desc,true,AssertLevel,power}])->
 	?info({pid,self()}),
 	process_flag(trap_exit,true),
 	output_manager:register(Port,Label,power),
-	State=#state{},
+	State=#state{port=Port,label=Label,desc=Desc},
 	{ok,State}.
 
 handle_call(on,_From,State=#state{port=Port})->
@@ -68,7 +68,14 @@ handle_call(stop,_From,State)->
 	{stop,normal,ok,State};
 
 handle_call(Msg=getStatus,_From,State)->
-	{reply,State,State};
+	Reply={
+		{port,	State#state.port},
+		{state,	State#state.powerStatus},
+		{label,	State#state.label},
+		{desc,	State#state.desc},
+		{type,	power}
+	},
+	{reply,Reply,State};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},

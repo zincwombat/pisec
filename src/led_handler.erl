@@ -96,7 +96,14 @@ handle_call({flash,Speed},_From,State=#state{port=Port,timer=TRef})->
 	{reply,ok,State#state{timer=NewTRef,ledStatus={flash,Speed},timer_intv=Speed}};
 
 handle_call(Msg=getStatus,_From,State)->
-	{reply,State,State};
+	Reply={
+		{port,	State#state.port},
+		{state,	State#state.ledStatus},
+		{label,	State#state.label},
+		{desc,	State#state.desc},
+		{type,	led}
+	},
+	{reply,Reply,State};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
