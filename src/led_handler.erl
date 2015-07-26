@@ -106,10 +106,10 @@ handle_cast(Msg,State)->
 	?warn(Unhandled),
 	{noreply,State}.
 
-handle_info({timeout,TRef,{fl_timeout,Speed}},State=#state{timer=TRef,timer_intv=S})->
+handle_info({timeout,TRef,{fl_timeout,Speed}},State=#state{port=Port,timer=TRef,timer_intv=S})->
 
 	CurrentOutputs=piface2:read_output(),
-	NewOutputs=CurrentOutputs bxor S,
+	NewOutputs=CurrentOutputs bxor (1 bsl (Port)),
 	Reply=piface2:write_output(NewOutputs),
 
 	?info({timer,{current,CurrentOutputs},{toggled,NewOutputs}}),
