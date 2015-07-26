@@ -108,9 +108,11 @@ handle_cast(Msg,State)->
 
 handle_info({timeout,TRef,{fl_timeout,Speed}},State=#state{timer=TRef,timer_intv=S})->
 
-	% CurrentOutputs=piface2:read_output(),
-	% NewOutputs=CurrentOutputs bxor S,
-	% Reply=piface2:write_output(NewOutputs),
+	CurrentOutputs=piface2:read_output(),
+	NewOutputs=CurrentOutputs bxor S,
+	Reply=piface2:write_output(NewOutputs),
+
+	?info({timer,{current,CurrentOutputs},{toggled,NewOutputs}}),
 
 	NewTRef=erlang:start_timer(S,self(),{fl_timeout,S}),
 	{noreply,State#state{timer=NewTRef}};
