@@ -28,8 +28,8 @@
 % API
 %==============================================================================
 
-start({Port,Label,Desc,true,AssertLevel,power}) ->
-	{ok,Pid}=gen_server:start_link(?MODULE,[{Port,Label,Desc,true,AssertLevel,power}],[]).
+start({Port,Label,Desc,true,InitState,power}) ->
+	{ok,Pid}=gen_server:start_link(?MODULE,[{Port,Label,Desc,true,InitState,power}],[]).
 
 stop(Pid) ->
 	gen_server:call(Pid,stop).
@@ -47,11 +47,13 @@ getStatus(Pid)->
 % callback functions
 %==============================================================================
 
-init([X={Port,Label,Desc,true,AssertLevel,power}])->
+init([X={Port,Label,Desc,true,InitState,power}])->
 	?info({pid,self()}),
 	process_flag(trap_exit,true),
 	output_manager:register(Port,Label,power),
-	State=#state{port=Port,label=Label,desc=Desc},
+	i_set(InitState),
+	% get the initial state by reading the register
+	State=#state{port=Port,powerStatus=InitState,label=Label,desc=Desc},
 	{ok,State}.
 
 handle_call(on,_From,State=#state{port=Port})->
@@ -103,9 +105,15 @@ terminate(Reason,#state{})->
 % Utility
 %==============================================================================
 
+i_set(Port,on)->
+	i_on(Port);
+
+i_set(Port,off)->
+	i_off(Port).
+
 i_on(Port)->
 	CurrentOutputs=piface2:read_output(),
-	NewOutputs=CurrentOutputs bxor (1 bsl (Port)),
+	NewOutputs=CurrentOutputs bor (1 bsl (Port)),
 	piface2:write_output(NewOutputs).
 
 i_off(Port)->
@@ -117,6 +125,17 @@ i_toggle(Port)->
 	CurrentOutputs=piface2:read_output(),
 	NewOutputs=CurrentOutputs bxor (1 bsl (Port)),
 	piface2:write_output(NewOutputs).
+
+i_state(Port)->
+	CurrentOutputs=piface2:read_output(),
+	case (CurrentOutputs band (1 bsl (Port))) of
+		0->
+			off;
+		_->
+			on
+	end.
+
+
 
 
 
