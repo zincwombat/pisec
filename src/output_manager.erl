@@ -27,6 +27,9 @@
 -export ([clear/1]).
 -export ([flash/2]).
 
+-export ([getLedStatus/0]).
+-export ([getPowerStatus/0]).
+
 -record (state, {itab}).
 
 %==============================================================================
@@ -65,6 +68,13 @@ clear(Port)->
 
 flash(Port,Speed)->
 	gen_server:call(?MODULE,{flash,Port,Speed}).
+
+getLedStatus()->
+	gen_server:call(?MODULE,{getStatus,led}).
+
+getPowerStatus()->
+	gen_server:call(?MODULE,{getStatus,power).
+
 
 %==============================================================================
 % callback functions
@@ -133,6 +143,7 @@ handle_call({flash,Port,Speed},_From,State=#state{itab=ITab}) when ?is_portnum(P
     	[{Port,Pid,_,led}]->
     		led_handler:flash(Pid,Speed);
     	[{Port,Pid,_,power}]->
+    		?error({flash,{ignored,{port,Port}}}),
     		ignored;
     	_->
     		?error({badarg,{port,Port}}),
@@ -143,45 +154,19 @@ handle_call({flash,Port,Speed},_From,State=#state{itab=ITab}) when ?is_portnum(P
 % 	allow both port labels (atoms) and integers to be used 
 
 handle_call({getState,Port},_From,State=#state{itab=ITab}) when ?is_portnum(Port)->
-    Reply=
-    case ets:lookup(ITab,Port) of
-    	[{Port,Pid,_}]->
-    		input_handler:getState(Pid);
-    	_->
-    		?error({badarg,{port,Port}}),
-    		[]
-    end,
-   	{reply,Reply,State};
+   	{reply,not_implemented,State};
 
 handle_call({getState,Label},_From,State=#state{itab=ITab}) when is_atom(Label)->
-	Handlers=ets:tab2list(ITab),
-	Reply=
-	case lists:keyfind(Label,3,Handlers) of
-		{Port,Pid,Label}->
-			input_handler:getState(Pid);
-		_->
-			?error({badarg,{label,Label}}),
-			[]
-	end,
-	{reply,Reply,State};
+	{reply,not_implemented,State};
 
+handle_call({getStatus,Type},_From,State=#state{itab=ITab})->
+	Handlers=getHandlers(Type,ITab),
+	{reply,{Type,Handlers},State};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
 	?warn(Unhandled),
 	{reply,Unhandled,State}.
-
-handle_cast({notify,PortNumber,NewValue,OldValue},State=#state{itab=ITab})->
-	?info({port,PortNumber,new,NewValue,old,OldValue}),
-	% dispatch the message to the handler
-	case ets:lookup(ITab, PortNumber) of
-		[{PortNumber, Pid, _}]->
-			Pid ! {stateChange,NewValue,OldValue};
-		_->
-			% no registered handler
-			?warn({no_handler,{port,PortNumber}})
-	end,
-	{noreply,State};
 
 handle_cast(Msg,State)->
 	Unhandled={unhandled_cast,{msg,Msg}},
@@ -191,7 +176,7 @@ handle_cast(Msg,State)->
 handle_info(Msg={'EXIT',Pid,Reason},State=#state{itab=ITab})->
 	?warn(Msg),
 	% if this is an input port handler, delete it from itab
-	ets:match_delete(ITab,{'_',Pid,'_'}),
+	ets:match_delete(ITab,{'_',Pid,'_','_'}),
 	{noreply,State};
 
 handle_info(Msg,State)->
@@ -206,4 +191,15 @@ terminate(Reason,#state{})->
 	?info({terminating,Reason}),
 	ok. 
 
+% =============================================================================
+% Utility Functions
+% =============================================================================
 
+getHandlers(Type,ITab)->
+	lists:filter(fun(Z)->is(Type,Z) end,ets:tab2list(ITab)).
+
+is(Type,{_,_,_,Type})->
+	true;
+
+is(_)->
+	false.
