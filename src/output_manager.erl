@@ -73,7 +73,7 @@ getLedStatus()->
 	gen_server:call(?MODULE,{getStatus,led}).
 
 getPowerStatus()->
-	gen_server:call(?MODULE,{getStatus,power).
+	gen_server:call(?MODULE,{getStatus,power}).
 
 
 %==============================================================================
@@ -201,5 +201,5 @@ getHandlers(Type,ITab)->
 is(Type,{_,_,_,Type})->
 	true;
 
-is(_)->
+is(_,_)->
 	false.
