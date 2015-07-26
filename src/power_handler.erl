@@ -19,7 +19,6 @@
 
 -export ([on/1]).
 -export ([off/1]).
--export ([status/1]).
 -export ([getStatus/1]).
 
 
@@ -34,9 +33,6 @@ start({Port,Label,Desc,true,AssertLevel,power}) ->
 
 stop(Pid) ->
 	gen_server:call(Pid,stop).
-
-state(Pid) ->
-	gen_server:call(Pid,state).
 
 on(Pid)->
 	gen_server:call(Pid,on).
@@ -61,28 +57,15 @@ init([X={Port,Label,Desc,true,AssertLevel,power}])->
 handle_call(on,_From,State=#state{port=Port})->
 	% turn led on
 	i_on(Port),
-	{reply,ok,State#state{ledStatus=on}};
+	{reply,ok,State#state{powerStatus=on}};
 
 handle_call(off,_From,State=#state{port=Port})->
 	% turn led off
 	i_off(Port),
-	{reply,ok,State#state{ledStatus=off}};
+	{reply,ok,State#state{powerStatus=off}};
 
 handle_call(stop,_From,State)->
 	{stop,normal,ok,State};
-
-handle_call(state,_From,State)->
-	{reply,{ok,State},State};
-
-handle_call(on,_From,State=#state{port=Port})->
-	% turn led on
-	i_on(Port),
-	{reply,ok,State#state{ledStatus=on}};
-
-handle_call(off,_From,State=#state{port=Port})->
-	% turn led off
-	i_off(Port),
-	{reply,ok,State#state{ledStatus=off}};
 
 handle_call(Msg=getStatus,_From,State)->
 	{reply,State,State};
