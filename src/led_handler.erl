@@ -74,7 +74,6 @@ handle_call(off,_From,State=#state{port=Port})->
 	{reply,ok,State#state{ledStatus=off}};
 
 handle_call({flash,off},_From,State=#state{port=Port,timer=TRef}) when is_reference(TRef)->
-	?info({flash_off,{timer_is_reference,TRef}}),
 	erlang:cancel_timer(TRef),
 	i_off(Port),
 	{reply,ok,State#state{timer=null,ledStatus=off,timer_intv=null}};
@@ -84,16 +83,12 @@ handle_call(Msg={flash,off},_From,State)->
 	{reply,ok,State};
 
 handle_call({flash,Speed},_From,State=#state{port=Port,timer=TRef}) when is_reference(TRef)->
-	?info({flash,Speed,{timer_is_reference,TRef}}),
 	erlang:cancel_timer(TRef),
 	NewTRef=erlang:start_timer(Speed,self(),{fl_timeout,Speed}),
-	?info({new_tref,NewTRef}),
 	{reply,ok,State#state{timer=NewTRef,ledStatus={flash,Speed},timer_intv=Speed}};
 
 handle_call({flash,Speed},_From,State=#state{port=Port,timer=TRef})->
-	?info({flash,Speed,{timer_is_not_reference,TRef}}),
 	NewTRef=erlang:start_timer(Speed,self(),{fl_timeout,Speed}),
-	?info({new_tref,NewTRef}),
 	{reply,ok,State#state{timer=NewTRef,ledStatus={flash,Speed},timer_intv=Speed}};
 
 handle_call(Msg,From,State)->
@@ -107,13 +102,7 @@ handle_cast(Msg,State)->
 	{noreply,State}.
 
 handle_info({timeout,TRef,{fl_timeout,Speed}},State=#state{port=Port,timer=TRef,timer_intv=S})->
-
-	CurrentOutputs=piface2:read_output(),
-	NewOutputs=CurrentOutputs bxor (1 bsl (Port)),
-	Reply=piface2:write_output(NewOutputs),
-
-	?info({timer,{current,CurrentOutputs},{toggled,NewOutputs}}),
-
+	i_toggle(Port),
 	NewTRef=erlang:start_timer(S,self(),{fl_timeout,S}),
 	{noreply,State#state{timer=NewTRef}};
 
@@ -135,7 +124,7 @@ terminate(Reason,#state{})->
 
 i_on(Port)->
 	CurrentOutputs=piface2:read_output(),
-	NewOutputs=CurrentOutputs bor (1 bsl (Port)),
+	NewOutputs=CurrentOutputs bxor (1 bsl (Port)),
 	piface2:write_output(NewOutputs).
 
 i_off(Port)->
