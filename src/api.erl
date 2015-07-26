@@ -9,8 +9,8 @@
 -export ([state/0]).
 -export ([sensors/0]).
 -export ([controls/0]).
--export ([leds/0]).
--export ([relays/0]).
+-export ([led_outputs/0]).
+-export ([power_outputs/0]).
 -export ([ack/0]).
 -export ([unack/0]).
 
