@@ -383,7 +383,7 @@ alarmStatusLed(Control)->
 					output_manager:set(Port);
 				off->
 					output_manager:clear(Port);
-				{flash,Speed} when ?is_integer(Speed)->
+				{flash,Speed} when is_integer(Speed)->
 					output_manager:flash(Port,Speed);
 				Other->
 					{error,{badarg,Other}}
