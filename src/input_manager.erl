@@ -150,7 +150,7 @@ handle_call(Msg,From,State)->
 	{reply,Unhandled,State}.
 
 handle_cast({notify,PortNumber,NewValue,OldValue},State=#state{itab=ITab})->
-	?info({port,PortNumber,new,NewValue,old,OldValue}),
+	% ?info({port,PortNumber,new,NewValue,old,OldValue}),
 	% dispatch the message to the handler
 	case ets:lookup(ITab, PortNumber) of
 		[{PortNumber, Pid, _}]->

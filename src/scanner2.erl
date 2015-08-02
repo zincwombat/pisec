@@ -268,7 +268,7 @@ notify_change(_PortNumber,Value,Value)->
 	ok;
 
 notify_change(PortNumber,NewValue,OldValue)->
- 	?info({notify,{port,PortNumber},{new,NewValue},{old,OldValue}}),
+ 	% ?info({notify,{port,PortNumber},{new,NewValue},{old,OldValue}}),
 	input_manager:notify(PortNumber,NewValue,OldValue).
 
 getAssertionLevels(Config)->
