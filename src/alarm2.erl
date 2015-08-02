@@ -360,19 +360,19 @@ alarmStatusLed('ACTIVE')->
 	alarmStatusLed(on);
 
 alarmStatusLed('WAIT_ARM')->
-	alarmStatusLed({flash,fast});
+	alarmStatusLed({flash,?FLASH_FAST});
 
 alarmStatusLed('DISARMED')->
 	alarmStatusLed(off);
 
 alarmStatusLed('CLEAR')->
-	alarmStatusLed({flash,slow});
+	alarmStatusLed({flash,?FLASH_SLOW});
 
 alarmStatusLed('ACTIVE')->
 	alarmStatusLed(on);
 
 alarmStatusLed('ACK')->
-	alarmStatusLed({flash,normal});
+	alarmStatusLed({flash,?FLASH_NORMAL});
 
 alarmStatusLed(Control)->
 	Outputs=config:get(outputs),
