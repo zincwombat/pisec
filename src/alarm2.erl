@@ -162,7 +162,7 @@ handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 	NextState='ACK',
 	alarmStatusLed(NextState),
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
-    handle_statechange_notifications(StateName,NextState.?LINE),
+    handle_statechange_notifications(StateName,NextState,?LINE),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
 handle_sync_event(history,_From,State,StateData=#state{history=H})->
