@@ -138,31 +138,28 @@ handle_sync_event(Event=unack,_From,StateName='ACK',
 	NextState='CLEAR',
 	alarmStatusLed(NextState),
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
-    handle_statechange_notifications(StateName,NextState,?LINE),
+    handle_statechange_notifications(StateName,NextState),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
 handle_sync_event(Event=unack,_From,StateName='ACK',
 				  StateData=#state{history=Queue})->
 	NextState='ACTIVE',
-	alarmStatusLed(NextState),
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
-    handle_statechange_notifications(StateName,NextState,?LINE),
+    handle_statechange_notifications(StateName,NextState),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue,active_count=0})->
 	NextState='CLEAR',
-	alarmStatusLed(NextState),
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
-    handle_statechange_notifications(StateName,NextState,?LINE),
+    handle_statechange_notifications(StateName,NextState),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue})->
 	NextState='ACK',
-	alarmStatusLed(NextState),
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
-    handle_statechange_notifications(StateName,NextState,?LINE),
+    handle_statechange_notifications(StateName,NextState),
 	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
 
 handle_sync_event(history,_From,State,StateData=#state{history=H})->
@@ -185,7 +182,7 @@ handle_sync_event(Event,_From,StateName,StateData=#state{})->
 
 handle_event(Sensor=#sensor{},StateName,StateData)->
 	{NextState,NextStateData}=i_handle_event(Sensor,StateName,StateData),
-	handle_statechange_notifications(StateName,NextState,?LINE),
+	handle_statechange_notifications(StateName,NextState),
 	{next_state,NextState,NextStateData};
 
 handle_event(_Event={stop,Reason},_StateName,StateData=#state{})->
@@ -218,8 +215,7 @@ handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData)->
 									active_set=ActiveSet},
 
 	?info({next_state,NextState}),
-	alarmStatusLed(NextState),
-	handle_statechange_notifications(StateName,NextState,?LINE),
+	handle_statechange_notifications(StateName,NextState),
 	{next_state,NextState,NextStateData};
 
 
@@ -277,7 +273,6 @@ handle_alarm(Sensor=#sensor{state=SensorStatus,desc=Desc},
 	end,
 
 	?info({next_state,NextState}),
-	alarmStatusLed(NextState),
 
 	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
 
@@ -297,7 +292,6 @@ handle_control(	Sensor=#sensor{state=asserted,label=enable},StateName='DISARMED'
 	NextState='WAIT_ARM',
 	NewQueue=aqueue:logFsm('DISARMED',LogMessage,NextState,Queue),
 	TRef=erlang:start_timer(StateData#state.wait_timeout,self(),tm_sync),
-	alarmStatusLed(NextState),
 	{NextState,StateData#state{history=NewQueue}};
 
 handle_control(	Sensor=#sensor{state=deAsserted,label=enable},StateName,
@@ -308,16 +302,17 @@ handle_control(	Sensor=#sensor{state=deAsserted,label=enable},StateName,
 	LogMessage=io_lib:format("alarm disabled",[]),
 	NextState='DISARMED',
 	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
-	alarmStatusLed(NextState),	
 	{NextState,StateData#state{history=NewQueue}}.
 
 
-handle_statechange_notifications(OldState,NewState)->
-	?info({stateChange, {from,OldState},{to,NewState}}),
-	ok.
 
-handle_statechange_notifications(OldState,NewState,Msg)->
-	?info({stateChange, {from,OldState},{to,NewState},{msg,Msg}}),
+handle_statechange_notifications(State,State)->
+	ignore;
+
+
+handle_statechange_notifications(OldState,NewState)->
+	alarmStatusLed(NextState),	
+	?info({stateChange, {from,OldState},{to,NewState}}),
 	ok.
 
 
