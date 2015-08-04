@@ -310,7 +310,7 @@ handle_control(	Sensor=#sensor{state=deAsserted,label=enable},StateName,
 
 	LogMessage=io_lib:format("alarm disabled",[]),
 	NextState='DISARMED',
-	NewQueue=aqueue:logFsm(State,LogMessage,'DISARMED',Queue),
+	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
 	alarmStatusLed(NextState),	
 	handle_statechange_notifications(StateName,NextState),
 	{NextState,StateData#state{history=NewQueue}}.
