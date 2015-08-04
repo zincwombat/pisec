@@ -311,7 +311,7 @@ handle_statechange_notifications(State,State)->
 
 
 handle_statechange_notifications(OldState,NewState)->
-	alarmStatusLed(NextState),	
+	alarmStatusLed(NewState),	
 	?info({stateChange, {from,OldState},{to,NewState}}),
 	ok.
 
