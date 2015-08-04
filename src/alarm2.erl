@@ -281,8 +281,6 @@ handle_alarm(Sensor=#sensor{state=SensorStatus,desc=Desc},
 
 	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
 
-	handle_statechange_notifications(StateName,NextState,?LINE),
-
 	{NextState,StateData#state{	active_count=NewActiveCount,
 								active_set=NewActiveSet,
 								history=NewQueue}};
@@ -300,7 +298,6 @@ handle_control(	Sensor=#sensor{state=asserted,label=enable},StateName='DISARMED'
 	NewQueue=aqueue:logFsm('DISARMED',LogMessage,NextState,Queue),
 	TRef=erlang:start_timer(StateData#state.wait_timeout,self(),tm_sync),
 	alarmStatusLed(NextState),
-	handle_statechange_notifications(StateName,NextState,?LINE),
 	{NextState,StateData#state{history=NewQueue}};
 
 handle_control(	Sensor=#sensor{state=deAsserted,label=enable},StateName,
@@ -312,7 +309,6 @@ handle_control(	Sensor=#sensor{state=deAsserted,label=enable},StateName,
 	NextState='DISARMED',
 	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
 	alarmStatusLed(NextState),	
-	handle_statechange_notifications(StateName,NextState,?LINE),
 	{NextState,StateData#state{history=NewQueue}}.
 
 
