@@ -53,7 +53,7 @@ handle_call(Msg,From,State)->
 
 handle_cast({notify,Message,MSISDNS},State)->
     lists:foreach(fun(Z)->i_notify(Message,Z,State) end,MSISDNS),
-    {noreply,State}.
+    {noreply,State};
 
 handle_cast(Msg,State)->
     Unhandled={unhandled_cast,{msg,Msg}},
@@ -78,5 +78,29 @@ terminate(Reason,State)->
 
 i_notify(Message,MSISDN,State)->
     ?info({notify,{to,MSISDN},{msg,Message}}),
-    % insert API client code here
     ok.
+    % insert API client code here
+
+    % RequestURL = "https://" ++ 
+    %              AccountSID ++ 
+    %              ":" ++ 
+    %              AuthToken ++ 
+    %              "@" ++ 
+    %              ?TWILIO_BASE_URL ++
+    %              "/" ++
+    %              ?API_VERSION_2010 ++ 
+    %              Path,
+
+    % Request = {RequestURL, [], "application/x-www-form-urlencoded", ParamsString},
+
+
+    % case httpc:request(post, Request,[],[]) of
+    %     {ok,{{_Vsn,Code,_RPhrase},_Hdrs,PayLoad}}->
+    %         % check content-type TODO
+    %         Map=object_to_map(jiffy:decode(PayLoad)),
+    %         Results=maps:get(?JSON_KEY,Map),
+    %         lists:map(fun(Z)->mkrec(avail,Z) end,Results);
+
+    %     Other->
+    %         ?error({error,Other})
+    % end.
