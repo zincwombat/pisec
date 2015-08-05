@@ -1,0 +1,1 @@
+-define (NOTIFY_MSISDNS, ["+61413585636"]).
