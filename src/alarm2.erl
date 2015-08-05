@@ -128,7 +128,6 @@ init(Args)->
 									active_set=ActiveSet,
 									history=NewQueue}}.
 
-
 %% ============================================================================
 %% SYNC STATE TRANSITIONS 
 %% ============================================================================									
@@ -304,11 +303,8 @@ handle_control(	Sensor=#sensor{state=deAsserted,label=enable},StateName,
 	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
 	{NextState,StateData#state{history=NewQueue}}.
 
-
-
 handle_statechange_notifications(State,State)->
 	ignore;
-
 
 handle_statechange_notifications(OldState,NewState)->
 	alarmStatusLed(NewState),	
