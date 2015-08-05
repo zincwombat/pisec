@@ -29,7 +29,7 @@ state() ->
 
 init([])->
         State=#state{},
-        {ok,State};
+        {ok,State}.
 
 
 handle_call(stop,_From,State)->
@@ -56,6 +56,6 @@ handle_info(Msg,State)->
 code_change(_OldVsn,Ctx,_Extra) ->
         {ok,Ctx}.       
 
-terminate(Reason,#state{ctab=CTab})->
+terminate(Reason,State)->
         ?info({terminating,Reason}),
         ok.
