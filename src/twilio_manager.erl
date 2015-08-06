@@ -78,29 +78,34 @@ terminate(Reason,State)->
 
 i_notify(Message,MSISDN,State)->
     ?info({notify,{to,MSISDN},{msg,Message}}),
-    ok.
-    % insert API client code here
+    AC=config:get(twilio_ac),
+    AU=config:get(twilio_au),
+    TN=config:get(twilio_nu),
 
-    % RequestURL = "https://" ++ 
-    %              AccountSID ++ 
-    %              ":" ++ 
-    %              AuthToken ++ 
-    %              "@" ++ 
-    %              ?TWILIO_BASE_URL ++
-    %              "/" ++
-    %              ?API_VERSION_2010 ++ 
-    %              Path,
+    RequestURL = "https://" ++ 
+                 AC ++ 
+                 ":" ++ 
+                 AU ++ 
+                 "@" ++ 
+                 ?TWILIO_BASE_URL ++
+                 "/" ++
+                 ?API_VERSION_2010 ++ 
+                 "/Accounts" ++
+                 "/" ++
+                 AC ++ 
+                 "/Messages",
 
-    % Request = {RequestURL, [], "application/x-www-form-urlencoded", ParamsString},
+    ?info({request_uri,RequestURL}),
+
+    FormParams = "To=" ++ MSISDN ++ "&From=" ++ TN ++ "&Body=" ++ Message, 
+
+    Request = {RequestURL, [], "application/x-www-form-urlencoded", yaws_api:url_encode(FormParams)},
 
 
-    % case httpc:request(post, Request,[],[]) of
-    %     {ok,{{_Vsn,Code,_RPhrase},_Hdrs,PayLoad}}->
-    %         % check content-type TODO
-    %         Map=object_to_map(jiffy:decode(PayLoad)),
-    %         Results=maps:get(?JSON_KEY,Map),
-    %         lists:map(fun(Z)->mkrec(avail,Z) end,Results);
+    case httpc:request(post, Request,[],[]) of
+        {ok,R={{_Vsn,Code,_RPhrase},_Hdrs,PayLoad}}->
+            ?info({twilio_ret,R});
 
-    %     Other->
-    %         ?error({error,Other})
-    % end.
+        Other->
+            ?error({error,Other})
+    end.
