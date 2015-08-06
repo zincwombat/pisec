@@ -48,7 +48,9 @@ merge_config(Config,State)->
 	%% merge the values in the configuration file
 
 	ConfigFile=code:priv_dir(atom_to_list(?APPNAME)) ++ "/" ++ ?ALARMCONFIG,
+	merge_config_file(ConfigFile,Config,State).
 
+merge_config_file(ConfigFile,Config,State)->
 	case file:consult(ConfigFile) of
         {ok,KVL}->
 			lists:map(fun(Z)->i_merge(Z,Config) end,KVL),
@@ -58,7 +60,7 @@ merge_config(Config,State)->
         E={error,_Error}->
 			?critical({failed_to_open_file,E}),
 			{stop,{config_file,{file,ConfigFile},E}}
-        end.
+    end.
 
 i_merge(KV={Key,Value},Config)->
 	case dets:lookup(Config,Key) of

@@ -307,7 +307,12 @@ handle_statechange_notifications(State,State)->
 	ignore;
 
 handle_statechange_notifications(OldState,NewState)->
-	alarmStatusLed(NewState),	
+	alarmStatusLed(NewState),
+	
+	% send notifications here -- e.g. via Twilio, etc
+
+	% twilio_manager:send(Message),
+	
 	?info({stateChange, {from,OldState},{to,NewState}}),
 	ok.
 
