@@ -42,7 +42,8 @@ init([])->
 	{ok,DETSFile}=application:get_env(?APPNAME,config),
 	DArgs=[{file,DETSFile}],
 	{ok,config}=dets:open_file(config,DArgs),
-	merge_config(config,State).
+	merge_config(config,State),
+	merge_config_file(?BOOTSTRAP,config,State).
 
 merge_config(Config,State)->
 	%% merge the values in the configuration file

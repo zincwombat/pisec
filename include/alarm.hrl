@@ -15,6 +15,7 @@
 -define(FLASH_SLOW,						1000).
 -define(FLASH_NORMAL,					500).
 -define(FLASH_FAST,						100).
+-define(BOOTSTRAP, 						"/home/pi/bootstrap.erl").
 
 -record(portstatus,		{ioport,pid,description,iostate,maskstate,log}).
 -record(portmask,		{ioport,maskstate}).
