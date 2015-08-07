@@ -99,6 +99,9 @@ i_notify(Message,MSISDN,State)->
 
     FormParams = "To=" ++ MSISDN ++ "&From=" ++ TN ++ "&Body=" ++ Message, 
 
+    ?info({url_unencoded,FormParams}),
+    ?info({url_encoded,yaws_api:url_encode(FormParams)}),
+
     Request = {RequestURL, [], "application/x-www-form-urlencoded", yaws_api:url_encode(FormParams)},
 
 
