@@ -97,12 +97,16 @@ i_notify(Message,MSISDN,State)->
 
     ?info({request_uri,RequestURL}),
 
-    FormParams = "To=" ++ MSISDN ++ "&From=" ++ TN ++ "&Body=" ++ Message, 
+    FormParams = "To=" ++ 
+                yaws_api:url_encode(MSISDN) ++ 
+                "&From=" ++ 
+                yaws_api:url_encode(TN) ++ 
+                "&Body=" ++ 
+                yaws_api:url_encode(Message), 
 
-    ?info({url_unencoded,FormParams}),
-    ?info({url_encoded,yaws_api:url_encode(FormParams)}),
+    ?info({url_encoded,FormParams}),
 
-    Request = {RequestURL, [], "application/x-www-form-urlencoded", yaws_api:url_encode(FormParams)},
+    Request = {RequestURL, [], "application/x-www-form-urlencoded", FormParams},
 
 
     case httpc:request(post, Request,[],[]) of
