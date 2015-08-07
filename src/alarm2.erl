@@ -308,6 +308,10 @@ handle_statechange_notifications(State,State)->
 
 handle_statechange_notifications(OldState,NewState)->
 	alarmStatusLed(NewState),
+
+	Message="Alarm state change from: [" ++ Oldstate ++ "] to [" ++ NewState ++ "]",
+
+	twilio_manager:notify(Message),
 	
 	% send notifications here -- e.g. via Twilio, etc
 
