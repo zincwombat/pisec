@@ -80,7 +80,7 @@ i_notify(Message,MSISDN,State)->
     ?info({notify,{to,MSISDN},{msg,Message}}),
     AC=config:get(twilio_ac),
     AU=config:get(twilio_au),
-    TN=config:get(twilio_nu),
+    TN=config:get(twilio_tn),
 
     RequestURL = "https://" ++ 
                  AC ++ 
