@@ -309,7 +309,7 @@ handle_statechange_notifications(State,State)->
 handle_statechange_notifications(OldState,NewState)->
 	alarmStatusLed(NewState),
 
-	Message="Alarm state change from: [" ++ Oldstate ++ "] to [" ++ NewState ++ "]",
+	Message="Alarm state change from: [" ++ OldState ++ "] to [" ++ NewState ++ "]",
 
 	twilio_manager:notify(Message),
 	
