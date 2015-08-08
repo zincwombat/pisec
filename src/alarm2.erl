@@ -48,7 +48,6 @@
 %% STATE DATA =================================================================
 
 -record(state,{	
-	tm_arming,
 	tm_alerting,
 	tm_sync,
 	active_set,
@@ -80,7 +79,6 @@ alarmCount()->
 
 state()->
 	gen_fsm:sync_send_all_state_event(?MODULE,state).
-
 
 init(Args)->
 	?info({starting,self()}),
@@ -194,7 +192,7 @@ handle_event(_Event,StateName,StateData)->
 %% HANDLE TIMERS etc
 %% ============================================================================
 
-handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData)->
+handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData=#state{history=Queue})->
 	?info({event,Event}),
 
 	SensorStates=input_manager:getState(),
@@ -210,8 +208,11 @@ handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData)->
 			'ACTIVE'
 	end,
 
+	NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
+
 	NextStateData=StateData#state{	active_count=ActiveCount,
-									active_set=ActiveSet},
+									active_set=ActiveSet,
+									history=NewQueue},
 
 	?info({next_state,NextState}),
 	handle_statechange_notifications(StateName,NextState),
@@ -289,7 +290,7 @@ handle_control(	Sensor=#sensor{state=asserted,label=enable},StateName='DISARMED'
 
 	LogMessage=io_lib:format("alarm enabled",[]),
 	NextState='WAIT_ARM',
-	NewQueue=aqueue:logFsm('DISARMED',LogMessage,NextState,Queue),
+	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
 	TRef=erlang:start_timer(StateData#state.wait_timeout,self(),tm_sync),
 	{NextState,StateData#state{history=NewQueue}};
 
@@ -309,6 +310,8 @@ handle_statechange_notifications(State,State)->
 handle_statechange_notifications(OldState,NewState)->
 	alarmStatusLed(NewState),
 
+	% needs convert State from atom to string ....
+
 	Message="Alarm state change from: [" ++ 
 	atom_to_list(OldState) ++ 
 	"] to [" ++ 
@@ -316,39 +319,28 @@ handle_statechange_notifications(OldState,NewState)->
 	 "]",
 
 	twilio_manager:notify(Message),
-	
-	% send notifications here -- e.g. via Twilio, etc
-
-	% twilio_manager:send(Message),
-	
+		
 	?info({stateChange, {from,OldState},{to,NewState}}),
 	ok.
-
 
 %% ============================================================================
 %% STATE CALLBACKS
 %% ============================================================================
 
 'DISARMED'(Event,StateData)->
-	?info({{event,Event},{state,'DISARMED'}}),
 	{next_state,'DISARMED',StateData}.
 
 'WAIT_ARM'(Event,StateData)->
-	?info({{event,Event},{state,'WAIT_ARM'}}),
 	{next_state,'WAIT_ARM',StateData}.
 
 'ACK'(Event,StateData)->
-	?info({{event,Event},{state,'ACK'}}),
 	{next_state,'ACK',StateData}.
 
 'CLEAR'(Event,StateData)->
-	?info({{event,Event},{state,'CLEAR'}}),
 	{next_state,'CLEAR',StateData}.
 
 'ACTIVE'(Event,StateData)->
-	?info({{event,Event},{state,'ACTIVE'}}),
 	{next_state,'ACTIVE',StateData}.
-
 
 %% ============================================================================
 %% Utility Routines
