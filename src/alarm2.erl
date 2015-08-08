@@ -52,7 +52,9 @@
 	active_set,
 	active_count,
 	history,
-	wait_timeout
+	alarming_interval,
+	alert_on_interval,
+	alert_off_interval
 }).
 
 start(_InitState)->
@@ -101,7 +103,9 @@ init(Args)->
 	ActiveSet=sets:from_list(lists:map(fun(Z)->{Z#sensor.label,Z#sensor.desc} end,Asserted)),
 	ActiveCount=sets:size(ActiveSet),
 
-	WaitArmTimeout=config:get(timer_wait_arm,?DEFAULT_WAIT_ARM_INTERVAL),
+	WaitArmInterval=config:get(timer_wait_arm,?DEFAULT_WAIT_ARM_INTERVAL),
+	AlertOnInterval=config:get(timer_alert_on,?DEFAULT_SIREN_ON_INTERVAL),
+	AlertOffInterval=config:get(timer_alert_off,?DEFAULT_SIREN_OFF_INTERVAL),
 
 	NextState=
 	case isAlarmEnabled() of 
@@ -120,7 +124,9 @@ init(Args)->
 
 	alarmStatusLed(NextState),
 
-	{ok,NextState,StateData=#state{	wait_timeout=WaitArmTimeout,
+	{ok,NextState,StateData=#state{	alarming_interval=WaitArmTimeout,
+									alert_on_interval=AlertOnInterval,
+									alert_off_interval=AlertOffInterval,
 									active_count=ActiveCount,
 									active_set=ActiveSet,
 									history=NewQueue}}.
@@ -214,7 +220,6 @@ handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData=#state{hist
 	?info({next_state,NextState}),
 	{next_state,NextState,handle_statechange_actions(StateName,NextState,StateData)};
 
-
 handle_info(Event,State,StateData)->
 	?info({ignored_info,Event}),
 	{next_state,State,StateData}.
@@ -287,7 +292,7 @@ handle_control(	Sensor=#sensor{state=asserted,label=enable},StateName='DISARMED'
 	LogMessage=io_lib:format("alarm enabled",[]),
 	NextState='WAIT_ARM',
 	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
-	TRef=erlang:start_timer(StateData#state.wait_timeout,self(),tm_sync),
+	TRef=erlang:start_timer(StateData#state.alarming_interval,self(),tm_sync),
 	{NextState,StateData#state{history=NewQueue}};
 
 handle_control(	Sensor=#sensor{state=deAsserted,label=enable},StateName,
@@ -303,7 +308,7 @@ handle_control(	Sensor=#sensor{state=deAsserted,label=enable},StateName,
 handle_statechange_actions(State,State,StateData)->
 	StateData;
 
-handle_statechange_actions(OldState,NewState,StateData)->
+handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})->
 	alarmStatusLed(NewState),
 
 	% needs convert State from atom to string ....
@@ -314,27 +319,33 @@ handle_statechange_actions(OldState,NewState,StateData)->
 	atom_to_list(NewState) ++
 	 "]",
 
+	NewStateData=
 	case NewState of
 		'ACTIVE'->
+			TRef=erlang:start_timer(StateData#state.alert_on_interval,self(),tm_alert_on),
+			?info({activated_alert_timer,TRef}),
 			% activate siren, set tm_alert timer
-			ok;
+			StateData#state{tm_alerting=TRef};
 
-		'ACK'->
+		'ACK' when is_reference(TRef)->
+			erlang:cancel_timer(StateData#state.tm_alerting),
 			% deactivate siren, cancel tm_alert timer
-			ok;
+			StateData#state{tm_alerting=undefined};
 
-		'CLEAR'->
+		'CLEAR' when is_reference(TRef)->
 			% deactivate siren, cancel tm_alert timer
-			ok;
+			erlang:cancel_timer(StateData#state.tm_alerting),
+			StateData#state{tm_alerting=undefined};
 
-		'WAIT_ARM'->
-			ok;
+		'WAIT_ARM' when is_reference(TRef)->
+			StateData#state{tm_alerting=undefined};
 
-		'DISARMED'->
-			ok;
+		'DISARMED' when is_reference(TRef)->
+			erlang:cancel_timer(StateData#state.tm_alerting),
+			StateData#state{tm_alerting=undefined};
 
 		_->
-			ok
+			StateData
 	end,
 
 	twilio_manager:notify(Message),

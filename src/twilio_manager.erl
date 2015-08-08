@@ -95,8 +95,6 @@ i_notify(Message,MSISDN,State)->
                  AC ++ 
                  "/Messages",
 
-    ?info({request_uri,RequestURL}),
-
     FormParams = "To=" ++ 
                 yaws_api:url_encode(MSISDN) ++ 
                 "&From=" ++ 
@@ -104,10 +102,7 @@ i_notify(Message,MSISDN,State)->
                 "&Body=" ++ 
                 yaws_api:url_encode(Message), 
 
-    ?info({url_encoded,FormParams}),
-
     Request = {RequestURL, [], "application/x-www-form-urlencoded", FormParams},
-
 
     case httpc:request(post, Request,[],[]) of
         {ok,R={{_Vsn,201,_RPhrase},_Hdrs,PayLoad}}->

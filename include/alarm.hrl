@@ -15,8 +15,9 @@
 -define(FLASH_SLOW,						1000).
 -define(FLASH_NORMAL,					500).
 -define(FLASH_FAST,						100).
--define(SIREN_ON_INTERVAL,				60000).	% 60 seconds
--define(SIREN_OFF_INTERVAL,				60000).	% 60 seconds
+-define(DEFAULT_SIREN_ON_INTERVAL,		60000).	% 60 seconds
+-define(DEFAULT_SIREN_OFF_INTERVAL,		60000).	% 60 seconds
+
 -define(BOOTSTRAP, 						"/home/pi/bootstrap.erl").
 
 -record(portstatus,		{ioport,pid,description,iostate,maskstate,log}).
@@ -24,11 +25,8 @@
 -record(alarmconf,		{alarmstate,setmask,clearmask,simulator=false}).
 -record(alarmstatus,	{alarmstate,portfilter,portstate=[],log}).
 -record(error,			{status,code,description,extended}).
-
 -record(json,			{meta,data}).
 -record(link,			{type,rel,href}).
-
-
 -record(event, 			{port,sensorStatus,label,desc,assertLevel,type}).
 -record(alarm, 			{port,label,desc}).
 -record(control, 		{port,label,desc}).
