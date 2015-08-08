@@ -110,8 +110,8 @@ i_notify(Message,MSISDN,State)->
 
 
     case httpc:request(post, Request,[],[]) of
-        {ok,R={{_Vsn,Code,_RPhrase},_Hdrs,PayLoad}}->
-            ?info({twilio_ret,R});
+        {ok,R={{_Vsn,201,_RPhrase},_Hdrs,PayLoad}}->
+            ?info({twilio_ret,{message_sent,Message}});
 
         Other->
             ?error({error,Other})

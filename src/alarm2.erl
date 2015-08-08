@@ -135,29 +135,29 @@ handle_sync_event(Event=unack,_From,StateName='ACK',
 	NextState='CLEAR',
 	alarmStatusLed(NextState),
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
-    handle_statechange_notifications(StateName,NextState),
-	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
+    NewStateData=handle_statechange_actions(StateName,NextState,StateData),
+	{reply,{ok,NextState},NextState,NewStateData#state{history=NewQueue}};
 
 handle_sync_event(Event=unack,_From,StateName='ACK',
 				  StateData=#state{history=Queue})->
 	NextState='ACTIVE',
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
-    handle_statechange_notifications(StateName,NextState),
-	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
+    NewStateData=handle_statechange_actions(StateName,NextState,StateData),
+	{reply,{ok,NextState},NextState,NewStateData#state{history=NewQueue}};
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue,active_count=0})->
 	NextState='CLEAR',
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
-    handle_statechange_notifications(StateName,NextState),
-	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
+    NewStateData=handle_statechange_actions(StateName,NextState,StateData),
+	{reply,{ok,NextState},NextState,NewStateData#state{history=NewQueue}};
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue})->
 	NextState='ACK',
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
-    handle_statechange_notifications(StateName,NextState),
-	{reply,{ok,NextState},NextState,StateData#state{history=NewQueue}};
+    NewStateData=handle_statechange_actions(StateName,NextState,StateData),
+	{reply,{ok,NextState},NextState,NewStateData#state{history=NewQueue}};
 
 handle_sync_event(history,_From,State,StateData=#state{history=H})->
 	{reply,aqueue:dump(H),State,StateData};
@@ -179,8 +179,7 @@ handle_sync_event(Event,_From,StateName,StateData=#state{})->
 
 handle_event(Sensor=#sensor{},StateName,StateData)->
 	{NextState,NextStateData}=i_handle_event(Sensor,StateName,StateData),
-	handle_statechange_notifications(StateName,NextState),
-	{next_state,NextState,NextStateData};
+\	{next_state,NextState,handle_statechange_actions(StateName,NextState,StateData)};
 
 handle_event(_Event={stop,Reason},_StateName,StateData=#state{})->
 	{stop,Reason,StateData};
@@ -215,8 +214,7 @@ handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData=#state{hist
 									history=NewQueue},
 
 	?info({next_state,NextState}),
-	handle_statechange_notifications(StateName,NextState),
-	{next_state,NextState,NextStateData};
+	{next_state,NextState,handle_statechange_actions(StateName,NextState,StateData)};
 
 
 handle_info(Event,State,StateData)->
@@ -304,10 +302,10 @@ handle_control(	Sensor=#sensor{state=deAsserted,label=enable},StateName,
 	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
 	{NextState,StateData#state{history=NewQueue}}.
 
-handle_statechange_notifications(State,State)->
-	ignore;
+handle_statechange_actions(State,State,StateData)->
+	StateData;
 
-handle_statechange_notifications(OldState,NewState)->
+handle_statechange_actions(OldState,NewState,StateData)->
 	alarmStatusLed(NewState),
 
 	% needs convert State from atom to string ....
@@ -319,9 +317,9 @@ handle_statechange_notifications(OldState,NewState)->
 	 "]",
 
 	twilio_manager:notify(Message),
-		
+
 	?info({stateChange, {from,OldState},{to,NewState}}),
-	ok.
+	StateData.
 
 %% ============================================================================
 %% STATE CALLBACKS
