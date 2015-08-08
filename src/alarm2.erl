@@ -152,6 +152,8 @@ handle_sync_event(Event=unack,_From,StateName='ACK',
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue,active_count=0})->
+
+	?info({ack_1,StateData}),
 	NextState='CLEAR',
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
     NewStateData=handle_statechange_actions(StateName,NextState,StateData),
@@ -159,6 +161,7 @@ handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue})->
+	?info({ack_2,StateData}),
 	NextState='ACK',
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
     NewStateData=handle_statechange_actions(StateName,NextState,StateData),
@@ -325,7 +328,7 @@ handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})
 	case NewState of
 		'ACTIVE'->
 			NewTRef=erlang:start_timer(StateData#state.alert_on_interval,self(),tm_alert_on),
-			?info({activated_alert_timer,TRef}),
+			?info({activated_alert_timer,NewTRef}),
 			% activate siren, set tm_alert timer
 			StateData#state{tm_alerting=NewTRef};
 
