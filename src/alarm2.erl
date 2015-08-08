@@ -124,7 +124,7 @@ init(Args)->
 
 	alarmStatusLed(NextState),
 
-	{ok,NextState,StateData=#state{	alarming_interval=WaitArmTimeout,
+	{ok,NextState,StateData=#state{	alarming_interval=WaitArmInterval,
 									alert_on_interval=AlertOnInterval,
 									alert_off_interval=AlertOffInterval,
 									active_count=ActiveCount,
