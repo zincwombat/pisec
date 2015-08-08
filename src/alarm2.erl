@@ -114,7 +114,7 @@ init(Args)->
 			'DISARMED';
 		_->
 			% set the arming timer
-			TRef=erlang:start_timer(WaitArmTimeout,self(),tm_sync),
+			TRef=erlang:start_timer(WaitArmInterval,self(),tm_sync),
 			%% fast flash the alarm status LED
 			'WAIT_ARM'
 	end,
