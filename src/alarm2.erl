@@ -322,10 +322,10 @@ handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})
 	NewStateData=
 	case NewState of
 		'ACTIVE'->
-			TRef=erlang:start_timer(StateData#state.alert_on_interval,self(),tm_alert_on),
+			NewTRef=erlang:start_timer(StateData#state.alert_on_interval,self(),tm_alert_on),
 			?info({activated_alert_timer,TRef}),
 			% activate siren, set tm_alert timer
-			StateData#state{tm_alerting=TRef};
+			StateData#state{tm_alerting=NewTRef};
 
 		'ACK' when is_reference(TRef)->
 			erlang:cancel_timer(StateData#state.tm_alerting),
