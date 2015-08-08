@@ -44,7 +44,6 @@
 -define(START_OPTIONS,  []).
 -define(SERVERNAME,     ?MODULE).
 
-
 %% STATE DATA =================================================================
 
 -record(state,{	
@@ -171,7 +170,6 @@ handle_sync_event(alarmCount,_From,State,StateData=#state{active_count=ActiveCou
 		
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
 	{reply,{error,{unhandled,Event}},StateName,StateData}.
-
 
 %% ============================================================================
 %% HANDLE ALL STATE EVENT CALLBACKS
@@ -318,19 +316,24 @@ handle_statechange_actions(OldState,NewState,StateData)->
 
 	case NewState of
 		'ACTIVE'->
-			% 
+			% activate siren, set tm_alert timer
 			ok;
 
 		'ACK'->
+			% deactivate siren, cancel tm_alert timer
 			ok;
 
 		'CLEAR'->
+			% deactivate siren, cancel tm_alert timer
 			ok;
 
-		'UNACK'->
+		'WAIT_ARM'->
 			ok;
 
 		'DISARMED'->
+			ok;
+
+		_->
 			ok
 	end,
 

@@ -15,6 +15,8 @@
 -define(FLASH_SLOW,						1000).
 -define(FLASH_NORMAL,					500).
 -define(FLASH_FAST,						100).
+-define(SIREN_ON_INTERVAL,				60000).	% 60 seconds
+-define(SIREN_OFF_INTERVAL,				60000).	% 60 seconds
 -define(BOOTSTRAP, 						"/home/pi/bootstrap.erl").
 
 -record(portstatus,		{ioport,pid,description,iostate,maskstate,log}).
