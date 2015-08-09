@@ -183,7 +183,7 @@ handle_sync_event(alarmCount,_From,State,StateData=#state{active_count=ActiveCou
 	{reply,{ok,ActiveCount},State,StateData};
 
 handle_sync_event({notify_status,Status},_From,State,StateData) when is_boolean(Status)->
-	{reply,ok,State,StateData#state{notify_status=Status};
+	{reply,ok,State,StateData#state{notify_status=Status}};
 		
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
 	{reply,{error,{unhandled,Event}},StateName,StateData}.
