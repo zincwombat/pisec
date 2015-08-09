@@ -194,7 +194,7 @@ handle_sync_event(Event,_From,StateName,StateData=#state{})->
 
 handle_event(Sensor=#sensor{},StateName,StateData)->
 	{NextState,NextStateData}=i_handle_event(Sensor,StateName,StateData),
-	{next_state,NextState,handle_statechange_actions(StateName,NextState,StateData)};
+	{next_state,NextState,handle_statechange_actions(StateName,NextState,NextStateData)};
 
 handle_event(_Event={stop,Reason},_StateName,StateData=#state{})->
 	{stop,Reason,StateData};
@@ -229,7 +229,7 @@ handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData=#state{hist
 									history=NewQueue},
 
 	?info({next_state,NextState}),
-	{next_state,NextState,handle_statechange_actions(StateName,NextState,StateData)};
+	{next_state,NextState,handle_statechange_actions(StateName,NextState,NextStateData)};
 
 handle_info(Event,State,StateData)->
 	?info({ignored_info,Event}),
