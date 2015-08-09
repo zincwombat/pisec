@@ -25,7 +25,8 @@
 	notify/1,
 	history/0,
 	state/0,
-	alarmCount/0
+	alarmCount/0,
+	setNotifyStatus/1
 ]).
 
 -export([
@@ -54,7 +55,8 @@
 	history,
 	alarming_interval,
 	alert_on_interval,
-	alert_off_interval
+	alert_off_interval,
+	notify_status
 }).
 
 start(_InitState)->
@@ -80,6 +82,9 @@ alarmCount()->
 
 state()->
 	gen_fsm:sync_send_all_state_event(?MODULE,state).
+
+setNotifyStatus(Status)->
+	gen_fsm:sync_send_all_state_event(?MODULE,{notify_status,Status}).
 
 init(Args)->
 	?info({starting,self()}),
@@ -176,6 +181,9 @@ handle_sync_event(state,_From,State,StateData)->
 handle_sync_event(alarmCount,_From,State,StateData=#state{active_count=ActiveCount,
 														  active_set=ActiveSet})->
 	{reply,{ok,ActiveCount},State,StateData};
+
+handle_sync_event({notify_status,Status},_From,State,StateData) when is_boolean(Status)->
+	{reply,ok,State,StateData#state{notify_status=Status};
 		
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
 	{reply,{error,{unhandled,Event}},StateName,StateData}.
@@ -353,10 +361,15 @@ handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})
 			StateData
 	end,
 
-	twilio_manager:notify(Message),
+	case StateData#state.notify_status of
+		true->
+			twilio_manager:notify(Message);
+		_->
+			ok
+	end,
 
 	?info({stateChange, {from,OldState},{to,NewState}}),
-	StateData.
+	NewStateData.
 
 %% ============================================================================
 %% STATE CALLBACKS
