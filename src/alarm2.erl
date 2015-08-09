@@ -324,6 +324,8 @@ handle_statechange_actions(State,State,StateData)->
 handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})->
 	alarmStatusLed(NewState),
 
+	?info({activeCount1,StateData#state.active_count}),
+
 	% needs convert State from atom to string ....
 
 	Message="Alarm state change from: [" ++ 
@@ -369,6 +371,7 @@ handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})
 	end,
 
 	?info({stateChange, {from,OldState},{to,NewState}}),
+	?info({activeCount2,NewStateData#state.active_count}),
 	NewStateData.
 
 %% ============================================================================
