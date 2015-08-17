@@ -234,11 +234,13 @@ handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData=#state{hist
 
 handle_info(Event={timeout,TRef,tm_alert_on },State='ACTIVE',StateData=#state{tm_alerting=TRef})->
 	?info({event,Event}),
+	siren(on),
 	NewTRef=erlang:start_timer(StateData#state.alert_off_interval,self(),tm_alert_off),
 	{next_state,State,StateData#state{tm_alerting=NewTRef}};
 
 handle_info(Event={timeout,TRef,tm_alert_off},State='ACTIVE',StateData=#state{tm_alerting=TRef})->
 	?info({event,Event}),
+	siren(off),
 	NewTRef=erlang:start_timer(StateData#state.alert_on_interval,self(),tm_alert_on),
 	{next_state,State,StateData#state{tm_alerting=NewTRef}};
 
@@ -349,23 +351,28 @@ handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})
 			NewTRef=erlang:start_timer(StateData#state.alert_on_interval,self(),tm_alert_off),
 			?info({activated_alert_timer,NewTRef}),
 			% activate siren, set tm_alert timer
+			siren(on),
 			StateData#state{tm_alerting=NewTRef};
 
 		'ACK' when is_reference(TRef)->
 			erlang:cancel_timer(StateData#state.tm_alerting),
 			% deactivate siren, cancel tm_alert timer
+			siren(off),
 			StateData#state{tm_alerting=undefined};
 
 		'CLEAR' when is_reference(TRef)->
 			% deactivate siren, cancel tm_alert timer
 			erlang:cancel_timer(StateData#state.tm_alerting),
+			siren(off),
 			StateData#state{tm_alerting=undefined};
 
 		'WAIT_ARM' when is_reference(TRef)->
+			siren(off),
 			StateData#state{tm_alerting=undefined};
 
 		'DISARMED' when is_reference(TRef)->
 			erlang:cancel_timer(StateData#state.tm_alerting),
+			siren(off),
 			StateData#state{tm_alerting=undefined};
 
 		_->
@@ -404,6 +411,12 @@ handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})
 %% ============================================================================
 %% Utility Routines
 %% ============================================================================
+
+siren(on)->
+	output_manager:set(api:getPort(siren));
+
+siren(off)->
+	output_manager:clear(api:getPort(siren));
 
 isSensorAsserted(#sensor{type=sensor,state=asserted})->
 	true;
