@@ -6,6 +6,7 @@
 -define(DEFAULT_ALARMHANDLER_HISTORY,	50).
 -define(DEFAULT_ALARM_INIT_STATE,		'DISARMED').
 -define(DEFAULT_WAIT_ARM_INTERVAL,		30000).
+-define(DEFAULT_TWILIO_NOTIFY, 			true).
 -define(MIN_PORT,						1).
 -define(MAX_PORT,						8).
 -define(IN_RANGE(X),					((X >= ?MIN_PORT) andalso (X =< ?MAX_PORT))).

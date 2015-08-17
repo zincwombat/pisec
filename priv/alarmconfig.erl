@@ -25,3 +25,4 @@
 {output_flash_normal,	250}.
 {output_flash_fast,		100}.
 {timer_wait_arm,		30000}.
+{twilio_notify,			false}.

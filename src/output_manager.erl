@@ -107,7 +107,7 @@ handle_call({unregister,Pid},_From,State=#state{itab=ITab}) when is_pid(Pid)->
 
 handle_call(getState,_From,State=#state{itab=ITab})->
     Handlers=ets:tab2list(ITab),
-    Reply=lists:map(fun(Z)->input_handler:getState(element(2,Z)) end,Handlers),
+    Reply=lists:map(fun(Z)->gen_server:call(element(2,Z),getState) end,Handlers),
    	{reply,Reply,State};
 
 

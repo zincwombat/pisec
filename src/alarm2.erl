@@ -111,6 +111,7 @@ init(Args)->
 	WaitArmInterval=config:get(timer_wait_arm,?DEFAULT_WAIT_ARM_INTERVAL),
 	AlertOnInterval=config:get(timer_alert_on,?DEFAULT_SIREN_ON_INTERVAL),
 	AlertOffInterval=config:get(timer_alert_off,?DEFAULT_SIREN_OFF_INTERVAL),
+	NotifyStatus=config:get(twilio_notify,?DEFAULT_TWILIO_NOTIFY),
 
 	NextState=
 	case isAlarmEnabled() of 
@@ -134,6 +135,7 @@ init(Args)->
 									alert_off_interval=AlertOffInterval,
 									active_count=ActiveCount,
 									active_set=ActiveSet,
+									notify_status=NotifyStatus,
 									history=NewQueue}}.
 
 %% ============================================================================
@@ -183,6 +185,7 @@ handle_sync_event(alarmCount,_From,State,StateData=#state{active_count=ActiveCou
 	{reply,{ok,ActiveCount},State,StateData};
 
 handle_sync_event({notify_status,Status},_From,State,StateData) when is_boolean(Status)->
+	config:set(twilio_notify,Status),
 	{reply,ok,State,StateData#state{notify_status=Status}};
 		
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
