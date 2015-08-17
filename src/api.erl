@@ -13,10 +13,14 @@
 -export ([power_outputs/0]).
 -export ([ack/0]).
 -export ([unack/0]).
+-export ([deAssertPort/1]).
+-export ([assertPort/1]).
+
+-include ("ports.hrl").
 
 
 arm()->
-	scanner2:assertPort(getPort(enable)).
+	assertPort(enable).
 
 disarm()->
 	scanner2:deAssertPort(getPort(enable)).
@@ -26,6 +30,18 @@ ack()->
 
 unack()->
 	alarm2:unack().
+
+assertPort(Port) when is_atom(Port)->
+	assertPort(getPort(Port));
+
+assertPort(Port) when ?is_portnum(Port)->
+	scanner2:assertPort(Port).
+
+deAssertPort(Port) when is_atom(Port)->
+	deAssertPort(getPort(Port));
+
+deAssertPort(Port) when ?is_portnum(Port)->
+	scanner2:deAssertPort(Port).
 
 reset()->
 	scanner2:reset().
@@ -51,7 +67,6 @@ power_outputs()->
 % ==============================================================================
 % utility functions
 % ==============================================================================
-
 
 getPort(Label) when is_atom(Label)->
 	Config=config:get(inputs),

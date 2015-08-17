@@ -231,6 +231,17 @@ handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData=#state{hist
 	?info({next_state,NextState}),
 	{next_state,NextState,handle_statechange_actions(StateName,NextState,NextStateData)};
 
+
+handle_info(Event={timeout,TRef,tm_alert_on },State='ACTIVE',StateData=#state{tm_alerting=TRef})->
+	?info({event,Event}),
+	NewTRef=erlang:start_timer(StateData#state.alert_off_interval,self(),tm_alert_off),
+	{next_state,State,StateData#state{tm_alerting=NewTRef}};
+
+handle_info(Event={timeout,TRef,tm_alert_off},State='ACTIVE',StateData=#state{tm_alerting=TRef})->
+	?info({event,Event}),
+	NewTRef=erlang:start_timer(StateData#state.alert_on_interval,self(),tm_alert_on),
+	{next_state,State,StateData#state{tm_alerting=NewTRef}};
+
 handle_info(Event,State,StateData)->
 	?info({ignored_info,Event}),
 	{next_state,State,StateData}.
@@ -240,6 +251,7 @@ handle_info(Event,State,StateData)->
 %% ============================================================================
 
 terminate(Reason,_StateName,_StateData)->
+	% TODO - turn off all the LEDs
 	{stop,Reason}.
 
 code_change(_OldVsn,StateName,StateData,_Extra)->
@@ -323,9 +335,6 @@ handle_statechange_actions(State,State,StateData)->
 
 handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})->
 	alarmStatusLed(NewState),
-
-	?info({activeCount1,StateData#state.active_count}),
-
 	% needs convert State from atom to string ....
 
 	Message="Alarm state change from: [" ++ 
@@ -337,7 +346,7 @@ handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})
 	NewStateData=
 	case NewState of
 		'ACTIVE'->
-			NewTRef=erlang:start_timer(StateData#state.alert_on_interval,self(),tm_alert_on),
+			NewTRef=erlang:start_timer(StateData#state.alert_on_interval,self(),tm_alert_off),
 			?info({activated_alert_timer,NewTRef}),
 			% activate siren, set tm_alert timer
 			StateData#state{tm_alerting=NewTRef};
@@ -371,7 +380,6 @@ handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})
 	end,
 
 	?info({stateChange, {from,OldState},{to,NewState}}),
-	?info({activeCount2,NewStateData#state.active_count}),
 	NewStateData.
 
 %% ============================================================================
