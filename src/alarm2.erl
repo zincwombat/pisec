@@ -186,6 +186,13 @@ handle_sync_event(alarmCount,_From,State,StateData=#state{active_count=ActiveCou
 
 handle_sync_event({notify_status,Status},_From,State,StateData) when is_boolean(Status)->
 	config:set(twilio_notify,Status),
+	case Status of
+		true->
+			Message=io_lib:format("alarm state: ~p",[State]),
+			twilio_manager:notify(Message);
+		_->
+			ok
+	end,
 	{reply,ok,State,StateData#state{notify_status=Status}};
 		
 handle_sync_event(Event,_From,StateName,StateData=#state{})->
