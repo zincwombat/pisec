@@ -20,7 +20,7 @@
 -export ([on/1]).
 -export ([off/1]).
 -export ([flash/2]).
--export ([getStatus/1]).
+-export ([getState/1]).
 
 -record (state, {port,ledStatus,label,desc,timer,timer_intv}).
 
@@ -46,8 +46,8 @@ off(Pid) ->
 flash(Pid,Speed)->
 	gen_server:call(Pid,{flash,Speed}).
 
-getStatus(Pid)->
-	gen_server:call(Pid,getStatus).
+getState(Pid)->
+	gen_server:call(Pid,getState).
 
 %==============================================================================
 % callback functions
@@ -96,7 +96,7 @@ handle_call({flash,Speed},_From,State=#state{port=Port,timer=TRef})->
 	NewTRef=erlang:start_timer(Speed,self(),{fl_timeout,Speed}),
 	{reply,ok,State#state{timer=NewTRef,ledStatus={flash,Speed},timer_intv=Speed}};
 
-handle_call(Msg=getStatus,_From,State)->
+handle_call(Msg=getState,_From,State)->
 	Reply={
 		{port,	State#state.port},
 		{state,	State#state.ledStatus},

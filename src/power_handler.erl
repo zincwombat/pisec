@@ -19,7 +19,7 @@
 
 -export ([on/1]).
 -export ([off/1]).
--export ([getStatus/1]).
+-export ([getState/1]).
 
 
 -record (state, {port,powerStatus,label,desc,timer,timer_intv}).
@@ -40,7 +40,7 @@ on(Pid)->
 off(Pid)->
 	gen_server:call(Pid,off).
 
-getStatus(Pid)->
+getState(Pid)->
 	gen_server:call(Pid,getStatus).
 
 %==============================================================================
@@ -69,7 +69,7 @@ handle_call(off,_From,State=#state{port=Port})->
 handle_call(stop,_From,State)->
 	{stop,normal,ok,State};
 
-handle_call(Msg=getStatus,_From,State)->
+handle_call(Msg=getState,_From,State)->
 	Reply={
 		{port,	State#state.port},
 		{state,	State#state.powerStatus},
