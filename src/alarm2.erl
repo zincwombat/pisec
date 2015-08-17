@@ -416,7 +416,7 @@ siren(on)->
 	output_manager:set(api:getPort(siren));
 
 siren(off)->
-	output_manager:clear(api:getPort(siren));
+	output_manager:clear(api:getPort(siren)).
 
 isSensorAsserted(#sensor{type=sensor,state=asserted})->
 	true;
