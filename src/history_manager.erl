@@ -32,6 +32,24 @@ stop() ->
 state() ->
 	gen_server:call(?MODULE,state).
 
+put(Item)->
+	ok.
+
+getAll()->
+	ok.
+
+getLast()->
+	ok.
+
+getLastN(N)->
+	ok.
+
+flush()->
+	ok.
+
+size()->
+	ok.
+
 init([])->
 	State=#state{},
 	{ok,DETSFile}=application:get_env(?APPNAME,history),
