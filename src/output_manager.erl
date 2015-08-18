@@ -26,6 +26,7 @@
 -export ([set/1]).
 -export ([clear/1]).
 -export ([flash/2]).
+-export ([reset/0]).
 
 -export ([getLedStatus/0]).
 -export ([getPowerStatus/0]).
@@ -65,6 +66,9 @@ set(Port)->
 
 clear(Port)->
 	gen_server:call(?MODULE,{clear,Port}).
+
+reset()->
+	gen_server:call(?MODULE,reset).
 
 flash(Port,Speed)->
 	gen_server:call(?MODULE,{flash,Port,Speed}).
@@ -109,6 +113,11 @@ handle_call(getState,_From,State=#state{itab=ITab})->
     Handlers=ets:tab2list(ITab),
     Reply=lists:map(fun(Z)->gen_server:call(element(2,Z),getState) end,Handlers),
    	{reply,Reply,State};
+
+handle_call(reset,_From,State=#state{itab=ITab})->
+    Handlers=ets:tab2list(ITab),
+    Reply=lists:map(fun(Z)->gen_server:call(element(2,Z),off) end,Handlers),
+   	{reply,Reply,State};)
 
 
 handle_call({set,Port},_From,State=#state{itab=ITab}) when ?is_portnum(Port)->

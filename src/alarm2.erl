@@ -4,9 +4,6 @@
 -include("alarm.hrl").
 -include("ports.hrl").
 
--define(ALARMING_INTERVAL,5000).	%% 5 seconds
--define(SYNC_INTERVAL,5000).		%% 5 seconds
-
 -export([
 	init/1,
 	handle_event/3,
@@ -160,7 +157,6 @@ handle_sync_event(Event=unack,_From,StateName='ACK',
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue,active_count=0})->
 
-	?info({ack_1,StateData}),
 	NextState='CLEAR',
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
     NewStateData=handle_statechange_actions(StateName,NextState,StateData),
@@ -168,7 +164,6 @@ handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 				  StateData=#state{history=Queue})->
-	?info({ack_2,StateData}),
 	NextState='ACK',
     NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
     NewStateData=handle_statechange_actions(StateName,NextState,StateData),

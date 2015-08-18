@@ -38,12 +38,13 @@ init(Args) ->
 	Scanner=?CHILD(scanner_sup,supervisor,Args),
 	Yaws=?CHILD(pisec_yaws_sup,supervisor),
 	Config=?CHILD(config,worker),
+	History=?CHILD(history_manager,worker),
 	IS=?CHILD(input_handler_sup,supervisor),
 	OMS=?CHILD(output_handler_sup,supervisor),
 	OM=?CHILD(output_manager,worker),
 	Twilio=?CHILD(twilio_manager,worker),
 	% Cs=[Config,Yaws,Scanner],
-	Cs=[Config,Twilio,IS,OM,OMS,Scanner],
+	Cs=[Config,History,Twilio,IS,OM,OMS,Scanner],
 	?info({starting,Cs}),
 	{ok,{{one_for_one,5,10},Cs}}.
 
