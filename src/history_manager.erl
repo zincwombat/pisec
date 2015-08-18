@@ -21,7 +21,7 @@
 -export ([flush/0]).
 -export ([size/0]).
 
--record(state, {htab}).
+-record(state, {htab,queue}).
 
 start() ->
 	gen_server:start_link({local,?MODULE},?MODULE,[],[]).
