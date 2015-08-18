@@ -37,7 +37,11 @@ init([])->
 	{ok,DETSFile}=application:get_env(?APPNAME,history),
 	DArgs=[{file,DETSFile}],
 	{ok,history}=dets:open_file(history,DArgs),
-	{ok,State#state{htab=config}}.
+
+	HistorySize=config:get(alarm_handler_history_size,?DEFAULT_ALARMHANDLER_HISTORY),
+	Queue=aqueue:new(HistorySize),	
+
+	{ok,State#state{htab=config,queue=Queue}}.
 	
 handle_call(stop,_From,State)->
 	{stop,normal,ok,State};

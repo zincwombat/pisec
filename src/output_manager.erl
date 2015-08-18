@@ -117,7 +117,7 @@ handle_call(getState,_From,State=#state{itab=ITab})->
 handle_call(reset,_From,State=#state{itab=ITab})->
     Handlers=ets:tab2list(ITab),
     Reply=lists:map(fun(Z)->gen_server:call(element(2,Z),off) end,Handlers),
-   	{reply,Reply,State};)
+   	{reply,Reply,State};
 
 
 handle_call({set,Port},_From,State=#state{itab=ITab}) when ?is_portnum(Port)->
