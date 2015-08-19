@@ -70,7 +70,7 @@ handle_call(getAll,_From,State=#state{queue=Queue})->
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
 	?warn(Unhandled),
-	{reply,Unhandled,State
+	{reply,Unhandled,State}.
 
 handle_cast({put,Item},State=#state{queue=Queue})->
 	{noreply,State#state{queue=aqueue:add(Item,Queue)}};
