@@ -33,16 +33,16 @@ state() ->
 	gen_server:call(?MODULE,state).
 
 put(Item)->
-	ok.
+	gen_server:cast(?MODULE,{put,Item}).
 
 getAll()->
-	ok.
+	gen_server:call(?MODULE,getAll).
 
 getLast()->
-	ok.
+	gen_server:call(?MODULE,getLast).
 
 getLastN(N)->
-	ok.
+	gen_server:call(?MODULE,{getLastN,N}).
 
 flush()->
 	ok.
@@ -64,10 +64,16 @@ init([])->
 handle_call(stop,_From,State)->
 	{stop,normal,ok,State};
 
+handle_call(getAll,_From,State=#state{queue=Queue})->
+	{reply,aqueue:dump(Queue),State};
+
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},
 	?warn(Unhandled),
-	{reply,Unhandled,State}.
+	{reply,Unhandled,State
+
+handle_cast({put,Item},State=#state{queue=Queue})->
+	{noreply,State#state{queue=aqueue:add(Item,Queue)}};
 
 handle_cast(Msg,State)->
 	Unhandled={unhandled_cast,{msg,Msg}},
