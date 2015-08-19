@@ -161,7 +161,7 @@ handle_sync_event(Event=ack,_From,StateName='ACTIVE',
 	NextState='ACK',
     logFsm(StateName,Event,NextState),
     NewStateData=handle_statechange_actions(StateName,NextState,StateData),
-	{reply,{ok,NextState},NextState,NewStateData#state};
+	{reply,{ok,NextState},NextState,NewStateData};
 
 handle_sync_event(history,_From,State,StateData)->
 	{reply,history_manager:getAll(),State,StateData};
@@ -316,7 +316,7 @@ handle_control(	Sensor=#sensor{state=asserted,label=enable},StateName='DISARMED'
 	NextState='WAIT_ARM',
 	logFsm(StateName,LogMessage,NextState),
 	TRef=erlang:start_timer(StateData#state.alarming_interval,self(),tm_sync),
-	{NextState,StateData#state};
+	{NextState,StateData};
 
 handle_control(	Sensor=#sensor{state=deAsserted,label=enable},StateName,
 				StateData)->
