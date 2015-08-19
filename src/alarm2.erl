@@ -221,7 +221,7 @@ handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData)->
 			'ACTIVE'
 	end,
 
-	logFsm(StateName,Event,NextState),
+	logFsm(StateName,"armed",NextState),
 
 	NextStateData=StateData#state{	active_count=ActiveCount,
 									active_set=ActiveSet},

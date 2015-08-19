@@ -19,7 +19,6 @@
 -define(DEFAULT_SIREN_ON_INTERVAL,		60000).	% 60 seconds
 -define(DEFAULT_SIREN_OFF_INTERVAL,		60000).	% 60 seconds
 
--define(BOOTSTRAP, 						"/home/pi/bootstrap.erl").
 
 -record(portstatus,		{ioport,pid,description,iostate,maskstate,log}).
 -record(portmask,		{ioport,maskstate}).
