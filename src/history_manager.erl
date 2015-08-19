@@ -45,7 +45,7 @@ getLastN(N)->
 	gen_server:call(?MODULE,{getLastN,N}).
 
 flush()->
-	ok.
+	gen_server:call(?MODULE,flush).
 
 size()->
 	ok.
@@ -66,6 +66,9 @@ handle_call(stop,_From,State)->
 
 handle_call(getAll,_From,State=#state{queue=Queue})->
 	{reply,aqueue:dump(Queue),State};
+
+handle_call(flush,_From,State=#state{queue=Queue})->
+	{reply,aqueue:empty(Queue),State};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},

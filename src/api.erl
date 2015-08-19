@@ -16,6 +16,7 @@
 -export ([deAssertPort/1]).
 -export ([assertPort/1]).
 -export ([getPort/1]).
+-export ([getLog/0]).
 
 -include ("ports.hrl").
 
@@ -64,6 +65,9 @@ led_outputs()->
 
 power_outputs()->
 	output_manager:getPowerStatus().
+
+getLog()->
+	history_manager:getAll().
 
 getPort(Label) when is_atom(Label)->
 	Config=config:get(inputs),
