@@ -44,7 +44,7 @@ init(Args) ->
 	OM=?CHILD(output_manager,worker),
 	Twilio=?CHILD(twilio_manager,worker),
 	% Cs=[Config,Yaws,Scanner],
-	Cs=[Config,History,Twilio,IS,OM,OMS,Scanner],
+	Cs=[Config,History,Twilio,IS,OM,OMS,Scanner,Yaws],
 	?info({starting,Cs}),
 	{ok,{{one_for_one,5,10},Cs}}.
 
