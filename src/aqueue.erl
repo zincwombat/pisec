@@ -30,25 +30,8 @@ add(E, {L,M,R,F}) when L < M->
 	{L+1,M,lists:append([E],R),F}; 				%Add element to rear
 
 add(E, {M,M,R,[H|T]})->
-	{M,M,lists:append([E],R),T};                                  %Add element to rear
+	{M,M,lists:append([E],R),T};                 %Add element to rear
 
 add(E, {M,M,R,[]})->
 	add(E, {M,M,[],lists:reverse(R)}).              %Move the rear to the front
-
-%% message handling and formatting functions
-
-fsmFmtLogMessage(CurrentState,Event,NextState) when is_list(Event)->
-        S=io_lib:format("[~s] :: ~s -> [~s]",[CurrentState,Event,NextState]),
-        list_to_binary(S);
-
-fsmFmtLogMessage(CurrentState,Event,NextState)->
-        S=io_lib:format("[~s] :: ~p -> [~s]",[CurrentState,Event,NextState]),
-        list_to_binary(S).
-
-log(Event,Queue={_L,_Max,_R,_F})->
-	add({Event,iso8601:format(calendar:local_time())},Queue).
-
-logFsm(CurrentState,Event,NextState,Queue)->
-	MEvent=fsmFmtLogMessage(CurrentState,Event,NextState),
-	log(MEvent,Queue).
 	

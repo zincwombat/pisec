@@ -49,7 +49,6 @@
 	tm_sync,
 	active_set,
 	active_count,
-	history,
 	alarming_interval,
 	alert_on_interval,
 	alert_off_interval,
@@ -87,10 +86,6 @@ init(Args)->
 	?info({starting,self()}),
 	process_flag(trap_exit,true),
 
-	HistorySize=config:get(alarm_handler_history_size,?DEFAULT_ALARMHANDLER_HISTORY),
-
-	Queue=aqueue:new(HistorySize),
-
 	% we need to get the asserted states of all the alarms
 
 	SensorStates=input_manager:getState(),
@@ -122,7 +117,7 @@ init(Args)->
 			'WAIT_ARM'
 	end,
 
-	NewQueue=aqueue:logFsm(NextState,"init",NextState,Queue),
+	logFsm(NextState,"init",NextState),
 	?info({initstate,NextState}),
 
 	alarmStatusLed(NextState),
@@ -132,45 +127,44 @@ init(Args)->
 									alert_off_interval=AlertOffInterval,
 									active_count=ActiveCount,
 									active_set=ActiveSet,
-									notify_status=NotifyStatus,
-									history=NewQueue}}.
+									notify_status=NotifyStatus}}.
 
 %% ============================================================================
 %% SYNC STATE TRANSITIONS 
 %% ============================================================================									
 
 handle_sync_event(Event=unack,_From,StateName='ACK',
-				  StateData=#state{history=Queue,active_count=0})->
+				  StateData=#state{active_count=0})->
 	NextState='CLEAR',
 	alarmStatusLed(NextState),
-    NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
+    logFsm(StateName,Event,NextState),
     NewStateData=handle_statechange_actions(StateName,NextState,StateData),
-	{reply,{ok,NextState},NextState,NewStateData#state{history=NewQueue}};
+	{reply,{ok,NextState},NextState,NewStateData};
 
 handle_sync_event(Event=unack,_From,StateName='ACK',
-				  StateData=#state{history=Queue})->
+				  StateData=#state{})->
 	NextState='ACTIVE',
-    NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
+    logFsm(StateName,Event,NextState),
     NewStateData=handle_statechange_actions(StateName,NextState,StateData),
-	{reply,{ok,NextState},NextState,NewStateData#state{history=NewQueue}};
+	{reply,{ok,NextState},NextState,NewStateData};
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
-				  StateData=#state{history=Queue,active_count=0})->
+				  StateData=#state{active_count=0})->
 
 	NextState='CLEAR',
-    NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
+    logFsm(StateName,Event,NextState),
     NewStateData=handle_statechange_actions(StateName,NextState,StateData),
-	{reply,{ok,NextState},NextState,NewStateData#state{history=NewQueue}};
+	{reply,{ok,NextState},NextState,NewStateData};
 
 handle_sync_event(Event=ack,_From,StateName='ACTIVE',
-				  StateData=#state{history=Queue})->
+				  StateData)->
 	NextState='ACK',
-    NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
+    logFsm(StateName,Event,NextState),
     NewStateData=handle_statechange_actions(StateName,NextState,StateData),
-	{reply,{ok,NextState},NextState,NewStateData#state{history=NewQueue}};
+	{reply,{ok,NextState},NextState,NewStateData#state};
 
-handle_sync_event(history,_From,State,StateData=#state{history=H})->
-	{reply,aqueue:dump(H),State,StateData};
+handle_sync_event(history,_From,State,StateData)->
+	{reply,history_manager:getAll(),State,StateData};
 
 handle_sync_event(state,_From,State,StateData)->
 	{reply,{state,State},State,StateData};
@@ -211,7 +205,7 @@ handle_event(_Event,StateName,StateData)->
 %% HANDLE TIMERS etc
 %% ============================================================================
 
-handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData=#state{history=Queue})->
+handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData)->
 	?info({event,Event}),
 
 	SensorStates=input_manager:getState(),
@@ -227,11 +221,10 @@ handle_info(Event={timeout,_,tm_sync},StateName='WAIT_ARM',StateData=#state{hist
 			'ACTIVE'
 	end,
 
-	NewQueue=aqueue:logFsm(StateName,Event,NextState,Queue),
+	logFsm(StateName,Event,NextState),
 
 	NextStateData=StateData#state{	active_count=ActiveCount,
-									active_set=ActiveSet,
-									history=NewQueue},
+									active_set=ActiveSet},
 
 	?info({next_state,NextState}),
 	{next_state,NextState,handle_statechange_actions(StateName,NextState,NextStateData)};
@@ -273,8 +266,7 @@ i_handle_event(Sensor=#sensor{type=control},StateName,StateData)->
 handle_alarm(Sensor=#sensor{state=SensorStatus,desc=Desc},
 			 StateName,
 			 StateData=#state{active_count=ActiveCount,
-			 				  active_set=ActiveSet,
-			 				  history=Queue}) when StateName /= 'DISARMED' ->
+			 				  active_set=ActiveSet}) when StateName /= 'DISARMED' ->
 
 	?info({alarm_event,Sensor,StateName}),
 
@@ -307,35 +299,34 @@ handle_alarm(Sensor=#sensor{state=SensorStatus,desc=Desc},
 
 	?info({next_state,NextState}),
 
-	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
+	logFsm(StateName,LogMessage,NextState),
 
 	{NextState,StateData#state{	active_count=NewActiveCount,
-								active_set=NewActiveSet,
-								history=NewQueue}};
+								active_set=NewActiveSet}};
 
 handle_alarm(Sensor,StateName,StateData)->
 	{StateName,StateData}.
 
 handle_control(	Sensor=#sensor{state=asserted,label=enable},StateName='DISARMED',
-				StateData=#state{history=Queue})->
+				StateData)->
 
 	?info({control_event,Sensor}),
 
 	LogMessage=io_lib:format("alarm enabled",[]),
 	NextState='WAIT_ARM',
-	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
+	logFsm(StateName,LogMessage,NextState),
 	TRef=erlang:start_timer(StateData#state.alarming_interval,self(),tm_sync),
-	{NextState,StateData#state{history=NewQueue}};
+	{NextState,StateData#state};
 
 handle_control(	Sensor=#sensor{state=deAsserted,label=enable},StateName,
-				StateData=#state{history=Queue})->
+				StateData)->
 
 	?info({control_event,Sensor}),
 
 	LogMessage=io_lib:format("alarm disabled",[]),
 	NextState='DISARMED',
-	NewQueue=aqueue:logFsm(StateName,LogMessage,NextState,Queue),
-	{NextState,StateData#state{history=NewQueue}}.
+	logFsm(StateName,LogMessage,NextState),
+	{NextState,StateData}.
 
 handle_statechange_actions(State,State,StateData)->
 	StateData;
@@ -479,4 +470,23 @@ alarmStatusLed(Control)->
 		false->
 			{error,badarg}
 	end.
+
+%% ============================================================================
+%% History Logging Routines
+%% ============================================================================
+
+fsmFmtLogMessage(CurrentState,Event,NextState) when is_list(Event)->
+        S=io_lib:format("[~s] :: ~s -> [~s]",[CurrentState,Event,NextState]),
+        list_to_binary(S);
+
+fsmFmtLogMessage(CurrentState,Event,NextState)->
+        S=io_lib:format("[~s] :: ~p -> [~s]",[CurrentState,Event,NextState]),
+        list_to_binary(S).
+
+logFsm(CurrentState,Event,NextState)->
+	MEvent=fsmFmtLogMessage(CurrentState,Event,NextState),
+	log(MEvent).
+
+log(Event)->
+	history_manager:put({Event,iso8601:format(calendar:local_time())}).
 
