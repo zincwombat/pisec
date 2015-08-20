@@ -68,7 +68,7 @@ handle_call(getAll,_From,State=#state{queue=Queue})->
 	{reply,aqueue:dump(Queue),State};
 
 handle_call(flush,_From,State=#state{queue=Queue})->
-	{reply,ok,State=#state{queue=aqueue:empty(Queue)}};
+	{reply,ok,State#state{queue=aqueue:empty(Queue)}};
 
 handle_call(Msg,From,State)->
 	Unhandled={unhandled_call,{msg,Msg},{from,From}},

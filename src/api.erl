@@ -17,6 +17,7 @@
 -export ([assertPort/1]).
 -export ([getPort/1]).
 -export ([getLog/0]).
+-export ([flushLog/0]).
 
 -include ("ports.hrl").
 
@@ -68,6 +69,9 @@ power_outputs()->
 
 getLog()->
 	history_manager:getAll().
+
+flushLog()->
+	history_manager:flush().
 
 getPort(Label) when is_atom(Label)->
 	Config=config:get(inputs),
