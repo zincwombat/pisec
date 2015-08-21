@@ -23,15 +23,19 @@
 
 
 arm()->
+	% returns ok
 	assertPort(enable).
 
 disarm()->
+	% returns ok
 	scanner2:deAssertPort(getPort(enable)).
 
 ack()->
+	% returns {ok,NextState} or {error,{unhandled,Event}}
 	alarm2:ack().
 
 unack()->
+	% returns {ok,NextState} or {error,{unhandled,Event}}
 	alarm2:unack().
 
 assertPort(Port) when is_atom(Port)->
@@ -47,18 +51,22 @@ deAssertPort(Port) when ?is_portnum(Port)->
 	scanner2:deAssertPort(Port).
 
 reset()->
+	% returns ok
 	scanner2:reset().
 
 alarms()->
+	% returns {alarms,ListofAlarms}
 	input_manager:getAssertedAlarms().
 
 state()->
+	% {state,State}
 	alarm2:state().
 
 sensors()->
 	scanner2:readInput().
 
 controls()->
+	% returns {controls,ListofControls}
 	input_manager:getAssertedControls().
 
 led_outputs()->

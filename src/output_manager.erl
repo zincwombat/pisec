@@ -172,9 +172,9 @@ handle_call({getStatus,Type},_From,State=#state{itab=ITab})->
 	Reply=
 	case Type of
 		power->
-			lists:map(fun(Z)->power_handler:getStatus(element(2,Z)) end, getHandlers(power,ITab));
+			lists:map(fun(Z)->power_handler:getState(element(2,Z)) end, getHandlers(power,ITab));
 		led->
-			lists:map(fun(Z)->led_handler:getStatus(element(2,Z)) end, getHandlers(led,ITab))
+			lists:map(fun(Z)->led_handler:getState(element(2,Z)) end, getHandlers(led,ITab))
 	end,
 	{reply,{Type,Reply},State};
 
