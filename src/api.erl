@@ -39,16 +39,26 @@ unack()->
 	alarm2:unack().
 
 assertPort(Port) when is_atom(Port)->
+	% returns ok
 	assertPort(getPort(Port));
 
 assertPort(Port) when ?is_portnum(Port)->
-	scanner2:assertPort(Port).
+	% returns ok
+	scanner2:assertPort(Port);
+
+assertPort(_)->
+	{error,badarg}.
 
 deAssertPort(Port) when is_atom(Port)->
+	% returns ok
 	deAssertPort(getPort(Port));
 
 deAssertPort(Port) when ?is_portnum(Port)->
-	scanner2:deAssertPort(Port).
+	% returns ok
+	scanner2:deAssertPort(Port);
+
+deAssertPort(_)->
+	{error,badarg}.
 
 reset()->
 	% returns ok

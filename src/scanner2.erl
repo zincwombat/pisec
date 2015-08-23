@@ -158,6 +158,8 @@ handle_call(readInput,_From,State)->
 	{reply,Reply,State};
 
 handle_call(Msg=reset,_From,State)->
+	config:set(ovrmask,0),
+	config:set(ovrval,0),
 	{reply,ok,State#state{ovr_mask=0,ovr_val=0}};
 
 handle_call(Msg={assertPort,PortNum},_From,State=#state{config=Config,
