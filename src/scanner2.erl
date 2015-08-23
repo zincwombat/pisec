@@ -195,6 +195,9 @@ handle_call(Msg={resetPort,PortNum},_From,State=#state{	ovr_mask=OvrMask,
 
 	NewOvrMask=setBit(PortNum,OvrMask,0),
 	NewOvrVal=setBit(PortNum,OvrVal,0),
+
+	config:set(ovrmask,NewOvrMask),
+	config:set(ovrval,NewOvrVal),
 	
 	{reply,ok,State#state{ovr_mask=NewOvrMask,ovr_val=NewOvrVal}};
 
