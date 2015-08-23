@@ -68,13 +68,25 @@ handle_call(stop,_From,State)->
 handle_call(state,_From,State)->
 	{reply,{ok,State},State};
 
-handle_call(on,_From,State=#state{port=Port})->
+handle_call(on,_From,State=#state{port=Port,timer=TRef})->
 	% turn led on
+	case is_reference(TRef) of
+		true->
+			erlang:cancel_timer(TRef);
+		_->
+			ok
+	end,
 	i_on(Port),
 	{reply,ok,State#state{ledStatus=on}};
 
-handle_call(off,_From,State=#state{port=Port})->
+handle_call(off,_From,State=#state{port=Port,timer=TRef})->
 	% turn led off
+	case is_reference(TRef) of
+		true->
+			erlang:cancel_timer(TRef);
+		_->
+			ok
+	end,
 	i_off(Port),
 	{reply,ok,State#state{ledStatus=off}};
 
