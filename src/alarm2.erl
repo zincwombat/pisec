@@ -455,9 +455,11 @@ alarmStatusLed('ACK')->
 	alarmStatusLed({flash,?FLASH_NORMAL});
 
 alarmStatusLed(Control)->
+	?info({control,Control}),
 	Outputs=config:get(outputs),
 	case lists:keyfind(alarm_status_led,2,Outputs) of
-		{Port,_,_,_,_,_}->
+		X={Port,_,_,_,_,_}->
+			?info(X),
 			case Control of
 				on->
 					output_manager:set(Port);
@@ -466,10 +468,12 @@ alarmStatusLed(Control)->
 				{flash,Speed} when is_integer(Speed)->
 					output_manager:flash(Port,Speed);
 				Other->
+					?error({badarg,Other}),
 					{error,{badarg,Other}}
 			end;		
 
 		false->
+			?error(false),
 			{error,badarg}
 	end.
 
