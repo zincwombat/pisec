@@ -121,6 +121,7 @@ init(Args)->
 	?info({initstate,NextState}),
 
 	alarmStatusLed(NextState),
+	output_manager:set(api:getOutputPort(power_led)),
 
 	{ok,NextState,StateData=#state{	alarming_interval=WaitArmInterval,
 									alert_on_interval=AlertOnInterval,
@@ -251,7 +252,8 @@ handle_info(Event,State,StateData)->
 %% ============================================================================
 
 terminate(Reason,_StateName,_StateData)->
-	% TODO - turn off all the LEDs
+	output_manager:clear(api:getOutputPort(power_led)),
+	output_manager:clear(api:getOutputPort(alarm_status_led)),
 	{stop,Reason}.
 
 code_change(_OldVsn,StateName,StateData,_Extra)->
@@ -411,10 +413,10 @@ handle_statechange_actions(OldState,NewState,StateData=#state{tm_alerting=TRef})
 %% ============================================================================
 
 siren(on)->
-	output_manager:set(api:getPort(siren));
+	output_manager:set(api:getOutputPort(siren));
 
 siren(off)->
-	output_manager:clear(api:getPort(siren)).
+	output_manager:clear(api:getOutputPort(siren)).
 
 isSensorAsserted(#sensor{type=sensor,state=asserted})->
 	true;

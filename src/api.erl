@@ -15,7 +15,8 @@
 -export ([unack/0]).
 -export ([deAssertPort/1]).
 -export ([assertPort/1]).
--export ([getPort/1]).
+-export ([getInputPort/1]).
+-export ([getOutputPort/1]).
 -export ([getLog/0]).
 -export ([flushLog/0]).
 
@@ -28,7 +29,7 @@ arm()->
 
 disarm()->
 	% returns ok
-	scanner2:deAssertPort(getPort(enable)).
+	scanner2:deAssertPort(getInputPort(enable)).
 
 ack()->
 	% returns {ok,NextState} or {error,{unhandled,Event}}
@@ -40,7 +41,7 @@ unack()->
 
 assertPort(Port) when is_atom(Port)->
 	% returns ok
-	assertPort(getPort(Port));
+	assertPort(getInputPort(Port));
 
 assertPort(Port) when ?is_portnum(Port)->
 	% returns ok
@@ -51,7 +52,7 @@ assertPort(_)->
 
 deAssertPort(Port) when is_atom(Port)->
 	% returns ok
-	deAssertPort(getPort(Port));
+	deAssertPort(getInputPort(Port));
 
 deAssertPort(Port) when ?is_portnum(Port)->
 	% returns ok
@@ -91,11 +92,17 @@ getLog()->
 flushLog()->
 	history_manager:flush().
 
-getPort(Label) when is_atom(Label)->
-	Config=config:get(inputs),
+getPort(Type,Label)->
+	Config=config:get(Type),
 	case lists:keyfind(enable,2,Config) of
 		X when is_tuple(X)->
 			element(1,X);
 		_->
 			throw({error,{badarg,Label}})
 	end.
+
+getInputPort(Label) when is_atom(Label)->
+	getPort(input,Label).
+
+getOutputPort(Label) when is_atom(Label)->
+	getPort(output,Label).
