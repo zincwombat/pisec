@@ -103,13 +103,13 @@ handle_state_change(true,false,State)->
 % =============================================================================
 
 handle_assert(State)->
-	?info({sensor_asserted,State#state.label,State#state.desc}),
+	% ?info({sensor_asserted,State#state.label,State#state.desc}),
 	NewState=State#state{sensorStatus=asserted},
 	alarm2:notify(stateToSensor(NewState)),
 	NewState.
 
 handle_deassert(State)->
-	?info({sensor_deasserted,State#state.label,State#state.desc}),
+	% ?info({sensor_deasserted,State#state.label,State#state.desc}),
 	NewState=State#state{sensorStatus=deAsserted},
 	alarm2:notify(stateToSensor(NewState)),
 	NewState.
