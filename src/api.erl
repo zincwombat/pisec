@@ -94,7 +94,7 @@ flushLog()->
 
 getPort(Type,Label)->
 	Config=config:get(Type),
-	case lists:keyfind(enable,2,Config) of
+	case lists:keyfind(Label,2,Config) of
 		X when is_tuple(X)->
 			element(1,X);
 		_->
