@@ -102,7 +102,7 @@ getPort(Type,Label)->
 	end.
 
 getInputPort(Label) when is_atom(Label)->
-	getPort(input,Label).
+	getPort(inputs,Label).
 
 getOutputPort(Label) when is_atom(Label)->
-	getPort(output,Label).
+	getPort(outputs,Label).
