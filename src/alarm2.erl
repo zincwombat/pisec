@@ -450,9 +450,6 @@ alarmStatusLed('DISARMED')->
 alarmStatusLed('CLEAR')->
 	alarmStatusLed({flash,?FLASH_SLOW});
 
-alarmStatusLed('ACTIVE')->
-	alarmStatusLed(on);
-
 alarmStatusLed('ACK')->
 	alarmStatusLed({flash,?FLASH_NORMAL});
 
